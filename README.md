@@ -19,6 +19,8 @@ lua/
     script1.lua
     ...
 output/
+    intervening_result1
+    intervening_result2
     nice_map.h3m
     ...
 src/
