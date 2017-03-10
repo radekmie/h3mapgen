@@ -31,5 +31,6 @@ test/
     test_input1
     ...
 generator.sh
+Makefile
 
 ```
