@@ -1,21 +1,18 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn-type -pedantic-errors -Wundef
 LDLIBS =
-TARGETS = bin/cellular bin/cellular_terrain.o bin/board.o
- 
+TARGETS = bin/cellular bin/voronoi
+
 all: $(TARGETS)
 
-bin/cellular: Makefile bin/board.o bin/cellular_terrain.o src/cellular/main.cpp
-	 $(CXX) $(CXXFLAGS) -o bin/cellular bin/board.o bin/cellular_terrain.o src/cellular/main.cpp
+bin/cellular: Makefile src/cellular/board.o src/cellular/cellular_terrain.o src/cellular/main.cpp
+	 $(CXX) $(CXXFLAGS) -o bin/cellular src/cellular/*.o src/cellular/main.cpp
 
-bin/board.o: Makefile src/cellular/board.cpp src/cellular/board.hpp
-	 $(CXX) $(CXXFLAGS) -c -o bin/board.o src/cellular/board.cpp
-
-bin/cellular_terrain.o: Makefile src/cellular/board.cpp src/cellular/board.hpp
-	$(CXX) $(CXXFLAGS) -c -o bin/cellular_terrain.o src/cellular/cellular_terrain.cpp
+bin/voronoi: Makefile src/voronoi/Constants.o src/voronoi/Sector.o src/voronoi/Site.o src/voronoi/Tile.o src/voronoi/TileGrid.o src/voronoi/TileGridGenerator.o src/voronoi/Main.cpp
+	$(CXX) $(CXXFLAGS) -o bin/voronoi src/voronoi/*.o src/voronoi/Main.cpp
 
 clean:
-	rm -f *.o
+	find ./src -depth -name *.o -delete
 
 distclean: clean
 	rm -f $(TARGETS)

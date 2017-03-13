@@ -6,8 +6,8 @@ It's subject to discussion although this schema seems reasonable to me.
 ```
 bin/
     generator.exe
-    object1.o
-    object2.o
+    object1.o *
+    object2.o *
     ...
 conf/
     voronoi.conf
@@ -34,6 +34,8 @@ generator.sh
 Makefile
 
 ```
+\* For now the `.o` files are built in the `src` directory since this way makes the Makefile tremendously simple.
+
 
 ## Random notes:
 - In case you don't know that: the first rule is that the code in `master` is compilable at all times. You should check that before commiting.
