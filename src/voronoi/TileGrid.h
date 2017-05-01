@@ -25,6 +25,7 @@ public:
 	Tile& GetTileAt(int x, int y);
 	Sector& GetSectorAt(int col, int row);
 	int GetSectorIdAt(floatPoint point);
+	Tile** GetTiles();
 
 private:
 	void PopulateTiles();
