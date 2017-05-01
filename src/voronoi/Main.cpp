@@ -3,69 +3,58 @@
 #include <time.h>
 
 #include "Common.h"
-#include "Site.h"
 #include "Tile.h"
-#include "TileGrid.h"
-#include "TileGridGenerator.h"
+#include "SectorLoader.h"
+#include "ExactSectorLoader.h"
+#include "TileDivider.h"
 
 
 int main(int argc, char** argv)
 {
 	srand((unsigned int)time(NULL));
 
-	Tile **newTiles;
-	int tH = Constants::GetTilesVerti(), tW = Constants::GetTilesHoriz();
+	ExactSectorLoader sectorLoader;
+	sectorLoader.LoadSectors("graphInput.txt");
 
-	newTiles = new Tile*[tH];
-	for (int y = 0; y < tH; ++y)
-	{
-		newTiles[y] = new Tile[tW];
-	}
-	for (int y = 0; y < tH; ++y)
-	{
-		for (int x = 0; x < tW; ++x)
-		{
-			newTiles[y][x].SetValues(x, y, 0.5f, 0.5f);
-		}
-	}
+	TileDivider voronoiDivider(sectorLoader.GetSectors(), sectorLoader.GetDimensions());
+	voronoiDivider.DivideBySectors(sectorLoader.GetSectorIndexes());
 
-	vector<Site> newSites;
-	int sites;
-	ifstream input("sitesInput.txt");
-	input >> sites;
-	for (int sIndex = 0; sIndex < sites; sIndex++)
-	{
-		int sId;
-		float sX, sY;
-		input >> sId >> sX >> sY;
-		newSites.push_back({ floatPoint((sX / 2.5f + 1.0f) * (float)tW / 2.0f, (sY / 2.5f + 1.0f) * (float)tH / 2.0f), sId });
-	}
-	input.close();
+	Tile **newTiles = voronoiDivider.GetTiles();
 
-	newTiles = TileGridGenerator::AssignSectorIdByDistance(newTiles, newSites);
 
-	newTiles = TileGridGenerator::DivideBySector(newTiles, newSites);
+	//newTiles[10][11].ownerId = 2;
+	//newTiles[10][11].ownerDist = 15.0f;
+	//newTiles[10][10].ownerId = 1;
+	//newTiles[10][10].isBridge = true;
 
 	ofstream output("graphMap.txt");
-	output << Constants::GetTilesVerti() << " " << Constants::GetTilesHoriz() << "\n";
-	for (int y = 0; y < Constants::GetTilesVerti(); ++y)
+	output << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
+	for (int y = 0; y < Constants::tilesVerti; ++y)
 	{
-		for (int x = 0; x < Constants::GetTilesHoriz(); ++x)
+		for (int x = 0; x < Constants::tilesHoriz; ++x)
 		{
-			int sectorId = newTiles[x][y].sectorId;
-			if (sectorId == -1)
+			int ownerId = newTiles[x][y].ownerId;
+			if (ownerId == -1)
 			{
+				// superblack
 				output << "$";
 			}
 			else
 			{
-				if (newTiles[x][y].closestDist > 13 && newTiles[x][y].sectorId != -1)
+				if (newTiles[x][y].isBridge)
 				{
+					// superwhite
+					output << ".";
+				}
+				else if (newTiles[x][y].ownerDist > 60.0f)
+				{
+					// black
 					output << "#";
 				}
 				else
 				{
-					output << " ";// sectorId;
+					// white
+					output << ownerId;
 				}
 			}
 		}
@@ -73,26 +62,7 @@ int main(int argc, char** argv)
 	}
 	output.close();
 
-	/*
-	TileGridGenerator tileGridGenerator({ Constants::GetTilesVerti(), Constants::GetTilesHoriz() },
-	{ Constants::GetSectorRows(), Constants::GetSectorCols() });
-
-	tileGridGenerator.GenerateSites();
-
-	tileGridGenerator.AssignSectorIdByDistance(tileGridGenerator.GetTiles(), tileGridGenerator.GetSites());
-
-	tileGridGenerator.DivideBySector(tileGridGenerator.GetTiles(), tileGridGenerator.GetSites());
-
-	tileGridGenerator.ShowTiles();
-*/
-
-	for (int y = 0; y < tH; ++y)
-	{
-		delete[] newTiles[y];
-	}
-	delete[] newTiles;
-
 	int x;
-	std::cin >> x;
+	cin >> x;
 	return 0;
 }

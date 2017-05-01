@@ -11,21 +11,19 @@
 class Tile
 {
 public:
-	int		closestSiteIndex;
-	float	closestDist;
-	int		sectorId;
+	int		ownerId;
+	float	ownerDist;
+	bool	isEdge;
+	bool	isBridge;
 
 protected:
-	int	x;
-	int	y;
-
 	floatPoint	repr;
 
 public:
 	Tile();
 	
-	void SetValues(int _x, int _y, float _reprX, float _reprY);
-	void ResetClosest();
+	void SetPosition(int _x, int _y);
+	void ResetValues();
 
 	float DistanceTo(floatPoint point);
 	vector<pair<int, int> > GetNeighbors(int tilesW, int tilesH);

@@ -1,4 +1,17 @@
+.gitignore
+
 /bin/
+
+#Visual Studio files
+*.sln
+*.db
+*.opendb
+*.vcxproj
+*.vcxproj.filters
+src/x64
+src/voronoi/x64
+src/.vs
+src/voronoi/mapa.txt
 
 # Compiled Object files
 *.slo

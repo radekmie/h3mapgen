@@ -3,36 +3,32 @@
 
 
 Tile::Tile()
-: x(-1)
-, y(-1)
-, repr(0.0f, 0.0f)
+: repr(-1.0f, -1.0f)
 {
-	this->ResetClosest();
-}
-
-void Tile::SetValues(int _x, int _y, float _reprX, float _reprY)
-{
-	this->x = _x;
-	this->y = _y;
-	this->ResetClosest();
-
-	floatPoint point{ _reprX, _reprY };
-	this->repr = point;
+	this->ResetValues();
 }
 
 
-void Tile::ResetClosest()
+void Tile::SetPosition(int _x, int _y)
 {
-	this->closestSiteIndex = -1;
-	this->sectorId = -1;
-	this->closestDist = 120.0f * 120.0f;
+	this->repr = floatPoint{ (float)_x + 0.5f, (float)_y + 0.5f };
+	this->ResetValues();
+}
+
+
+void Tile::ResetValues()
+{
+	this->ownerId = -1;
+	this->ownerDist = 200.0f * 200.0f;
+	this->isEdge = false;
+	this->isBridge = false;
 }
 
 
 float Tile::DistanceTo(floatPoint point)
 {
-	float dX = (this->x + this->repr.x - point.x);
-	float dY = (this->y + this->repr.y - point.y);
+	float dX = this->repr.x - point.x;
+	float dY = this->repr.y - point.y;
 
 	return sqrt(dX * dX + dY * dY);
 }
@@ -41,41 +37,43 @@ float Tile::DistanceTo(floatPoint point)
 vector<pair<int, int> > Tile::GetNeighbors(int tilesW, int tilesH)
 {
 	vector<pair<int, int> > neighbors;
-	bool roomLeft = this->x > 0;
-	bool roomRight = this->x < tilesW - 1;
-	bool roomUp = this->y > 0;
-	bool roomDown = this->y < tilesH - 1;
+	int x = (int)this->repr.x;
+	int y = (int)this->repr.y;
+	bool roomLeft = x > 0;
+	bool roomRight = x < tilesW - 1;
+	bool roomUp = y > 0;
+	bool roomDown = y < tilesH - 1;
 	if (roomLeft)
 	{
-		neighbors.push_back({this->x - 1, this->y});
+		neighbors.push_back({x - 1, y});
 		if (roomUp)
 		{
-			neighbors.push_back({ this->x - 1, this->y - 1 });
+			neighbors.push_back({ x - 1, y - 1 });
 		}
 		if (roomDown)
 		{
-			neighbors.push_back({ this->x - 1, this->y + 1 });
+			neighbors.push_back({ x - 1, y + 1 });
 		}
 	}
 	if (roomRight)
 	{
-		neighbors.push_back({ this->x + 1, this->y });
+		neighbors.push_back({ x + 1, y });
 		if (roomUp)
 		{
-			neighbors.push_back({ this->x + 1, this->y - 1 });
+			neighbors.push_back({ x + 1, y - 1 });
 		}
 		if (roomDown)
 		{
-			neighbors.push_back({ this->x + 1, this->y + 1 });
+			neighbors.push_back({ x + 1, y + 1 });
 		}
 	}
 	if (roomUp)
 	{
-		neighbors.push_back({ this->x, this->y - 1 });
+		neighbors.push_back({ x, y - 1 });
 	}
 	if (roomDown)
 	{
-		neighbors.push_back({ this->x, this->y + 1 });
+		neighbors.push_back({ x, y + 1 });
 	}
 	return neighbors;
 }

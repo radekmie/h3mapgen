@@ -20,7 +20,16 @@ struct floatPoint
 	float x;
 	float y;
 	floatPoint(float _x, float _y)
-	: x(_x)	, y(_y) {}
+	: x(_x), y(_y) {}
+};
+
+
+struct sectorIndex
+{
+	int row;
+	int col;
+	sectorIndex(int _row, int _col)
+	: row(_row), col(_col) {}
 };
 
 

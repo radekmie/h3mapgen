@@ -1,27 +1,5 @@
-
+/*
 #include "TileGridGenerator.h"
-
-
-TileGridGenerator::TileGridGenerator(pair<int, int> tilesDim, pair<int, int> sectorsDim)
-: tileGrid(tilesDim, sectorsDim)
-, sites()
-{
-
-}
-
-
-void TileGridGenerator::GenerateSites()
-{
-	if (Constants::GetUseGrid())
-	{
-		this->GenerateGridSites(Constants::GetSectorCols(), Constants::GetSectorRows(),
-			Constants::GetTilesHoriz(), Constants::GetTilesVerti());
-	}
-	else
-	{
-		this->GenerateRandomSites(Constants::GetPointsNum(), Constants::GetTilesHoriz(), Constants::GetTilesVerti());
-	}
-}
 
 
 void TileGridGenerator::ShowTiles()
@@ -45,18 +23,6 @@ void TileGridGenerator::ShowTiles()
 		out << "\n";
 	}
 	out.close();
-}
-
-
-vector<Site>& TileGridGenerator::GetSites()
-{
-	return this->sites;
-}
-
-
-Tile** TileGridGenerator::GetTiles()
-{
-	return this->tileGrid.GetTiles();
 }
 
 
@@ -154,12 +120,6 @@ void TileGridGenerator::GenerateRandomSites(int pointsNum, int width, int height
 		}
 		this->sites.push_back({ floatPoint{ nextX, nextY } });
 	}
-	//	sites.push_back({ floatPoint{ 43.2f, 16.72f, }, 0 });
-	//	sites.push_back({ floatPoint{ 13.33f, 30.9f }, 0 });
-	//	sites.push_back({ floatPoint{ 35.6f, 25.5f }, 0 });
-	//	sites.push_back({ floatPoint{ 15.6f, 5.5f }, 0 });
-	//	sites.push_back({ floatPoint{ 55.6f, 45.5f }, 0 });
-	//	sites.push_back({ floatPoint{ 25.6f, 35.5f }, 0 });
 }
 
 
@@ -184,3 +144,4 @@ void TileGridGenerator::GenerateGridSites(int pointsW, int pointsH, int width, i
 		}
 	}
 }
+*/
