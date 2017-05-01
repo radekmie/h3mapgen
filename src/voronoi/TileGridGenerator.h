@@ -22,8 +22,10 @@ public:
 	void GenerateSites();
 
 	void ShowTiles();
-	void AssignSectorIdByDistance();
-	void DivideBySector();
+	vector<Site>& GetSites();
+	Tile** GetTiles();
+	static Tile** AssignSectorIdByDistance(Tile **_tiles, vector<Site> _sites);
+	static Tile** DivideBySector(Tile **_tiles, vector<Site> _sites);
 
 private:
 	void GenerateRandomSites(int pointsNum, int width, int height);

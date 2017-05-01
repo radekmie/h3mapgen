@@ -152,3 +152,9 @@ int TileGrid::GetSectorIdAt(floatPoint point)
 	}
 	return -1;
 }
+
+
+Tile** TileGrid::GetTiles()
+{
+	return this->tiles;
+}

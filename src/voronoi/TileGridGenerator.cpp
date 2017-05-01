@@ -14,12 +14,12 @@ void TileGridGenerator::GenerateSites()
 {
 	if (Constants::GetUseGrid())
 	{
-		return this->GenerateGridSites(Constants::GetSectorCols(), Constants::GetSectorRows(),
+		this->GenerateGridSites(Constants::GetSectorCols(), Constants::GetSectorRows(),
 			Constants::GetTilesHoriz(), Constants::GetTilesVerti());
 	}
 	else
 	{
-		return this->GenerateRandomSites(Constants::GetPointsNum(), Constants::GetTilesHoriz(), Constants::GetTilesVerti());
+		this->GenerateRandomSites(Constants::GetPointsNum(), Constants::GetTilesHoriz(), Constants::GetTilesVerti());
 	}
 }
 
@@ -48,7 +48,19 @@ void TileGridGenerator::ShowTiles()
 }
 
 
-void TileGridGenerator::AssignSectorIdByDistance()
+vector<Site>& TileGridGenerator::GetSites()
+{
+	return this->sites;
+}
+
+
+Tile** TileGridGenerator::GetTiles()
+{
+	return this->tileGrid.GetTiles();
+}
+
+
+Tile** TileGridGenerator::AssignSectorIdByDistance(Tile **_tiles, vector<Site> _sites)
 {
 	for (int y = 0; y < Constants::GetTilesVerti(); ++y)
 	{
@@ -56,48 +68,49 @@ void TileGridGenerator::AssignSectorIdByDistance()
 		{
 			float minDist = 120.0f * 120.0f;
 			int closestSiteIndex = -1;
-			Tile& tile = tileGrid.GetTileAt(x, y);
-			for (int i = 0; i < (int)sites.size(); ++i)
+			Tile& tile = _tiles[y][x];
+			for (int i = 0; i < (int)_sites.size(); ++i)
 			{
-				float dist = tile.DistanceTo(floatPoint{ sites[i].point.x, sites[i].point.y });
+				float dist = tile.DistanceTo(floatPoint{ _sites[i].point.x, _sites[i].point.y });
 				if (dist < minDist)
 				{
 					minDist = dist;
 					closestSiteIndex = i;
 				}
 			}
-			sites[closestSiteIndex].size++;
+			_sites[closestSiteIndex].size++;
 			tile.closestSiteIndex = closestSiteIndex;
-			tile.sectorId = tileGrid.GetSectorIdAt(sites[closestSiteIndex].point);
+			tile.sectorId = _sites[closestSiteIndex].id;
 			tile.closestDist = minDist;
 		}
 	}
+	return _tiles;
 }
 
 
-void TileGridGenerator::DivideBySector()
+Tile** TileGridGenerator::DivideBySector(Tile **_tiles, vector<Site> _sites)
 {
 	for (int y = 0; y < Constants::GetTilesVerti(); ++y)
 	{
 		for (int x = 0; x < Constants::GetTilesHoriz(); ++x)
 		{
-			Tile& myTile = tileGrid.GetTileAt(x, y);
+			Tile& myTile = _tiles[y][x];
 			int mySiteIndex = myTile.closestSiteIndex;
 			int mySectorId = myTile.sectorId;
 			if (mySiteIndex == -1 || mySectorId == -1)
 			{
 				continue;
 			}
-			int mySize = sites[mySiteIndex].size;
+			int mySize = _sites[mySiteIndex].size;
 			vector<pair<int, int> > neighbors = myTile.GetNeighbors(Constants::GetTilesHoriz(), Constants::GetTilesVerti());
 			for (pair<int, int> neighbor : neighbors)
 			{
-				int hisSiteIndex = tileGrid.GetTileAt(neighbor.first, neighbor.second).closestSiteIndex;
-				int hisSectorId = tileGrid.GetTileAt(neighbor.first, neighbor.second).sectorId;
+				int hisSiteIndex = _tiles[neighbor.second][neighbor.first].closestSiteIndex;
+				int hisSectorId = _tiles[neighbor.second][neighbor.first].sectorId;
 				if (hisSectorId != -1
 					&& hisSectorId != mySectorId)
 				{
-					if (mySize > sites[hisSiteIndex].size || mySize == sites[hisSiteIndex].size && mySectorId < hisSectorId)
+					if (mySize > _sites[hisSiteIndex].size || mySize == _sites[hisSiteIndex].size && mySectorId < hisSectorId)
 					{
 						myTile.ResetClosest();
 						break;
@@ -106,6 +119,7 @@ void TileGridGenerator::DivideBySector()
 			}
 		}
 	}
+	return _tiles;
 }
 
 
@@ -165,7 +179,7 @@ void TileGridGenerator::GenerateGridSites(int pointsW, int pointsH, int width, i
 			{
 				float dX = (rand() % 7001) / 7001.0f * rangeW - rangeW / 2;
 				float dY = (rand() % 7001) / 7001.0f * rangeH - rangeH / 2;
-				this->sites.push_back({ floatPoint{ x + dX, y + dY }, id++ });
+				this->sites.push_back({ floatPoint{ x + dX, y + dY }, tileGrid.GetSectorIdAt(floatPoint{ x + dX, y + dY }) });
 			}
 		}
 	}
