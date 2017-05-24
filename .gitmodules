@@ -1,0 +1,3 @@
+[submodule "homm3tools"]
+	path = homm3tools
+	url = git@github.com:potmdehex/homm3tools.git
