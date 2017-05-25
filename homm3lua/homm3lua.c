@@ -2,48 +2,118 @@
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
+#include <string.h>
 
-static int test (lua_State *L) {
-  const char *path = luaL_checkstring(L, 1);
+static const char *HOMM3LUA_h3mlib_ctx_t = "homm3lua.h3mlib_ctx_t";
 
-  h3mlib_ctx_t h3m = NULL;
-  uint8_t terrain[H3M_SIZE_SMALL * H3M_SIZE_SMALL] = { 0 };
+// homm3lua.new(format, size)
+static int new (lua_State *L) {
+  const char *format_s = luaL_checkstring(L, 1);
+  char        format_n;
 
-  // Init a S size RoE map with standard settings
-  h3m_init_min(&h3m, H3M_FORMAT_ROE, H3M_SIZE_SMALL);
+       if (strcmp(format_s, "H3M_FORMAT_AB")  == 0) format_n = H3M_FORMAT_AB;
+  else if (strcmp(format_s, "H3M_FORMAT_CHR") == 0) format_n = H3M_FORMAT_CHR;
+  else if (strcmp(format_s, "H3M_FORMAT_ROE") == 0) format_n = H3M_FORMAT_ROE;
+  else if (strcmp(format_s, "H3M_FORMAT_SOD") == 0) format_n = H3M_FORMAT_SOD;
+  else if (strcmp(format_s, "H3M_FORMAT_WOG") == 0) format_n = H3M_FORMAT_WOG;
+  else return luaL_error(L, "Invalid format %s.", format_s);
 
-  // Fill map with lava terrain and "write" HELLO WORLD using objects
-  h3m_terrain_fill(h3m, H3M_TERRAIN_LAVA);
-  h3m_object_text(h3m, "Pandora's Box", 3, 2, 0, "HELLO");
-  h3m_object_text(h3m, "Master Gremlin", 3, 9, 0, "WORLD");
+  const char *size_s = luaL_checkstring(L, 2);
+  char        size_n;
 
-  // Set terrain background under HELLO to grass, WORLD to snow
-  h3m_terrain_get_all(h3m, 0, terrain, sizeof(terrain));
-  for (int x = 2; x < H3M_SIZE_SMALL - 4; ++x) {
-      for (int y = 1; y < 8; ++y) {
-          terrain[H3M_2D_TO_1D(H3M_SIZE_SMALL, x, y, 0)] = H3M_TERRAIN_GRASS;
-      }
+       if (strcmp(size_s, "H3M_SIZE_SMALL")      == 0) size_n = H3M_SIZE_SMALL;
+  else if (strcmp(size_s, "H3M_SIZE_EXTRALARGE") == 0) size_n = H3M_SIZE_EXTRALARGE;
+  else if (strcmp(size_s, "H3M_SIZE_LARGE")      == 0) size_n = H3M_SIZE_LARGE;
+  else if (strcmp(size_s, "H3M_SIZE_MEDIUM")     == 0) size_n = H3M_SIZE_MEDIUM;
+  else return luaL_error(L, "Invalid size %s.", size_s);
 
-      for (int y = 8; y < 15; ++y) {
-          terrain[H3M_2D_TO_1D(H3M_SIZE_SMALL, x, y, 0)] = H3M_TERRAIN_SNOW;
-      }
-  }
+  h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) lua_newuserdata(L, sizeof(h3mlib_ctx_t));
+  h3m_init_min(h3mlib_ctx, format_n, size_n);
 
-  h3m_terrain_set_all(h3m, 0, terrain);
+  luaL_setmetatable(L, HOMM3LUA_h3mlib_ctx_t);
 
-  // Write map and cleanup
-  h3m_write(h3m, path);
-  h3m_exit(&h3m);
+  return 1;
+}
+
+// homm3lua:__gc()
+static int __gc (lua_State *L) {
+  h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) luaL_checkudata(L, 1, HOMM3LUA_h3mlib_ctx_t);
+
+  h3m_exit(h3mlib_ctx);
 
   return 0;
 }
 
+// homm3lua:fill(tile)
+static int fill (lua_State *L) {
+  h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) luaL_checkudata(L, 1, HOMM3LUA_h3mlib_ctx_t);
+
+  const char *terrain_s = luaL_checkstring(L, 2);
+  char        terrain_n;
+
+       if (strcmp(terrain_s, "H3M_TERRAIN_DIRT")         == 0) terrain_n = H3M_TERRAIN_DIRT;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_GRASS")        == 0) terrain_n = H3M_TERRAIN_GRASS;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_LAVA")         == 0) terrain_n = H3M_TERRAIN_LAVA;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_ROCK")         == 0) terrain_n = H3M_TERRAIN_ROCK;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_ROUGH")        == 0) terrain_n = H3M_TERRAIN_ROUGH;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_SAND")         == 0) terrain_n = H3M_TERRAIN_SAND;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_SNOW")         == 0) terrain_n = H3M_TERRAIN_SNOW;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_SUBTERRANEAN") == 0) terrain_n = H3M_TERRAIN_SUBTERRANEAN;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_SWAMP")        == 0) terrain_n = H3M_TERRAIN_SWAMP;
+  else if (strcmp(terrain_s, "H3M_TERRAIN_WATER")        == 0) terrain_n = H3M_TERRAIN_WATER;
+  else return luaL_error(L, "Invalid terrain %s.", terrain_s);
+
+  h3m_terrain_fill(*h3mlib_ctx, terrain_n);
+
+  return 0;
+}
+
+// homm3lua:save(path)
+static int save (lua_State *L) {
+  h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) luaL_checkudata(L, 1, HOMM3LUA_h3mlib_ctx_t);
+
+  const char *path = luaL_checkstring(L, 2);
+
+  h3m_write(*h3mlib_ctx, path);
+
+  return 0;
+}
+
+// homm3lua:text(text, x, y, z, item)
+static int text (lua_State *L) {
+  h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) luaL_checkudata(L, 1, HOMM3LUA_h3mlib_ctx_t);
+
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+
+  const char *text = luaL_checkstring(L, 2);
+  const char *item = luaL_checkstring(L, 6);
+
+  h3m_object_text(*h3mlib_ctx, item, x, y, z, text);
+
+  return 0;
+}
+
+static const struct luaL_Reg homm3lua_h3mlib_ctx_t[] = {
+  {"__gc", __gc},
+  {"fill", fill},
+  {"save", save},
+  {"text", text},
+  {NULL, NULL}
+};
+
 static const struct luaL_Reg homm3lua[] = {
-  {"test", test},
+  {"new", new},
   {NULL, NULL}
 };
 
 int luaopen_homm3lua (lua_State *L) {
+  luaL_newmetatable(L, HOMM3LUA_h3mlib_ctx_t);
+  lua_pushvalue(L, -1);
+  lua_setfield(L, -2, "__index");
+  luaL_setfuncs(L, homm3lua_h3mlib_ctx_t, 0);
   luaL_newlib(L, homm3lua);
+
   return 1;
 }
