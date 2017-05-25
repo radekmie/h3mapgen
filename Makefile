@@ -21,7 +21,6 @@ clean:
 	$(MAKE) -C homm3tools/h3m/h3mtilespritegen/BUILD/gcc clean
 	$(MAKE) -C homm3tools/h3m/h3mlib/BUILD/gcc clean
 	rm -f $(OBJ) dist/homm3lua.so
-	find homm3tools -type f -name '*.so' -exec rm {} + # https://github.com/potmdehex/homm3tools/pull/25
 
 .PHONY: libs
 libs:
