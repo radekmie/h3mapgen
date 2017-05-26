@@ -1,4 +1,4 @@
-#include "homm3tools.h"
+#include "homm3lua_objects.h"
 
 int h3m_object_set_does_not_grow (h3mlib_ctx_t ctx, int od_index, int does_not_grow) {
   struct  H3M_OD_ENTRY  *h3m_od_entry = &ctx-> h3m.od.entries[od_index];
