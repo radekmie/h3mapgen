@@ -4,6 +4,8 @@
 #include <lualib.h>
 #include <string.h>
 
+#include "homm3tools.h"
+
 static const char *HOMM3LUA_h3mlib_ctx_t = "homm3lua.h3mlib_ctx_t";
 
 // homm3lua.new(format, size)
@@ -68,6 +70,41 @@ static int fill (lua_State *L) {
   return 0;
 }
 
+// homm3lua:mobs(name, x, y, z, quantity, disposition, never_flees, does_not_grow)
+static int mobs (lua_State *L) {
+  h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) luaL_checkudata(L, 1, HOMM3LUA_h3mlib_ctx_t);
+
+  const char *name = luaL_checkstring(L, 2);
+  const int does_not_grow = lua_toboolean(L, 9);
+  const int never_flees = lua_toboolean(L, 8);
+  const int quantity = luaL_checkinteger(L, 6);
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+
+  const char *disposition_s = luaL_checkstring(L, 7);
+  char        disposition_n;
+
+       if (strcmp(disposition_s, "H3M_DISPOSITION_AGGRESSIVE") == 0) disposition_n = H3M_DISPOSITION_AGGRESSIVE;
+  else if (strcmp(disposition_s, "H3M_DISPOSITION_COMPLIANT")  == 0) disposition_n = H3M_DISPOSITION_COMPLIANT;
+  else if (strcmp(disposition_s, "H3M_DISPOSITION_FRIENDLY")   == 0) disposition_n = H3M_DISPOSITION_FRIENDLY;
+  else if (strcmp(disposition_s, "H3M_DISPOSITION_HOSTILE")    == 0) disposition_n = H3M_DISPOSITION_HOSTILE;
+  else if (strcmp(disposition_s, "H3M_DISPOSITION_SAVAGE")     == 0) disposition_n = H3M_DISPOSITION_SAVAGE;
+  else return luaL_error(L, "Invalid disposition %s.", disposition_s);
+
+  luaL_checkoption(L, 2, NULL, HOMM3LUA_monsters);
+
+  int object = 0;
+
+  h3m_object_add(*h3mlib_ctx, name, x, y, z, &object);
+  h3m_object_set_quantitiy(*h3mlib_ctx, object, quantity);
+  h3m_object_set_disposition(*h3mlib_ctx, object, disposition_n);
+  h3m_object_set_never_flees(*h3mlib_ctx, object, never_flees);
+  h3m_object_set_does_not_grow(*h3mlib_ctx, object, does_not_grow);
+
+  return 0;
+}
+
 // homm3lua:save(path)
 static int save (lua_State *L) {
   h3mlib_ctx_t *h3mlib_ctx = (h3mlib_ctx_t *) luaL_checkudata(L, 1, HOMM3LUA_h3mlib_ctx_t);
@@ -98,6 +135,7 @@ static int text (lua_State *L) {
 static const struct luaL_Reg homm3lua_h3mlib_ctx_t[] = {
   {"__gc", __gc},
   {"fill", fill},
+  {"mobs", mobs},
   {"save", save},
   {"text", text},
   {NULL, NULL}

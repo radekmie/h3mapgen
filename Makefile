@@ -28,7 +28,7 @@ libs:
 	$(MAKE) -C homm3tools/h3m/h3mlib/BUILD/gcc install
 
 dist/homm3lua.so: $(OBJ) | libs
-	$(CC) $< $(STATICLIBS) $(CFLAGS) $(LDLIBS) -o $@
+	$(CC) $^ $(STATICLIBS) $(CFLAGS) $(LDLIBS) -o $@
 
 dist/%.o: homm3lua/%.c | dist
 	$(CC) $< -c $(CFLAGS) -o $@
