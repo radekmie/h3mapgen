@@ -87,6 +87,29 @@ static int fill (lua_State *L) {
   return 0;
 }
 
+// homm3lua:hero(hero, x, y, z, player)
+static int hero (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *hero = luaL_checkstring(L, 2);
+  const int class = h3mlua_check_class(L, 2);
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+  const int player = h3mlua_check_player(L, 6);
+
+  int object = 0;
+
+  if (h3m_object_add(*h3m, hero, x, y, z, &object))
+    return luaL_error(L, "h3m_object_add");
+  if (h3m_object_set_subtype(*h3m, object, class))
+    return luaL_error(L, "h3m_object_set_subtype");
+  if (h3m_object_set_owner(*h3m, object, player))
+    return luaL_error(L, "h3m_object_set_owner");
+
+  return 0;
+}
+
 // homm3lua:name(name)
 static int name (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -125,7 +148,7 @@ static int text (lua_State *L) {
   return 0;
 }
 
-// homm3lua:town(town, x, y, z, player)
+// homm3lua:town(town, x, y, z, owner)
 static int town (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -133,14 +156,13 @@ static int town (lua_State *L) {
   const int x = luaL_checkinteger(L, 3);
   const int y = luaL_checkinteger(L, 4);
   const int z = luaL_checkinteger(L, 5);
-  const int player = h3mlua_check_owner(L, 6);
+  const int owner = h3mlua_check_owner(L, 6);
 
   int object = 0;
 
   if (h3m_object_add(*h3m, town, x, y, z, &object))
     return luaL_error(L, "h3m_object_add");
-
-  if (player != -1 && h3m_object_set_owner(*h3m, object, player))
+  if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
     return luaL_error(L, "h3m_object_set_owner");
 
   return 0;
@@ -164,6 +186,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"description", description},
   {"difficulty", difficulty},
   {"fill", fill},
+  {"hero", hero},
   {"name", name},
   {"player", player},
   {"text", text},
