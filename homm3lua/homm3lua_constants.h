@@ -9,6 +9,8 @@
 
 int h3mlua_check_disposition (lua_State *L, int arg);
 int h3mlua_check_format      (lua_State *L, int arg);
+int h3mlua_check_owner       (lua_State *L, int arg);
+int h3mlua_check_player      (lua_State *L, int arg);
 int h3mlua_check_size        (lua_State *L, int arg);
 int h3mlua_check_terrain     (lua_State *L, int arg);
 

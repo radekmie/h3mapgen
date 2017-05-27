@@ -5,6 +5,8 @@ package.cpath = package.cpath .. ';dist/?.so;../dist/?.so'
 local homm3lua = require('homm3lua')
 local homm3luaInstance = homm3lua.new('H3M_FORMAT_ROE', 'H3M_SIZE_SMALL')
 
+homm3luaInstance:player(0)
+homm3luaInstance:player(1)
 homm3luaInstance:fill('H3M_TERRAIN_LAVA')
 homm3luaInstance:creature('Archangel', 3, 15, 0, 45, 'H3M_DISPOSITION_AGGRESSIVE', true, true)
 homm3luaInstance:creature('Archangel', 3, 16, 0, 45, 'H3M_DISPOSITION_COMPLIANT', true, false)

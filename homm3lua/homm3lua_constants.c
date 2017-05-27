@@ -9,7 +9,7 @@ int h3mlua_check_disposition (lua_State *L, int arg) {
   if (strcmp(disposition, "H3M_DISPOSITION_HOSTILE")    == 0) return H3M_DISPOSITION_HOSTILE;
   if (strcmp(disposition, "H3M_DISPOSITION_SAVAGE")     == 0) return H3M_DISPOSITION_SAVAGE;
 
-  return luaL_error(L, "Invalid disposition %s.", disposition);
+  return luaL_error(L, "Invalid disposition: %s.", disposition);
 }
 
 int h3mlua_check_format (lua_State *L, int arg) {
@@ -21,7 +21,25 @@ int h3mlua_check_format (lua_State *L, int arg) {
   if (strcmp(format, "H3M_FORMAT_SOD") == 0) return H3M_FORMAT_SOD;
   if (strcmp(format, "H3M_FORMAT_WOG") == 0) return H3M_FORMAT_WOG;
 
-  return luaL_error(L, "Invalid format %s.", format);
+  return luaL_error(L, "Invalid format: %s.", format);
+}
+
+int h3mlua_check_owner (lua_State *L, int arg) {
+  const int owner = luaL_checkinteger(L, arg);
+
+  if (owner >= -1 && owner <= 7)
+    return owner;
+
+  return luaL_error(L, "Invalid owner: %d.", owner);
+}
+
+int h3mlua_check_player (lua_State *L, int arg) {
+  const int player = luaL_checkinteger(L, arg);
+
+  if (player >= 0 && player <= 7)
+    return player;
+
+  return luaL_error(L, "Invalid player: %d.", player);
 }
 
 int h3mlua_check_size (lua_State *L, int arg) {
@@ -32,7 +50,7 @@ int h3mlua_check_size (lua_State *L, int arg) {
   if (strcmp(size, "H3M_SIZE_LARGE")      == 0) return H3M_SIZE_LARGE;
   if (strcmp(size, "H3M_SIZE_MEDIUM")     == 0) return H3M_SIZE_MEDIUM;
 
-  return luaL_error(L, "Invalid size %s.", size);
+  return luaL_error(L, "Invalid size: %s.", size);
 }
 
 int h3mlua_check_terrain (lua_State *L, int arg) {
@@ -49,5 +67,5 @@ int h3mlua_check_terrain (lua_State *L, int arg) {
   if (strcmp(terrain, "H3M_TERRAIN_SWAMP")        == 0) return H3M_TERRAIN_SWAMP;
   if (strcmp(terrain, "H3M_TERRAIN_WATER")        == 0) return H3M_TERRAIN_WATER;
 
-  return luaL_error(L, "Invalid terrain %s.", terrain);
+  return luaL_error(L, "Invalid terrain: %s.", terrain);
 }
