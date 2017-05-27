@@ -24,20 +24,8 @@ static int __gc (lua_State *L) {
   return 0;
 }
 
-// homm3lua:fill(tile)
-static int fill (lua_State *L) {
-  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
-
-  const int terrain = h3mlua_check_terrain(L, 2);
-
-  if (h3m_terrain_fill(*h3m, terrain))
-    return luaL_error(L, "h3m_terrain_fill");
-
-  return 0;
-}
-
-// homm3lua:mobs(creature, x, y, z, quantity, disposition, never_flees, does_not_grow)
-static int mobs (lua_State *L) {
+// homm3lua:creature(creature, x, y, z, quantity, disposition, never_flees, does_not_grow)
+static int creature (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *creature = luaL_checkstring(L, 2);
@@ -65,14 +53,14 @@ static int mobs (lua_State *L) {
   return 0;
 }
 
-// homm3lua:save(path)
-static int save (lua_State *L) {
+// homm3lua:fill(tile)
+static int fill (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
-  const char *path = luaL_checkstring(L, 2);
+  const int terrain = h3mlua_check_terrain(L, 2);
 
-  if (h3m_write(*h3m, path))
-    return luaL_error(L, "h3m_write");
+  if (h3m_terrain_fill(*h3m, terrain))
+    return luaL_error(L, "h3m_terrain_fill");
 
   return 0;
 }
@@ -94,12 +82,24 @@ static int text (lua_State *L) {
   return 0;
 }
 
+// homm3lua:write(path)
+static int write (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *path = luaL_checkstring(L, 2);
+
+  if (h3m_write(*h3m, path))
+    return luaL_error(L, "h3m_write");
+
+  return 0;
+}
+
 static const struct luaL_Reg h3mlua_instance[] = {
   {"__gc", __gc},
+  {"creature", creature},
   {"fill", fill},
-  {"mobs", mobs},
-  {"save", save},
   {"text", text},
+  {"write", write},
   {NULL, NULL}
 };
 
