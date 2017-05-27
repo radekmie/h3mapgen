@@ -64,6 +64,17 @@ static int description (lua_State *L) {
   return 0;
 }
 
+// homm3lua:difficulty(difficulty)
+static int difficulty (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const int difficulty = h3mlua_check_difficulty(L, 2);
+
+  h3m_difficulty_set(*h3m, difficulty);
+
+  return 0;
+}
+
 // homm3lua:fill(tile)
 static int fill (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -151,6 +162,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"__gc", __gc},
   {"creature", creature},
   {"description", description},
+  {"difficulty", difficulty},
   {"fill", fill},
   {"name", name},
   {"player", player},

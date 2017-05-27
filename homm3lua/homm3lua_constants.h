@@ -8,6 +8,7 @@
 #include <string.h>
 
 int h3mlua_check_disposition (lua_State *L, int arg);
+int h3mlua_check_difficulty  (lua_State *L, int arg);
 int h3mlua_check_format      (lua_State *L, int arg);
 int h3mlua_check_owner       (lua_State *L, int arg);
 int h3mlua_check_player      (lua_State *L, int arg);

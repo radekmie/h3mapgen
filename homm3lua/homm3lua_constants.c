@@ -12,6 +12,15 @@ int h3mlua_check_disposition (lua_State *L, int arg) {
   return luaL_error(L, "Invalid disposition: %s.", disposition);
 }
 
+int h3mlua_check_difficulty (lua_State *L, int arg) {
+  const int difficulty = luaL_checkinteger(L, arg);
+
+  if (difficulty >= 0 && difficulty <= 4)
+    return difficulty;
+
+  return luaL_error(L, "Invalid difficulty: %d.", difficulty);
+}
+
 int h3mlua_check_format (lua_State *L, int arg) {
   const char *format = luaL_checkstring(L, arg);
 
