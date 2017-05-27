@@ -53,6 +53,17 @@ static int creature (lua_State *L) {
   return 0;
 }
 
+// homm3lua:description(description)
+static int description (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *description = luaL_checkstring(L, 2);
+
+  h3m_desc_set(*h3m, description);
+
+  return 0;
+}
+
 // homm3lua:fill(tile)
 static int fill (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -139,6 +150,7 @@ static int write (lua_State *L) {
 static const struct luaL_Reg h3mlua_instance[] = {
   {"__gc", __gc},
   {"creature", creature},
+  {"description", description},
   {"fill", fill},
   {"name", name},
   {"player", player},

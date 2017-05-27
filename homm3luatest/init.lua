@@ -6,6 +6,7 @@ local homm3lua = require('homm3lua')
 local homm3luaInstance = homm3lua.new('H3M_FORMAT_ROE', 'H3M_SIZE_SMALL')
 
 homm3luaInstance:name('Test of homm3lua')
+homm3luaInstance:description('Example of everything we can do with homm3lua (at the moment).')
 homm3luaInstance:player(0)
 homm3luaInstance:player(1)
 homm3luaInstance:fill('H3M_TERRAIN_LAVA')
