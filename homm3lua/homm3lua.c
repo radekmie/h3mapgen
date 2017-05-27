@@ -69,15 +69,35 @@ static int fill (lua_State *L) {
 static int text (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
+  const char *text = luaL_checkstring(L, 2);
   const int x = luaL_checkinteger(L, 3);
   const int y = luaL_checkinteger(L, 4);
   const int z = luaL_checkinteger(L, 5);
-
-  const char *text = luaL_checkstring(L, 2);
   const char *item = luaL_checkstring(L, 6);
 
   if (h3m_object_text(*h3m, item, x, y, z, text))
     return luaL_error(L, "h3m_object_text");
+
+  return 0;
+}
+
+// homm3lua:town(town, x, y, z, player)
+static int town (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *town = luaL_checkstring(L, 2);
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+  const int player = luaL_checkinteger(L, 6);
+
+  int object = 0;
+
+  if (h3m_object_add(*h3m, town, x, y, z, &object))
+    return luaL_error(L, "h3m_object_add");
+
+  if (player != -1 && h3m_object_set_owner(*h3m, object, player))
+    return luaL_error(L, "h3m_object_set_owner");
 
   return 0;
 }
@@ -99,6 +119,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"creature", creature},
   {"fill", fill},
   {"text", text},
+  {"town", town},
   {"write", write},
   {NULL, NULL}
 };
