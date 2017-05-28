@@ -24,6 +24,23 @@ static int __gc (lua_State *L) {
   return 0;
 }
 
+// homm3lua:artifact(artifact, x, y, z)
+static int artifact (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *artifact = luaL_checkstring(L, 2);
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+
+  int object = 0;
+
+  if (h3m_object_add(*h3m, artifact, x, y, z, &object))
+    return luaL_error(L, "h3m_object_add");
+
+  return 0;
+}
+
 // homm3lua:creature(creature, x, y, z, quantity, disposition, never_flees, does_not_grow)
 static int creature (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -239,6 +256,7 @@ static int write (lua_State *L) {
 
 static const struct luaL_Reg h3mlua_instance[] = {
   {"__gc", __gc},
+  {"artifact", artifact},
   {"creature", creature},
   {"description", description},
   {"difficulty", difficulty},
