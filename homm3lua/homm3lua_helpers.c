@@ -1,4 +1,4 @@
-#include "homm3lua_objects.h"
+#include "homm3lua_helpers.h"
 
 void h3m_difficulty_set(h3mlib_ctx_t ctx, uint8_t difficulty) {
   ctx->h3m.bi.any.difficulty = difficulty;
