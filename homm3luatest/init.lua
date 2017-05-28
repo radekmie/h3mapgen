@@ -28,9 +28,9 @@ homm3luaInstance:town('Necropolis', 19, 3, 0, 4)
 homm3luaInstance:hero('Charna', 18, 4, 0, 4)
 homm3luaInstance:town('Dungeon', 23, 3, 0, 5)
 homm3luaInstance:hero('Ajit', 22, 4, 0, 5)
--- homm3luaInstance:town('Stronghold', 27, 3, 0, 6) -- https://github.com/potmdehex/homm3tools/issues/26
+homm3luaInstance:town('Stronghold', 27, 3, 0, 6)
 homm3luaInstance:hero('Crag Hack', 26, 4, 0, 6)
--- homm3luaInstance:town('Fortress', 31, 3, 0, 7)   -- https://github.com/potmdehex/homm3tools/issues/26
+homm3luaInstance:town('Fortress', 31, 3, 0, 7)
 homm3luaInstance:hero('Alkin', 30, 4, 0, 7)
 homm3luaInstance:town('Random Town', 35, 3, 0, -1)
 homm3luaInstance:text('HELLO', 4, 5, 0, 'Pandora\'s Box')
