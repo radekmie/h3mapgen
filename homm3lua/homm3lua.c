@@ -110,6 +110,26 @@ static int hero (lua_State *L) {
   return 0;
 }
 
+// homm3lua:mine(mine, x, y, z, owner)
+static int mine (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *mine = luaL_checkstring(L, 2);
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+  const int owner = h3mlua_check_owner(L, 6);
+
+  int object = 0;
+
+  if (h3m_object_add(*h3m, mine, x, y, z, &object))
+    return luaL_error(L, "h3m_object_add");
+  if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
+    return luaL_error(L, "h3m_object_set_owner");
+
+  return 0;
+}
+
 // homm3lua:name(name)
 static int name (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -187,6 +207,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"difficulty", difficulty},
   {"fill", fill},
   {"hero", hero},
+  {"mine", mine},
   {"name", name},
   {"player", player},
   {"text", text},
