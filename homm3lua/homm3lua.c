@@ -142,12 +142,32 @@ static int name (lua_State *L) {
 }
 
 // homm3lua:player(player)
-static int player(lua_State *L) {
+static int player (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const int player = h3mlua_check_player(L, 2);
 
   h3m_player_enable(*h3m, player);
+
+  return 0;
+}
+
+// homm3lua:resource(resource, x, y, z, quantity)
+static int resource (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const char *resource = luaL_checkstring(L, 2);
+  const int x = luaL_checkinteger(L, 3);
+  const int y = luaL_checkinteger(L, 4);
+  const int z = luaL_checkinteger(L, 5);
+  const int quantity = luaL_checkinteger(L, 6);
+
+  int object = 0;
+
+  if (h3m_object_add(*h3m, resource, x, y, z, &object))
+    return luaL_error(L, "h3m_object_add");
+  if (h3m_object_set_quantitiy(*h3m, object, quantity))
+    return luaL_error(L, "h3m_object_set_quantitiy");
 
   return 0;
 }
@@ -210,6 +230,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"mine", mine},
   {"name", name},
   {"player", player},
+  {"resource", resource},
   {"text", text},
   {"town", town},
   {"write", write},
