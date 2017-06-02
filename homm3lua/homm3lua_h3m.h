@@ -1,5 +1,5 @@
-#ifndef __H3MLUA_HELPERS_H_DEF__
-#define __H3MLUA_HELPERS_H_DEF__
+#ifndef __H3MLUA_H3M_H_DEF__
+#define __H3MLUA_H3M_H_DEF__
 
 #include <h3mlib.h>
 #include <internal/h3mlib_ctx.h>
