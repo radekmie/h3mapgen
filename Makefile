@@ -30,7 +30,7 @@ libs:
 dist/homm3lua.so: $(OBJ) | libs
 	$(CC) $^ $(STATICLIBS) $(CFLAGS) $(LDLIBS) -o $@
 
-dist/%.o: homm3lua/%.c | dist
+dist/%.o: homm3lua/%.c homm3lua/%.h | dist
 	$(CC) $< -c $(CFLAGS) -o $@
 
 dist:
