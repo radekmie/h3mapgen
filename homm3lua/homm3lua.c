@@ -35,6 +35,8 @@ static int artifact (lua_State *L) {
 
   if (h3m_object_add(*h3m, artifact, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
+  if ((*h3m)->meta.od_entries[object].oa_type != META_OBJECT_ARTIFACT)
+    return luaL_argerror(L, 2, "it's not an artifact");
 
   return 0;
 }
@@ -54,6 +56,8 @@ static int creature (lua_State *L) {
 
   if (h3m_object_add(*h3m, creature, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
+  if ((*h3m)->meta.od_entries[object].oa_type != META_OBJECT_MONSTER)
+    return luaL_argerror(L, 2, "it's not a creature");
   if (h3m_object_set_quantitiy(*h3m, object, quantity))
     return luaL_error(L, "h3m_object_set_quantitiy");
   if (h3m_object_set_disposition(*h3m, object, disposition))
@@ -108,8 +112,6 @@ static int hero (lua_State *L) {
   const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
   const int player = luaL_checkinteger(L, 4);
 
-  int object = 0;
-
   static const char *models[] = {
     "Knight",
     "Cleric",
@@ -131,8 +133,12 @@ static int hero (lua_State *L) {
     "Elementalist"
   };
 
+  int object = 0;
+
   if (h3m_object_add(*h3m, models[hero / 8], xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
+  if ((*h3m)->meta.od_entries[object].oa_type != META_OBJECT_HERO)
+    return luaL_argerror(L, 2, "it's not a hero");
   if (h3m_object_set_subtype(*h3m, object, hero))
     return luaL_error(L, "h3m_object_set_subtype");
   if (h3m_object_set_owner(*h3m, object, player))
@@ -153,6 +159,8 @@ static int mine (lua_State *L) {
 
   if (h3m_object_add(*h3m, mine, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
+  if ((*h3m)->meta.od_entries[object].oa_type != META_OBJECT_RESOURCE_GENERATOR)
+    return luaL_argerror(L, 2, "it's not a mine");
   if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
     return luaL_error(L, "h3m_object_set_owner");
 
@@ -208,6 +216,8 @@ static int resource (lua_State *L) {
 
   if (h3m_object_add(*h3m, resource, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
+  if ((*h3m)->meta.od_entries[object].oa_type != META_OBJECT_RESOURCE)
+    return luaL_argerror(L, 2, "it's not a resource");
   if (h3m_object_set_quantitiy(*h3m, object, quantity))
     return luaL_error(L, "h3m_object_set_quantitiy");
 
@@ -240,6 +250,8 @@ static int town (lua_State *L) {
 
   if (h3m_object_add(*h3m, town, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
+  if ((*h3m)->meta.od_entries[object].oa_type != META_OBJECT_TOWN)
+    return luaL_argerror(L, 2, "it's not a town");
   if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
     return luaL_error(L, "h3m_object_set_owner");
 
