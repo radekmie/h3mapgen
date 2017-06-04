@@ -3,14 +3,15 @@ package.cpath = package.cpath .. ';dist/?.so;../dist/?.so'
 
 -- Yay!
 local homm3lua = require('homm3lua')
-local instance = homm3lua.new(homm3lua.FORMAT_ROE, homm3lua.SIZE_SMALL)
+local instance = homm3lua.new(homm3lua.FORMAT_ROE, homm3lua.SIZE_MEDIUM)
 
 instance:name('Test of homm3lua')
 instance:description('Example of everything we can do with homm3lua (at the moment).')
 instance:difficulty(homm3lua.DIFFICULTY_IMPOSSIBLE)
 instance:player(homm3lua.PLAYER_1)
 instance:player(homm3lua.PLAYER_2)
-instance:fill(homm3lua.TERRAIN_LAVA)
+instance:fill(homm3lua.TERRAIN_SNOW)
+instance:shape(function (x, y, z, current) if x > 50 or y > 50 then return current end return (x // 6 + y // 3 + z) % 10 end)
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=15, z=0}, 45, homm3lua.DISPOSITION_AGGRESSIVE, true, true)
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=15, z=0}, 45, homm3lua.DISPOSITION_AGGRESSIVE, true, true)
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=16, z=0}, 45, homm3lua.DISPOSITION_COMPLIANT, true, false)

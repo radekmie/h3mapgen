@@ -224,6 +224,38 @@ static int resource (lua_State *L) {
   return 0;
 }
 
+// :shape({x, y, z} -> terrain)
+static int shape (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  luaL_checktype(L, 2, LUA_TFUNCTION);
+
+  uint8_t t[H3M_MAX_SIZE * H3M_MAX_SIZE];
+  uint8_t r[H3M_MAX_SIZE * H3M_MAX_SIZE];
+
+  memset(r, 0, sizeof(r));
+
+  h3m_terrain_get_all((*h3m), (*h3m)->h3m.bi.any.has_two_levels, t, sizeof(t));
+
+  for (int x = 0; x < (*h3m)->h3m.bi.any.map_size; ++x)
+  for (int y = 0; y < (*h3m)->h3m.bi.any.map_size; ++y)
+  for (int z = 0; z < 1 + (*h3m)->h3m.bi.any.has_two_levels; ++z) {
+    lua_pushvalue(L, 2);
+    lua_pushinteger(L, x);
+    lua_pushinteger(L, y);
+    lua_pushinteger(L, z);
+    lua_pushinteger(L, t[H3M_2D_TO_1D((*h3m)->h3m.bi.any.map_size, x, y, z)]);
+    lua_call(L, 4, 1);
+
+    t[H3M_2D_TO_1D((*h3m)->h3m.bi.any.map_size, x, y, z)] = luaL_checkinteger(L, -1);
+  }
+
+  if (h3m_generate_tiles((*h3m), (*h3m)->h3m.bi.any.map_size, (*h3m)->h3m.bi.any.has_two_levels, t, r, r))
+    return luaL_error(L, "h3m_generate_tiles");
+
+  return 0;
+}
+
 // :text(text, {x, y, z}, object)
 static int text (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -283,6 +315,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"obstacle", obstacle},
   {"player", player},
   {"resource", resource},
+  {"shape", shape},
   {"text", text},
   {"town", town},
   {"write", write},
