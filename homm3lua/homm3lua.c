@@ -24,39 +24,35 @@ static int __gc (lua_State *L) {
   return 0;
 }
 
-// :artifact(artifact, x, y, z)
+// :artifact(artifact, {x, y, z})
 static int artifact (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *artifact = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
 
   int object = 0;
 
-  if (h3m_object_add(*h3m, artifact, x, y, z, &object))
+  if (h3m_object_add(*h3m, artifact, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
 
   return 0;
 }
 
-// :creature(creature, x, y, z, quantity, disposition, never_flees, does_not_grow)
+// :creature(creature, {x, y, z}, quantity, disposition, never_flees, does_not_grow)
 static int creature (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *creature = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
-  const int quantity = luaL_checkinteger(L, 6);
-  const int disposition = luaL_checkinteger(L, 7);
-  const int never_flees = lua_toboolean(L, 8);
-  const int does_not_grow = lua_toboolean(L, 9);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
+  const int quantity = luaL_checkinteger(L, 4);
+  const int disposition = luaL_checkinteger(L, 5);
+  const int never_flees = lua_toboolean(L, 6);
+  const int does_not_grow = lua_toboolean(L, 7);
 
   int object = 0;
 
-  if (h3m_object_add(*h3m, creature, x, y, z, &object))
+  if (h3m_object_add(*h3m, creature, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
   if (h3m_object_set_quantitiy(*h3m, object, quantity))
     return luaL_error(L, "h3m_object_set_quantitiy");
@@ -104,15 +100,13 @@ static int fill (lua_State *L) {
   return 0;
 }
 
-// :hero(hero, x, y, z, player)
+// :hero(hero, {x, y, z}, player)
 static int hero (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const int hero = luaL_checkinteger(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
-  const int player = luaL_checkinteger(L, 6);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
+  const int player = luaL_checkinteger(L, 4);
 
   int object = 0;
 
@@ -137,7 +131,7 @@ static int hero (lua_State *L) {
     "Elementalist"
   };
 
-  if (h3m_object_add(*h3m, models[hero / 8], x, y, z, &object))
+  if (h3m_object_add(*h3m, models[hero / 8], xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
   if (h3m_object_set_subtype(*h3m, object, hero))
     return luaL_error(L, "h3m_object_set_subtype");
@@ -147,19 +141,17 @@ static int hero (lua_State *L) {
   return 0;
 }
 
-// :mine(mine, x, y, z, owner)
+// :mine(mine, {x, y, z}, owner)
 static int mine (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *mine = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
-  const int owner = luaL_checkinteger(L, 6);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
+  const int owner = luaL_checkinteger(L, 4);
 
   int object = 0;
 
-  if (h3m_object_add(*h3m, mine, x, y, z, &object))
+  if (h3m_object_add(*h3m, mine, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
   if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
     return luaL_error(L, "h3m_object_set_owner");
@@ -189,36 +181,32 @@ static int player (lua_State *L) {
   return 0;
 }
 
-// :obstacle(object, x, y, z)
+// :obstacle(obstacle, {x, y, z})
 static int obstacle (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
-  const char *object = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
+  const char *obstacle = luaL_checkstring(L, 2);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
 
   int object = 0;
 
-  if (h3m_object_add(*h3m, object, x, y, z, &object))
+  if (h3m_object_add(*h3m, obstacle, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
 
   return 0;
 }
 
-// :resource(resource, x, y, z, quantity)
+// :resource(resource, {x, y, z}, quantity)
 static int resource (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *resource = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
-  const int quantity = luaL_checkinteger(L, 6);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
+  const int quantity = luaL_checkinteger(L, 4);
 
   int object = 0;
 
-  if (h3m_object_add(*h3m, resource, x, y, z, &object))
+  if (h3m_object_add(*h3m, resource, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
   if (h3m_object_set_quantitiy(*h3m, object, quantity))
     return luaL_error(L, "h3m_object_set_quantitiy");
@@ -226,35 +214,31 @@ static int resource (lua_State *L) {
   return 0;
 }
 
-// :text(text, x, y, z, object)
+// :text(text, {x, y, z}, object)
 static int text (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *text = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
-  const char *object = luaL_checkstring(L, 6);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
+  const char *object = luaL_checkstring(L, 4);
 
-  if (h3m_object_text(*h3m, object, x, y, z, text))
+  if (h3m_object_text(*h3m, object, xyz.x, xyz.y, xyz.z, text))
     return luaL_error(L, "h3m_object_text");
 
   return 0;
 }
 
-// :town(town, x, y, z, owner)
+// :town(town, {x, y, z}, owner)
 static int town (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *town = luaL_checkstring(L, 2);
-  const int x = luaL_checkinteger(L, 3);
-  const int y = luaL_checkinteger(L, 4);
-  const int z = luaL_checkinteger(L, 5);
-  const int owner = luaL_checkinteger(L, 6);
+  const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
+  const int owner = luaL_checkinteger(L, 4);
 
   int object = 0;
 
-  if (h3m_object_add(*h3m, town, x, y, z, &object))
+  if (h3m_object_add(*h3m, town, xyz.x, xyz.y, xyz.z, &object))
     return luaL_error(L, "h3m_object_add");
   if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
     return luaL_error(L, "h3m_object_set_owner");
