@@ -789,7 +789,6 @@ int luaopen_homm3lua (lua_State *L) {
   literal("CREATURE_WYVERN_MONARCH",                 "Wyvern Monarch");
   literal("CREATURE_ZEALOT",                         "Zealot");
   literal("CREATURE_ZOMBIE",                         "Zombie");
-  literal("MINE_ABANDONED_MINE",                     "Abandoned Mine");
   literal("MINE_ALCHEMISTS_LAB",                     "Alchemist's Lab");
   literal("MINE_CRYSTAL_CAVERN",                     "Crystal Cavern");
   literal("MINE_GEM_POND",                           "Gem Pond");

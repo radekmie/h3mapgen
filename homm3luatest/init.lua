@@ -24,7 +24,6 @@ instance:mine(homm3lua.MINE_SULFUR_DUNE, {x=16, y=17, z=0}, homm3lua.OWNER_NEUTR
 instance:mine(homm3lua.MINE_CRYSTAL_CAVERN, {x=19, y=17, z=0}, homm3lua.OWNER_NEUTRAL)
 instance:mine(homm3lua.MINE_GEM_POND, {x=22, y=17, z=0}, homm3lua.OWNER_NEUTRAL)
 instance:mine(homm3lua.MINE_GOLD_MINE, {x=25, y=17, z=0}, homm3lua.OWNER_NEUTRAL)
-instance:mine(homm3lua.MINE_ABANDONED_MINE, {x=28, y=17, z=0}, homm3lua.OWNER_NEUTRAL)
 instance:artifact(homm3lua.ARTIFACT_PENDANT_OF_DISPASSION, {x=17, y=15, z=0})
 instance:artifact(homm3lua.ARTIFACT_PENDANT_OF_SECOND_SIGHT, {x=18, y=15, z=0})
 instance:artifact(homm3lua.ARTIFACT_PENDANT_OF_HOLINESS, {x=19, y=15, z=0})
