@@ -218,7 +218,6 @@ static int terrain (lua_State *L) {
 
   switch (lua_type(L, 2)) {
     case LUA_TFUNCTION: {
-
       uint8_t t[H3M_MAX_SIZE * H3M_MAX_SIZE];
       uint8_t r[H3M_MAX_SIZE * H3M_MAX_SIZE];
 

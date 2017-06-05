@@ -7,7 +7,7 @@ STATICLIBS := $(LIBDIR)/h3mlib.a $(LIBDIR)/h3mtilespritegen.a
 LUAC := $(shell pkg-config --cflags lua53)
 LUAL := $(shell pkg-config --libs   lua53)
 
-CFLAGS := $(LUAC) -W -Wall -Wextra -O2 -fPIC -shared -std=c99 $(INC)
+CFLAGS := $(LUAC) -W -Wall -Wextra -O3 -fPIC -shared -std=c99 $(INC)
 LDLIBS := $(LUAL)
 LFLAGS := -L $(LIBDIR)
 
