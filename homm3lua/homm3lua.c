@@ -218,28 +218,35 @@ static int terrain (lua_State *L) {
 
   switch (lua_type(L, 2)) {
     case LUA_TFUNCTION: {
-      uint8_t t[H3M_MAX_SIZE * H3M_MAX_SIZE];
-      uint8_t r[H3M_MAX_SIZE * H3M_MAX_SIZE];
+      const int both = (*h3m)->h3m.bi.any.has_two_levels;
+      const int size = (*h3m)->h3m.bi.any.map_size;
 
-      memset(r, 0, sizeof(r));
+      uint8_t *t = malloc((1 + both) * size * size);
+      uint8_t *r = calloc((1 + both) * size * size, 1);
 
-      h3m_terrain_get_all((*h3m), (*h3m)->h3m.bi.any.has_two_levels, t, sizeof(t));
+      h3m_terrain_get_all((*h3m), both, t, (both ? 2 : 1) * size * size);
 
-      for (int x = 0; x < (int)(*h3m)->h3m.bi.any.map_size; ++x)
-      for (int y = 0; y < (int)(*h3m)->h3m.bi.any.map_size; ++y)
-      for (int z = 0; z < 1 + (*h3m)->h3m.bi.any.has_two_levels; ++z) {
+      for (int x = 0; x < size; ++x)
+      for (int y = 0; y < size; ++y)
+      for (int z = 0; z < 1 + both; ++z) {
         lua_pushvalue(L, 2);
         lua_pushinteger(L, x);
         lua_pushinteger(L, y);
         lua_pushinteger(L, z);
-        lua_pushinteger(L, t[H3M_2D_TO_1D((*h3m)->h3m.bi.any.map_size, x, y, z)]);
+        lua_pushinteger(L, t[H3M_2D_TO_1D(size, x, y, z)]);
         lua_call(L, 4, 1);
 
-        t[H3M_2D_TO_1D((*h3m)->h3m.bi.any.map_size, x, y, z)] = luaL_checkinteger(L, -1);
+        t[H3M_2D_TO_1D(size, x, y, z)] = luaL_checkinteger(L, -1);
       }
 
-      if (h3m_generate_tiles((*h3m), (*h3m)->h3m.bi.any.map_size, (*h3m)->h3m.bi.any.has_two_levels, t, r, r))
+      if (h3m_generate_tiles((*h3m), size, 0, t, r, r))
         return luaL_error(L, "h3m_generate_tiles");
+      if (both && h3m_generate_tiles((*h3m), size, 1, t + size * size, r, r))
+        return luaL_error(L, "h3m_generate_tiles");
+
+      free(t);
+      free(r);
+
       break;
     }
 
@@ -292,6 +299,17 @@ static int town (lua_State *L) {
   return 0;
 }
 
+// :underground(has_two_levels)
+static int underground (lua_State *L) {
+  h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
+
+  const uint8_t has_two_levels = lua_toboolean(L, 2);
+
+  (*h3m)->h3m.bi.any.has_two_levels = has_two_levels;
+
+  return 0;
+}
+
 // :write(path)
 static int write (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
@@ -319,6 +337,7 @@ static const struct luaL_Reg h3mlua_instance[] = {
   {"terrain", terrain},
   {"text", text},
   {"town", town},
+  {"underground", underground},
   {"write", write},
   {NULL, NULL}
 };

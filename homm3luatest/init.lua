@@ -9,6 +9,8 @@ local instance = homm3lua.new(homm3lua.FORMAT_ROE, homm3lua.SIZE_EXTRALARGE)
 instance:name('Test of homm3lua')
 instance:description('Example of everything we can do with homm3lua (at the moment).')
 instance:difficulty(homm3lua.DIFFICULTY_IMPOSSIBLE)
+-- https://github.com/potmdehex/homm3tools/pull/30
+-- instance:underground(true)
 
 instance:player(homm3lua.PLAYER_1)
 instance:player(homm3lua.PLAYER_2)
@@ -16,6 +18,10 @@ instance:player(homm3lua.PLAYER_2)
 -- Terrain
 instance:terrain(homm3lua.TERRAIN_GRASS)
 instance:terrain(function (x, y, z, current)
+    if z == 1 then
+        return homm3lua.TERRAIN_ROCK
+    end
+
     if x < 40 and y < 20 then
         return current
     end
