@@ -3,7 +3,7 @@ package.cpath = package.cpath .. ';dist/?.so;../dist/?.so'
 
 -- Yay!
 local homm3lua = require('homm3lua')
-local instance = homm3lua.new(homm3lua.FORMAT_ROE, homm3lua.SIZE_MEDIUM)
+local instance = homm3lua.new(homm3lua.FORMAT_ROE, homm3lua.SIZE_EXTRALARGE)
 
 -- General informations
 instance:name('Test of homm3lua')
@@ -14,13 +14,21 @@ instance:player(homm3lua.PLAYER_1)
 instance:player(homm3lua.PLAYER_2)
 
 -- Terrain
-instance:terrain(homm3lua.TERRAIN_SNOW)
+instance:terrain(homm3lua.TERRAIN_GRASS)
 instance:terrain(function (x, y, z, current)
-    if x > 50 or y > 50 then
+    if x < 40 and y < 20 then
         return current
     end
 
-    return (x // 6 + y // 3 + z) % 10
+    local f = require('math').sin
+    local range = 8 * math.pi
+    local scale = homm3lua.SIZE_EXTRALARGE
+
+    local nx = x / scale * range
+    local ny = (scale // 2 - y) / (scale // 2)
+    local ok = 1 / scale
+
+    return math.min(math.floor((math.abs(ny - f(nx)) - ok) * 2), 2) + 7
 end)
 
 -- Creatures
