@@ -212,7 +212,7 @@ static int resource (lua_State *L) {
   return 0;
 }
 
-// :terrain(terrain | {x, y, z} -> terrain)
+// :terrain(terrain | {x, y, z} -> (terrain?, road?, river?))
 static int terrain (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -220,32 +220,40 @@ static int terrain (lua_State *L) {
     case LUA_TFUNCTION: {
       const int both = (*h3m)->h3m.bi.any.has_two_levels;
       const int size = (*h3m)->h3m.bi.any.map_size;
+      const int size2 = size * size;
 
-      uint8_t *t = malloc((1 + both) * size * size);
-      uint8_t *r = calloc((1 + both) * size * size, 1);
+      uint8_t *rivers  = calloc((1 + both) * size2, sizeof(uint8_t));
+      uint8_t *roads   = calloc((1 + both) * size2, sizeof(uint8_t));
+      uint8_t *terrain = malloc((1 + both) * size2);
 
-      h3m_terrain_get_all((*h3m), both, t, (both ? 2 : 1) * size * size);
+      h3m_terrain_get_all((*h3m), both, terrain, (1 + both) * size2);
 
-      for (int x = 0; x < size; ++x)
+      for (int z = 0; z < 1 + both; ++z)
       for (int y = 0; y < size; ++y)
-      for (int z = 0; z < 1 + both; ++z) {
+      for (int x = 0; x < size; ++x) {
+        const int index = H3M_2D_TO_1D(size, x, y, z);
+
         lua_pushvalue(L, 2);
         lua_pushinteger(L, x);
         lua_pushinteger(L, y);
         lua_pushinteger(L, z);
-        lua_pushinteger(L, t[H3M_2D_TO_1D(size, x, y, z)]);
-        lua_call(L, 4, 1);
+        lua_call(L, 3, 3);
 
-        t[H3M_2D_TO_1D(size, x, y, z)] = luaL_checkinteger(L, -1);
+        if (!lua_isnil(L, -1)) rivers [index] = luaL_checkinteger(L, -1);
+        if (!lua_isnil(L, -2)) roads  [index] = luaL_checkinteger(L, -2);
+        if (!lua_isnil(L, -3)) terrain[index] = luaL_checkinteger(L, -3);
+
+        lua_pop(L, 3);
       }
 
-      if (h3m_generate_tiles((*h3m), size, 0, t, r, r))
+      if (h3m_generate_tiles((*h3m), size, 0, terrain, roads, rivers))
         return luaL_error(L, "h3m_generate_tiles");
-      if (both && h3m_generate_tiles((*h3m), size, 1, t + size * size, r, r))
+      if (both && h3m_generate_tiles((*h3m), size, 1, terrain + size2, roads + size2, rivers + size2))
         return luaL_error(L, "h3m_generate_tiles");
 
-      free(t);
-      free(r);
+      free(rivers);
+      free(roads);
+      free(terrain);
 
       break;
     }
