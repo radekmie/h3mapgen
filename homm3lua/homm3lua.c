@@ -226,7 +226,10 @@ static int terrain (lua_State *L) {
       uint8_t *roads   = calloc((1 + both) * size2, sizeof(uint8_t));
       uint8_t *terrain = malloc((1 + both) * size2);
 
-      h3m_terrain_get_all((*h3m), both, terrain, (1 + both) * size2);
+      if (h3m_terrain_get_all((*h3m), 0, terrain, size2))
+        return luaL_error(L, "h3m_terrain_get_all");
+      if (both && h3m_terrain_get_all((*h3m), 1, terrain, size2))
+        return luaL_error(L, "h3m_terrain_get_all");
 
       for (int z = 0; z < 1 + both; ++z)
       for (int y = 0; y < size; ++y)

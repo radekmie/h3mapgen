@@ -9,8 +9,7 @@ local instance = homm3lua.new(homm3lua.FORMAT_ROE, homm3lua.SIZE_EXTRALARGE)
 instance:name('Test of homm3lua')
 instance:description('Example of everything we can do with homm3lua (at the moment).')
 instance:difficulty(homm3lua.DIFFICULTY_IMPOSSIBLE)
--- https://github.com/potmdehex/homm3tools/pull/30
--- instance:underground(true)
+instance:underground(true)
 
 instance:player(homm3lua.PLAYER_1)
 instance:player(homm3lua.PLAYER_2)
