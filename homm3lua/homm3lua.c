@@ -329,6 +329,11 @@ static int write (lua_State *L) {
 
   if (h3m_write(*h3m, path))
     return luaL_error(L, "h3m_write");
+  // https://github.com/potmdehex/homm3tools/issues/31
+  // Meanwhile, normal gzip is working:
+  //   gzip path && mv path.gz path
+  // if (h3m_compress(path, path))
+  //   return luaL_error(L, "h3m_compress");
 
   return 0;
 }
