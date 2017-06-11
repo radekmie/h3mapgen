@@ -13,6 +13,12 @@ instance:underground(true)
 
 instance:player(homm3lua.PLAYER_1)
 instance:player(homm3lua.PLAYER_2)
+instance:player(homm3lua.PLAYER_3)
+instance:player(homm3lua.PLAYER_4)
+instance:player(homm3lua.PLAYER_5)
+instance:player(homm3lua.PLAYER_6)
+instance:player(homm3lua.PLAYER_7)
+instance:player(homm3lua.PLAYER_8)
 
 -- Terrain
 instance:terrain(homm3lua.TERRAIN_GRASS)
