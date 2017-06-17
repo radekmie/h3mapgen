@@ -1,0 +1,104 @@
+
+LML_graph = 
+{
+  {
+    class = 
+    {
+      { level=0, type="LOCAL", },
+    },
+    edges = { [2]=true, },
+    features = 
+    {
+      {
+        class = { level=0, type="LOCAL", },
+        type = "TOWN",
+        value = "PLAYER",
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=1, type="LOCAL", },
+    },
+    edges = { [1]=true, [3]=true, },
+    features = 
+    {
+      {
+        class = { level=1, type="LOCAL", },
+        type = "MINE",
+        value = "???",
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=5, type="BUFFER", },
+    },
+    edges = { [2]=true, },
+    features = 
+    {
+      {
+        class = { level=5, type="BUFFER", },
+        type = "OUTER",
+        value = 0,
+      },
+    },
+  },
+}
+
+LML_init = 
+{
+  class = 
+  {
+    { level=0, type="LOCAL", },
+    { level=1, type="LOCAL", },
+    { level=5, type="BUFFER", },
+  },
+  features = 
+  {
+    {
+      class = { level=0, type="LOCAL", },
+      type = "TOWN",
+      value = "PLAYER",
+    },
+    {
+      class = { level=1, type="LOCAL", },
+      type = "MINE",
+      value = "???",
+    },
+    {
+      class = { level=5, type="BUFFER", },
+      type = "OUTER",
+      value = 0,
+    },
+  },
+}
+
+LML_interface = 
+{
+  {
+    edges = { 2, },
+    id = 1,
+    outer = { },
+    type = "LOCAL",
+  },
+  {
+    edges = { 1, 3, },
+    id = 2,
+    outer = { },
+    type = "LOCAL",
+  },
+  {
+    edges = { 2, },
+    id = 3,
+    outer = { 0, },
+    type = "BUFFER",
+  },
+}
+
+LML_seed = -1
+
+version = "0.0001a"
+

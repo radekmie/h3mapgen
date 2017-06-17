@@ -1,0 +1,282 @@
+
+LML_graph = 
+{
+  {
+    class = 
+    {
+      { level=0, type="LOCAL", },
+    },
+    edges = { [2]=true, },
+    features = 
+    {
+      {
+        class = { level=0, type="LOCAL", },
+        type = "TOWN",
+        value = "PLAYER",
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=1, type="LOCAL", },
+    },
+    edges = { [1]=true, [3]=true, [4]=true, },
+    features = 
+    {
+      {
+        class = { level=1, type="LOCAL", },
+        type = "MINE",
+        value = "???",
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=4, type="BUFFER", },
+    },
+    edges = { [2]=true, [5]=true, [6]=true, },
+    features = { },
+  },
+  {
+    class = 
+    {
+      { level=2, type="LOCAL", },
+    },
+    edges = { [2]=true, [7]=true, [8]=true, [9]=true, },
+    features = { },
+  },
+  {
+    class = 
+    {
+      { level=5, type="BUFFER", },
+    },
+    edges = { [3]=true, },
+    features = 
+    {
+      {
+        class = { level=5, type="BUFFER", },
+        type = "MINE",
+        value = "???",
+      },
+      {
+        class = { level=5, type="BUFFER", },
+        type = "OUTER",
+        value = 0,
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=4, type="BUFFER", },
+    },
+    edges = { [3]=true, },
+    features = 
+    {
+      {
+        class = { level=4, type="BUFFER", },
+        type = "TOWN",
+        value = "NEUTRAL",
+      },
+      {
+        class = { level=4, type="BUFFER", },
+        type = "OUTER",
+        value = 0,
+      },
+      {
+        class = { level=4, type="BUFFER", },
+        type = "OUTER",
+        value = 0,
+      },
+      {
+        class = { level=4, type="BUFFER", },
+        type = "OUTER",
+        value = 0,
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=5, type="LOCAL", },
+    },
+    edges = { [4]=true, },
+    features = 
+    {
+      {
+        class = { level=5, type="LOCAL", },
+        type = "TOWN",
+        value = "NEUTRAL",
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=3, type="LOCAL", },
+    },
+    edges = { [4]=true, },
+    features = 
+    {
+      {
+        class = { level=3, type="LOCAL", },
+        type = "OUTER",
+        value = 6,
+      },
+    },
+  },
+  {
+    class = 
+    {
+      { level=2, type="LOCAL", },
+    },
+    edges = { [4]=true, },
+    features = 
+    {
+      {
+        class = { level=2, type="LOCAL", },
+        type = "MINE",
+        value = "???",
+      },
+    },
+  },
+}
+
+LML_init = 
+{
+  class = 
+  {
+    { level=0, type="LOCAL", },
+    { level=1, type="LOCAL", },
+    { level=2, type="LOCAL", },
+    { level=2, type="LOCAL", },
+    { level=3, type="LOCAL", },
+    { level=5, type="LOCAL", },
+    { level=4, type="BUFFER", },
+    { level=4, type="BUFFER", },
+    { level=5, type="BUFFER", },
+  },
+  features = 
+  {
+    {
+      class = { level=0, type="LOCAL", },
+      type = "TOWN",
+      value = "PLAYER",
+    },
+    {
+      class = { level=1, type="LOCAL", },
+      type = "MINE",
+      value = "???",
+    },
+    {
+      class = { level=2, type="LOCAL", },
+      type = "MINE",
+      value = "???",
+    },
+    {
+      class = { level=3, type="LOCAL", },
+      type = "OUTER",
+      value = 6,
+    },
+    {
+      class = { level=5, type="LOCAL", },
+      type = "TOWN",
+      value = "NEUTRAL",
+    },
+    {
+      class = { level=4, type="BUFFER", },
+      type = "TOWN",
+      value = "NEUTRAL",
+    },
+    {
+      class = { level=5, type="BUFFER", },
+      type = "MINE",
+      value = "???",
+    },
+    {
+      class = { level=4, type="BUFFER", },
+      type = "OUTER",
+      value = 0,
+    },
+    {
+      class = { level=4, type="BUFFER", },
+      type = "OUTER",
+      value = 0,
+    },
+    {
+      class = { level=4, type="BUFFER", },
+      type = "OUTER",
+      value = 0,
+    },
+    {
+      class = { level=5, type="BUFFER", },
+      type = "OUTER",
+      value = 0,
+    },
+  },
+}
+
+LML_interface = 
+{
+  {
+    edges = { 2, },
+    id = 1,
+    outer = { },
+    type = "LOCAL",
+  },
+  {
+    edges = { 1, 3, 4, },
+    id = 2,
+    outer = { },
+    type = "LOCAL",
+  },
+  {
+    edges = { 5, 2, 6, },
+    id = 3,
+    outer = { },
+    type = "BUFFER",
+  },
+  {
+    edges = { 8, 9, 2, 7, },
+    id = 4,
+    outer = { },
+    type = "LOCAL",
+  },
+  {
+    edges = { 3, },
+    id = 5,
+    outer = { 0, },
+    type = "BUFFER",
+  },
+  {
+    edges = { 3, },
+    id = 6,
+    outer = { 0, 0, 0, },
+    type = "BUFFER",
+  },
+  {
+    edges = { 4, },
+    id = 7,
+    outer = { },
+    type = "LOCAL",
+  },
+  {
+    edges = { 4, },
+    id = 8,
+    outer = { 6, },
+    type = "LOCAL",
+  },
+  {
+    edges = { 4, },
+    id = 9,
+    outer = { },
+    type = "LOCAL",
+  },
+}
+
+LML_seed = -1
+
+version = "0.0001a"
+

@@ -1,0 +1,26 @@
+
+
+
+- rozszerzyć serializację o obsługę tabel jako kluczy
+- rozszerzyć serializację o level -1 bez zewnętrznych nawiasów
+- dopisac w aux hpgm który zapisuje i odczytuje pliki h3pgm  (ogólnie config?)
+- dopisać w aux wrapper na graphviza - tworzący obiekt, nodes itd itp, a nastepnie zapisujący do zadanego pliku
+
+
+- dopisać obsługę seeda
+
+- dopisać generowanie 
+- dopisać iterator do wybierania produkcji
+- desc, short_desc
+
+
+
+- lml config: production_apply limit, todo
+
+
+
+- dopisac przykładową produkcję i liba
+
+
+-- co jeśli buffer wyląduje bez żadnej outer edge???
+
