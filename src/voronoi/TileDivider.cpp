@@ -53,7 +53,7 @@ void TileDivider::CreateSites(vector<pair<int, floatPoint> > &_sites, int _id, f
 void TileDivider::RunVoronoi(vector<pair<int, floatPoint> > _sites)
 {
 	// assign tile ids base on simple voronoi with given sites.
-	cout << "Running voronoi\n" << this->tilesDimensions.first << ", " << this->tilesDimensions.second << endl;
+	cout << "Running voronoi\n";
 	for (int y = 0; y < this->tilesDimensions.first; ++y)
 	{
 		for (int x = 0; x < this->tilesDimensions.second; ++x)
@@ -64,7 +64,6 @@ void TileDivider::RunVoronoi(vector<pair<int, floatPoint> > _sites)
 			for (int i = 0; i < (int)_sites.size(); ++i)
 			{
 				float dist = tile.DistanceTo(floatPoint{ _sites[i].second.x, _sites[i].second.y });
-//				cout << "Comparing to " << _sites[i].first << ", dist: " << dist << endl;
 				if (dist < tile.ownerDist)
 				{
 					tile.ownerDist = dist;
@@ -95,6 +94,7 @@ void TileDivider::RunVoronoi(vector<pair<int, floatPoint> > _sites)
 					if (myOwnerDist > hisOwnerDist || myOwnerDist == hisOwnerDist && myOwnerId < hisOwnerId)
 					{
 						tile.ResetValues();
+						tile.isEdge = true;
 						break;
 					}
 				}

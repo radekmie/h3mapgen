@@ -5,7 +5,7 @@
 #include "Common.h"
 #include "Tile.h"
 #include "SectorLoader.h"
-#include "ExactSectorLoader.h"
+#include "BresenhamSectorLoader.h"
 #include "TileDivider.h"
 
 
@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 {
 	srand((unsigned int)time(NULL));
 
-	ExactSectorLoader sectorLoader;
+	BresenhamSectorLoader sectorLoader;
 	sectorLoader.LoadSectors("graphInput.txt");
 
 	TileDivider voronoiDivider(sectorLoader.GetSectors(), sectorLoader.GetDimensions());
@@ -33,20 +33,20 @@ int main(int argc, char** argv)
 	{
 		for (int x = 0; x < Constants::tilesHoriz; ++x)
 		{
-			int ownerId = newTiles[x][y].ownerId;
-			if (ownerId == -1)
+			int ownerId = newTiles[y][x].ownerId;
+			if (newTiles[y][x].isBridge)
+			{
+				// superwhite
+				output << ".";
+			}
+			else if (newTiles[y][x].isEdge)
 			{
 				// superblack
 				output << "$";
 			}
 			else
 			{
-				if (newTiles[x][y].isBridge)
-				{
-					// superwhite
-					output << ".";
-				}
-				else if (newTiles[x][y].ownerDist > 60.0f)
+				if (newTiles[y][x].ownerDist > 60.0f)
 				{
 					// black
 					output << "#";
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 				else
 				{
 					// white
-					output << ownerId;
+					output << ownerId % 10;
 				}
 			}
 		}

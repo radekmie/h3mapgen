@@ -56,6 +56,14 @@ void SectorLoader::LoadSectors(string _inputFile)
 		int row = (int)(sY / this->diffH);
 		Sector& sector = this->sectors[row][col];
 		sector = this->HandleNewSector(sId, sWeight, col, row, { sX, sY });
+		int neighborsNum;
+		input >> neighborsNum;
+		for (int i = 0; i < neighborsNum; ++i)
+		{
+			floatPoint neighborPos{ 0.0f, 0.0f };
+			input >> neighborPos.x >> neighborPos.y;
+			cout << "Neighbor [" << neighborPos.x << ", " << neighborPos.y << "]\n";
+		}
 		// TODO: handle connections as well...
 	}
 	input.close();
@@ -65,8 +73,15 @@ void SectorLoader::LoadSectors(string _inputFile)
 Sector& SectorLoader::HandleNewSector(int _id, int _weight, int _col, int _row, floatPoint _position)
 {
 	Sector& sector = this->sectors[_row][_col];
-	sector.id = _id;
-	sector.weight = _weight;
-	this->sectorIndexes.push_back({ _row, _col });
+	if (sector.id == _id)
+	{
+		sector.weight += _weight;
+	}
+	else
+	{
+		sector.id = _id;
+		sector.weight = _weight;
+		this->sectorIndexes.push_back({ _row, _col });
+	}
 	return sector;
 }
