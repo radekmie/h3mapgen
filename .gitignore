@@ -1,5 +1,8 @@
 #/bin/
 
+/bin/_test/*.dot
+/bin/_test/*.png
+
 # Compiled Object files
 *.slo
 *.lo

@@ -2,48 +2,27 @@
 LML_graph = 
 {
   {
-    class = 
-    {
-      { level=0, type="LOCAL", },
-    },
-    edges = { [2]=true, },
+    class = { { level=0, type="LOCAL", }, },
+    edges = { [2]=1, [3]=1, },
     features = 
     {
-      {
-        class = { level=0, type="LOCAL", },
-        type = "TOWN",
-        value = "PLAYER",
-      },
+      { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
     },
   },
   {
-    class = 
-    {
-      { level=1, type="LOCAL", },
-    },
-    edges = { [1]=true, [3]=true, },
+    class = { { level=5, type="BUFFER", }, },
+    edges = { 1, },
     features = 
     {
-      {
-        class = { level=1, type="LOCAL", },
-        type = "MINE",
-        value = "???",
-      },
+      { class={ level=5, type="BUFFER", }, type="OUTER", value=0, },
     },
   },
   {
-    class = 
-    {
-      { level=5, type="BUFFER", },
-    },
-    edges = { [2]=true, },
+    class = { { level=1, type="LOCAL", }, },
+    edges = { 1, },
     features = 
     {
-      {
-        class = { level=5, type="BUFFER", },
-        type = "OUTER",
-        value = 0,
-      },
+      { class={ level=1, type="LOCAL", }, type="MINE", value="???", },
     },
   },
 }
@@ -58,44 +37,17 @@ LML_init =
   },
   features = 
   {
-    {
-      class = { level=0, type="LOCAL", },
-      type = "TOWN",
-      value = "PLAYER",
-    },
-    {
-      class = { level=1, type="LOCAL", },
-      type = "MINE",
-      value = "???",
-    },
-    {
-      class = { level=5, type="BUFFER", },
-      type = "OUTER",
-      value = 0,
-    },
+    { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
+    { class={ level=1, type="LOCAL", }, type="MINE", value="???", },
+    { class={ level=5, type="BUFFER", }, type="OUTER", value=0, },
   },
 }
 
 LML_interface = 
 {
-  {
-    edges = { 2, },
-    id = 1,
-    outer = { },
-    type = "LOCAL",
-  },
-  {
-    edges = { 1, 3, },
-    id = 2,
-    outer = { },
-    type = "LOCAL",
-  },
-  {
-    edges = { 2, },
-    id = 3,
-    outer = { 0, },
-    type = "BUFFER",
-  },
+  { edges=  { 2, 3, }, id=1, outer=  { }, type="LOCAL", },
+  { edges=  { 1, }, id=2, outer=  { 0, }, type="BUFFER", },
+  { edges=  { 1, }, id=3, outer=  { }, type="LOCAL", },
 }
 
 LML_seed = -1

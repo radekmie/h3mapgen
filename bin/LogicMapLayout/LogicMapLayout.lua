@@ -1,5 +1,5 @@
 local Zone = require'LogicMapLayout/Zone'
-
+local GD = require'Auxiliary/GraphvizDrawer'
 
 local LML = {}
 local LML_mt = { __index = LML, __metatable = "Access resticted." }
@@ -36,13 +36,15 @@ end
 -- LML object have to be initialized before calling Generate.
 -- Random seed has to be properly set.
 -- @param grammar Table with grammar rules
--- @param MAX_STEPS Constant containing upper bound for the number of production application (error when exceeded)
-function LML:Generate(grammar, MAX_STEPS)
+-- @param max_steps Constant containing upper bound for the number of production application (error when exceeded)
+-- @param debugimg_path If provided, produces image output every step
+function LML:Generate(grammar, max_steps, debuging_path)
+  if debuging_path then self:Drawer():Draw(debuging_path..'-'..0) end
   local c, id, fc = self:IsConsistent()
   if not c then error(string.format('Initial grammar node %d is inconsistent (feature class: %s).', id, fc)) end 
   local isuniform, nonuniform_ids = self:IsUniform()
   if isuniform then return end 
-  for step = 1, MAX_STEPS do
+  for step = 1, max_steps do
     local success = false
     for prod in ordered_productions(grammar) do
       success = prod.f(self, nonuniform_ids)
@@ -51,6 +53,7 @@ function LML:Generate(grammar, MAX_STEPS)
       if success then break end
     end
     if not success then print('WARNING: No succesfull production found.') end
+    if debugimg_path then self:Drawer():Draw(debuging_path..'-'..step) end
     isuniform, nonuniform_ids = self:IsUniform()
     if isuniform then return end
   end
@@ -88,6 +91,47 @@ function LML:IsUniform()
     if not v:IsUniform() then nonuniform[#nonuniform+1] = i end
   end
   return #nonuniform==0, nonuniform
+end
+
+
+--- Produces data for LML graph image
+-- @return GraphvizDrawer object containing current graph image data
+function LML:Drawer()
+  local gd = GD.New()
+  gd:AddNode{id=0, shape='none', label=''}
+  for i, z in ipairs(self) do
+    local labelc = {}
+    for _, c in ipairs(z.class) do
+      labelc[#labelc+1] = c.type:sub(1,1)..c.level
+    end
+    local labelf = {}
+    for _, f in ipairs(z.features) do
+      if f.type == 'OUTER' then
+        gd:AddNode{id=i..'o', shape='point', style='invisible', label=''}
+        -- two options: one that all outer edges goes to their corresponding outer nodes, second that all goes to the common 0 node i.e.\ sink state
+        gd:AddEdge(i, i..'o', {label=f.value or '', style='dotted'}) -- or gd:AddEdge(i, 0, ...
+      else
+        labelf[#labelf+1] = f.type:sub(1,1)..'-'..f.value:sub(1,1)
+      end
+    end
+
+    local shape = 'none'
+    if not z:IsUniform() then shape='doubleoctagon' 
+    elseif z.class[1].type=='LOCAL' then shape='circle'
+    elseif z.class[1].type=='BUFFER' then shape='box'
+    end    
+    gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ',')..'\\n'..table.concat(labelf, ','), color='#000000'}
+    
+    for e, n in pairs(z.edges) do
+      if e <= i then -- display only one-direction of edge (from lhigher id's to lower)
+        for j=1, n do
+          gd:AddEdge(i, e) 
+        end
+      end
+    end
+  end
+  
+  return gd
 end
 
 

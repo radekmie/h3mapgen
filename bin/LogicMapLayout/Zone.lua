@@ -19,8 +19,8 @@ function Zone.New(data)
     obj.features[k] = Feature.New(v)
   end
   obj.edges = {}
-  for k, _ in pairs(data and data.edges or {}) do
-    obj.edges[k] = true
+  for k, v in pairs(data and data.edges or {}) do
+    obj.edges[k] = v
   end
   return setmetatable(obj, Zone_mt)
 end
@@ -35,8 +35,8 @@ function Zone:Interface(id)
   if self.class[1].type=='LOCAL' then zone.type = 'LOCAL' end
   if self.class[1].type=='BUFFER' then zone.type = 'BUFFER' end
   local edges = {}
-  for k, _ in pairs(self.edges) do
-    edges[#edges+1] = k
+  for k, v in pairs(self.edges) do
+    for i = 1, v do edges[#edges+1] = k end
   end
   zone.edges = edges
   local outer = {}

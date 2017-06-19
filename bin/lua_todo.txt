@@ -1,25 +1,26 @@
 
 
 
-- rozszerzyć serializację o obsługę tabel jako kluczy
-- rozszerzyć serializację o level -1 bez zewnętrznych nawiasów
-- dopisac w aux hpgm który zapisuje i odczytuje pliki h3pgm  (ogólnie config?)
-- dopisać w aux wrapper na graphviza - tworzący obiekt, nodes itd itp, a nastepnie zapisujący do zadanego pliku
 
 
-- dopisać obsługę seeda
-
-- dopisać generowanie 
 - dopisać iterator do wybierania produkcji
-- desc, short_desc
+- używać desc, short_desc
+- jakiś verbose dla LML'a ?
 
 
 
-- lml config: production_apply limit, todo
+- dopisać sensownych kilka produkcji
 
 
 
-- dopisac przykładową produkcję i liba
+- wywołanie generowania, tzn całego test_lml w protected call
+
+
+
+- sensowne przykłady grafów - te co były kiedyś wcześniej?
+
+- 
+
 
 
 -- co jeśli buffer wyląduje bez żadnej outer edge???

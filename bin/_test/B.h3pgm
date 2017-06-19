@@ -1,0 +1,98 @@
+
+LML_graph = 
+{
+  {
+    class = { { level=0, type="LOCAL", }, },
+    edges = { [2]=1, [3]=1, },
+    features = 
+    {
+      { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
+    },
+  },
+  {
+    class = { { level=5, type="BUFFER", }, },
+    edges = { 1, },
+    features = { },
+  },
+  {
+    class = { { level=1, type="LOCAL", }, },
+    edges = { [1]=1, [4]=1, },
+    features = { },
+  },
+  {
+    class = { { level=2, type="LOCAL", }, },
+    edges = { [3]=1, [5]=1, [6]=1, },
+    features = 
+    {
+      { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
+    },
+  },
+  {
+    class = { { level=4, type="BUFFER", }, },
+    edges = { [4]=1, },
+    features = 
+    {
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    },
+  },
+  {
+    class = { { level=3, type="LOCAL", }, },
+    edges = { [4]=1, [7]=1, },
+    features = 
+    {
+      { class={ level=3, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
+    },
+  },
+  {
+    class = { { level=2, type="BUFFER", }, },
+    edges = { [6]=1, },
+    features = 
+    {
+      { class={ level=2, type="BUFFER", }, type="OUTER", value=0, },
+    },
+  },
+}
+
+LML_init = 
+{
+  class = 
+  {
+    { level=0, type="LOCAL", },
+    { level=1, type="LOCAL", },
+    { level=2, type="BUFFER", },
+    { level=2, type="LOCAL", },
+    { level=3, type="LOCAL", },
+    { level=4, type="BUFFER", },
+    { level=5, type="BUFFER", },
+  },
+  features = 
+  {
+    { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
+    { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
+    { class={ level=3, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
+    { class={ level=2, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+  },
+}
+
+LML_interface = 
+{
+  { edges=  { 2, 3, }, id=1, outer=  { }, type="LOCAL", },
+  { edges=  { 1, }, id=2, outer=  { }, type="BUFFER", },
+  { edges=  { 1, 4, }, id=3, outer=  { }, type="LOCAL", },
+  { edges=  { 5, 6, 3, }, id=4, outer=  { }, type="LOCAL", },
+  { edges=  { 4, }, id=5, outer=  { 0, 0, 0, 0, }, type="BUFFER", },
+  { edges=  { 4, 7, }, id=6, outer=  { }, type="LOCAL", },
+  { edges=  { 6, }, id=7, outer=  { 0, }, type="BUFFER", },
+}
+
+LML_seed = -1
+
+version = "0.0001a"
+

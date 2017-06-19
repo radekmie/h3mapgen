@@ -16,10 +16,9 @@ local function f (lml, nonuniform_ids)
   local nid, nzone = lml:AddZone()
   zone.class = smaller_c
   zone.features = smaller_f
-  zone.edges[nid] = true
   nzone.class = greater_c
   nzone.features = greater_f
-  nzone.edges[id] = true
+  lib.AddEdge(lml, id, nid)
   return true
 end
 

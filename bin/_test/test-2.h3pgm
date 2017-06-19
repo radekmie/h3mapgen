@@ -2,144 +2,73 @@
 LML_graph = 
 {
   {
-    class = 
-    {
-      { level=0, type="LOCAL", },
-    },
-    edges = { [2]=true, },
+    class = { { level=0, type="LOCAL", }, },
+    edges = { [2]=1, [3]=1, },
     features = 
     {
-      {
-        class = { level=0, type="LOCAL", },
-        type = "TOWN",
-        value = "PLAYER",
-      },
+      { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
     },
   },
   {
-    class = 
-    {
-      { level=1, type="LOCAL", },
-    },
-    edges = { [1]=true, [3]=true, [4]=true, },
+    class = { { level=5, type="BUFFER", }, },
+    edges = { 1, },
     features = 
     {
-      {
-        class = { level=1, type="LOCAL", },
-        type = "MINE",
-        value = "???",
-      },
+      { class={ level=5, type="BUFFER", }, type="MINE", value="???", },
+      { class={ level=5, type="BUFFER", }, type="OUTER", value=0, },
     },
   },
   {
-    class = 
+    class = { { level=1, type="LOCAL", }, },
+    edges = { [1]=1, [4]=1, [5]=1, },
+    features = 
     {
-      { level=4, type="BUFFER", },
+      { class={ level=1, type="LOCAL", }, type="MINE", value="???", },
     },
-    edges = { [2]=true, [5]=true, [6]=true, },
+  },
+  {
+    class = { { level=3, type="LOCAL", }, },
+    edges = { [3]=1, [6]=1, },
+    features = 
+    {
+      { class={ level=3, type="LOCAL", }, type="OUTER", value=6, },
+    },
+  },
+  {
+    class = { { level=2, type="LOCAL", }, },
+    edges = { [3]=1, [7]=1, },
     features = { },
   },
   {
-    class = 
+    class = { { level=5, type="LOCAL", }, },
+    edges = { [4]=1, [8]=1, },
+    features = 
     {
-      { level=2, type="LOCAL", },
+      { class={ level=5, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
     },
-    edges = { [2]=true, [7]=true, [8]=true, [9]=true, },
+  },
+  {
+    class = { { level=2, type="LOCAL", }, },
+    edges = { [5]=1, },
+    features = 
+    {
+      { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
+    },
+  },
+  {
+    class = { { level=4, type="BUFFER", }, },
+    edges = { [6]=1, [9]=1, },
     features = { },
   },
   {
-    class = 
-    {
-      { level=5, type="BUFFER", },
-    },
-    edges = { [3]=true, },
+    class = { { level=4, type="BUFFER", }, },
+    edges = { [8]=1, },
     features = 
     {
-      {
-        class = { level=5, type="BUFFER", },
-        type = "MINE",
-        value = "???",
-      },
-      {
-        class = { level=5, type="BUFFER", },
-        type = "OUTER",
-        value = 0,
-      },
-    },
-  },
-  {
-    class = 
-    {
-      { level=4, type="BUFFER", },
-    },
-    edges = { [3]=true, },
-    features = 
-    {
-      {
-        class = { level=4, type="BUFFER", },
-        type = "TOWN",
-        value = "NEUTRAL",
-      },
-      {
-        class = { level=4, type="BUFFER", },
-        type = "OUTER",
-        value = 0,
-      },
-      {
-        class = { level=4, type="BUFFER", },
-        type = "OUTER",
-        value = 0,
-      },
-      {
-        class = { level=4, type="BUFFER", },
-        type = "OUTER",
-        value = 0,
-      },
-    },
-  },
-  {
-    class = 
-    {
-      { level=5, type="LOCAL", },
-    },
-    edges = { [4]=true, },
-    features = 
-    {
-      {
-        class = { level=5, type="LOCAL", },
-        type = "TOWN",
-        value = "NEUTRAL",
-      },
-    },
-  },
-  {
-    class = 
-    {
-      { level=3, type="LOCAL", },
-    },
-    edges = { [4]=true, },
-    features = 
-    {
-      {
-        class = { level=3, type="LOCAL", },
-        type = "OUTER",
-        value = 6,
-      },
-    },
-  },
-  {
-    class = 
-    {
-      { level=2, type="LOCAL", },
-    },
-    edges = { [4]=true, },
-    features = 
-    {
-      {
-        class = { level=2, type="LOCAL", },
-        type = "MINE",
-        value = "???",
-      },
+      { class={ level=4, type="BUFFER", }, type="TOWN", value="NEUTRAL", },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
     },
   },
 }
@@ -160,120 +89,31 @@ LML_init =
   },
   features = 
   {
-    {
-      class = { level=0, type="LOCAL", },
-      type = "TOWN",
-      value = "PLAYER",
-    },
-    {
-      class = { level=1, type="LOCAL", },
-      type = "MINE",
-      value = "???",
-    },
-    {
-      class = { level=2, type="LOCAL", },
-      type = "MINE",
-      value = "???",
-    },
-    {
-      class = { level=3, type="LOCAL", },
-      type = "OUTER",
-      value = 6,
-    },
-    {
-      class = { level=5, type="LOCAL", },
-      type = "TOWN",
-      value = "NEUTRAL",
-    },
-    {
-      class = { level=4, type="BUFFER", },
-      type = "TOWN",
-      value = "NEUTRAL",
-    },
-    {
-      class = { level=5, type="BUFFER", },
-      type = "MINE",
-      value = "???",
-    },
-    {
-      class = { level=4, type="BUFFER", },
-      type = "OUTER",
-      value = 0,
-    },
-    {
-      class = { level=4, type="BUFFER", },
-      type = "OUTER",
-      value = 0,
-    },
-    {
-      class = { level=4, type="BUFFER", },
-      type = "OUTER",
-      value = 0,
-    },
-    {
-      class = { level=5, type="BUFFER", },
-      type = "OUTER",
-      value = 0,
-    },
+    { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
+    { class={ level=1, type="LOCAL", }, type="MINE", value="???", },
+    { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
+    { class={ level=3, type="LOCAL", }, type="OUTER", value=6, },
+    { class={ level=5, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
+    { class={ level=4, type="BUFFER", }, type="TOWN", value="NEUTRAL", },
+    { class={ level=5, type="BUFFER", }, type="MINE", value="???", },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    { class={ level=5, type="BUFFER", }, type="OUTER", value=0, },
   },
 }
 
 LML_interface = 
 {
-  {
-    edges = { 2, },
-    id = 1,
-    outer = { },
-    type = "LOCAL",
-  },
-  {
-    edges = { 1, 3, 4, },
-    id = 2,
-    outer = { },
-    type = "LOCAL",
-  },
-  {
-    edges = { 5, 2, 6, },
-    id = 3,
-    outer = { },
-    type = "BUFFER",
-  },
-  {
-    edges = { 8, 9, 2, 7, },
-    id = 4,
-    outer = { },
-    type = "LOCAL",
-  },
-  {
-    edges = { 3, },
-    id = 5,
-    outer = { 0, },
-    type = "BUFFER",
-  },
-  {
-    edges = { 3, },
-    id = 6,
-    outer = { 0, 0, 0, },
-    type = "BUFFER",
-  },
-  {
-    edges = { 4, },
-    id = 7,
-    outer = { },
-    type = "LOCAL",
-  },
-  {
-    edges = { 4, },
-    id = 8,
-    outer = { 6, },
-    type = "LOCAL",
-  },
-  {
-    edges = { 4, },
-    id = 9,
-    outer = { },
-    type = "LOCAL",
-  },
+  { edges=  { 2, 3, }, id=1, outer=  { }, type="LOCAL", },
+  { edges=  { 1, }, id=2, outer=  { 0, }, type="BUFFER", },
+  { edges=  { 1, 4, 5, }, id=3, outer=  { }, type="LOCAL", },
+  { edges=  { 6, 3, }, id=4, outer=  { 6, }, type="LOCAL", },
+  { edges=  { 7, 3, }, id=5, outer=  { }, type="LOCAL", },
+  { edges=  { 4, 8, }, id=6, outer=  { }, type="LOCAL", },
+  { edges=  { 5, }, id=7, outer=  { }, type="LOCAL", },
+  { edges=  { 6, 9, }, id=8, outer=  { }, type="BUFFER", },
+  { edges=  { 8, }, id=9, outer=  { 0, 0, 0, }, type="BUFFER", },
 }
 
 LML_seed = -1

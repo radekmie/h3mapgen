@@ -1,0 +1,68 @@
+
+LML_graph = 
+{
+  {
+    class = { { level=0, type="LOCAL", }, },
+    edges = { [2]=1, [3]=1, },
+    features = 
+    {
+      { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
+    },
+  },
+  {
+    class = { { level=2, type="LOCAL", }, },
+    edges = { 1, },
+    features = 
+    {
+      { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
+      { class={ level=2, type="LOCAL", }, type="OUTER", value=4, },
+    },
+  },
+  {
+    class = { { level=1, type="LOCAL", }, },
+    edges = { [1]=1, [4]=1, },
+    features = { },
+  },
+  {
+    class = { { level=1, type="LOCAL", }, },
+    edges = { [3]=1, [5]=1, },
+    features = { },
+  },
+  {
+    class = { { level=2, type="LOCAL", }, },
+    edges = { [4]=1, },
+    features = { },
+  },
+}
+
+LML_init = 
+{
+  class = 
+  {
+    { level=0, type="LOCAL", },
+    { level=1, type="LOCAL", },
+    { level=1, type="LOCAL", },
+    { level=2, type="LOCAL", },
+    { level=2, type="LOCAL", },
+  },
+  features = 
+  {
+    { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
+    { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
+    { class={ level=2, type="LOCAL", }, type="OUTER", value=4, },
+  },
+}
+
+LML_interface = 
+{
+  { edges=  { 2, 3, }, id=1, outer=  { }, type="LOCAL", },
+  { edges=  { 1, }, id=2, outer=  { 4, }, type="LOCAL", },
+  { edges=  { 1, 4, }, id=3, outer=  { }, type="LOCAL", },
+  { edges=  { 5, 3, }, id=4, outer=  { }, type="LOCAL", },
+  { edges=  { 4, }, id=5, outer=  { }, type="LOCAL", },
+}
+
+LML_seed = -1
+
+version = "0.0001a"
+

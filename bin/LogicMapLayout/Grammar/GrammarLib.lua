@@ -46,4 +46,31 @@ function GrammarLib.Split2ByRandomPivot(classes)
 end
 
 
+--- Adds an undirected edge between two zones in LML
+-- @param lml LogicMapLayout object
+-- @ id1 Id of the one zone at adge's end
+-- @ id2 Id of the other zone at adge's end
+function GrammarLib.AddEdge(lml, id1, id2)
+  local edges1 = lml[id1].edges
+  local edges2 = lml[id2].edges
+  if edges1[id2]==nil then edges1[id2]=0 end
+  edges1[id2] = edges1[id2] + 1
+  if edges2[id1]==nil then edges2[id1]=0 end
+  edges2[id1] = edges2[id1] + 1
+end
+
+--- Removes an undirected edge between two zones in LML
+-- @param lml LogicMapLayout object
+-- @ id1 Id of the one zone at adge's end
+-- @ id2 Id of the other zone at adge's end
+function GrammarLib.RemoveEdge(lml, id1, id2)
+  local edges1 = lml[id1].edges
+  local edges2 = lml[id2].edges
+  if edges1[id2]~=nil then edges1[id2] = edges1[id2] - 1 end
+  if edges1[id2]==0 then edges1[id2] = nil end
+  if edges2[id1]==nil then edges2[id1] = edges2[id1] - 1 end
+  if edges2[id1]==0 then edges2[id1] = nil end
+end
+
+
 return GrammarLib
