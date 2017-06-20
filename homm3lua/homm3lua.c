@@ -10,6 +10,8 @@ static int new (lua_State *L) {
   if (h3m_init_min(h3m, format, size))
     return luaL_error(L, "h3m_init_min");
 
+  (*h3m)->h3m.bi.any.has_hero = 1;
+
   luaL_setmetatable(L, "homm3lua");
 
   return 1;
