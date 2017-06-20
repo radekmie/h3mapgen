@@ -292,13 +292,14 @@ static int text (lua_State *L) {
   return 0;
 }
 
-// :town(town, {x, y, z}, owner)
+// :town(town, {x, y, z}, owner[, is_main_town])
 static int town (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
   const char *town = luaL_checkstring(L, 2);
   const h3mlua_xyz xyz = h3mlua_check_xyz(L, 3);
   const int owner = luaL_checkinteger(L, 4);
+  const int is_main_town = lua_toboolean(L, 5);
 
   int object = 0;
 
@@ -308,6 +309,29 @@ static int town (lua_State *L) {
     return luaL_argerror(L, 2, "it's not a town");
   if (owner != -1 && h3m_object_set_owner(*h3m, object, owner))
     return luaL_error(L, "h3m_object_set_owner");
+  if (is_main_town) {
+    if (owner == -1)
+      return luaL_error(L, "Neutral town cannot be a main one.");
+
+    if (strcmp(town, "Castle")      == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x01;
+    if (strcmp(town, "Rampart")     == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x02;
+    if (strcmp(town, "Tower")       == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x04;
+    if (strcmp(town, "Inferno")     == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x08;
+    if (strcmp(town, "Necropolis")  == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x10;
+    if (strcmp(town, "Dungeon")     == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x20;
+    if (strcmp(town, "Fortress")    == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x40;
+    if (strcmp(town, "Stronghold")  == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0x80;
+    if (strcmp(town, "Random Town") == 0) (*h3m)->h3m.players[owner]->roe.town_types = 0xFF;
+
+    (*h3m)->meta.player_sizes[owner] = 11;
+    (*h3m)->h3m.players[owner]->roe.unknown1 = 0;
+    (*h3m)->h3m.players[owner]->roe.has_main_town = 1;
+    (*h3m)->h3m.players[owner]->roe.u.e1.starting_town_xpos = xyz.x - 2;
+    (*h3m)->h3m.players[owner]->roe.u.e1.starting_town_ypos = xyz.y;
+    (*h3m)->h3m.players[owner]->roe.u.e1.starting_town_zpos = xyz.z;
+    (*h3m)->h3m.players[owner]->roe.u.e1.starting_hero_is_random = 1;
+    (*h3m)->h3m.players[owner]->roe.u.e1.starting_hero_type = 0xFF;
+  }
 
   return 0;
 }
