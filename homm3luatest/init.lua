@@ -96,7 +96,6 @@ end)
 
 -- Creatures
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=15, z=0}, 45, homm3lua.DISPOSITION_AGGRESSIVE, true,  true)
-instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=15, z=0}, 45, homm3lua.DISPOSITION_AGGRESSIVE, true,  true)
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=16, z=0}, 45, homm3lua.DISPOSITION_COMPLIANT,  true,  false)
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=17, z=0}, 45, homm3lua.DISPOSITION_FRIENDLY,   false, true)
 instance:creature(homm3lua.CREATURE_ARCHANGEL, {x=3, y=18, z=0}, 45, homm3lua.DISPOSITION_HOSTILE,    false, false)
