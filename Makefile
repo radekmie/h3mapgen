@@ -20,7 +20,7 @@ all: dist/homm3lua.so
 clean:
 	$(MAKE) -C homm3tools/h3m/h3mtilespritegen/BUILD/gcc clean
 	$(MAKE) -C homm3tools/h3m/h3mlib/BUILD/gcc clean
-	rm -f $(OBJ) dist/homm3lua.so
+	rm -rf dist doc
 
 .PHONY: libs
 libs:
@@ -35,3 +35,7 @@ dist/%.o: homm3lua/%.c homm3lua/%.h | dist
 
 dist:
 	mkdir -p dist
+
+doc: doc/index.html
+doc/index.html: $(SRC)
+	ldoc -c /dev/null homm3lua

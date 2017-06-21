@@ -1,5 +1,6 @@
 ```shell
 $ make
+$ make doc # requires ldoc
 $ lua homm3luatest/init.lua
 ```
 
