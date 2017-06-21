@@ -310,7 +310,7 @@ static int terrain (lua_State *L) {
       break;
     }
 
-    case LUA_Tinteger: {
+    case LUA_TNUMBER: {
       const int terrain = luaL_checkinteger(L, 2);
 
       if (h3m_terrain_fill(*h3m, terrain))
