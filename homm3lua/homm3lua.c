@@ -1,6 +1,13 @@
 #include "homm3lua.h"
 
-// .new(format, size)
+/// Glue between homm3tools and Lua.
+// @module homm3lua
+
+/// Creates a new map.
+// @function    new
+// @tparam      integer     format    Map format. See FORMAT_*
+// @tparam      integer     size      Map size. See SIZE_*
+// @treturn     homm3lua              Map instance.
 static int new (lua_State *L) {
   const int format = luaL_checkinteger(L, 1);
   const int size = luaL_checkinteger(L, 2);
@@ -17,7 +24,12 @@ static int new (lua_State *L) {
   return 1;
 }
 
-// :__gc()
+/// Map instance.
+// @type homm3lua
+
+/// Clean up map memory.
+// @local
+// @function    __gc
 static int __gc (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -26,7 +38,10 @@ static int __gc (lua_State *L) {
   return 0;
 }
 
-// :artifact(artifact, {x, y, z})
+/// Place an artifact.
+// @function    artifact
+// @tparam      integer         artifact    Artifact name. See ARTIFACT_*
+// @tparam      homm3lua_xyz    xyz         Position in {x, y, z} format.
 static int artifact (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -43,7 +58,14 @@ static int artifact (lua_State *L) {
   return 0;
 }
 
-// :creature(creature, {x, y, z}, quantity, disposition, never_flees, does_not_grow)
+/// Place a creature.
+// @function    creature
+// @tparam      integer         creature         Creature name. See CREATURE_*
+// @tparam      homm3lua_xyz    xyz              Position in {x, y, z} format.
+// @tparam      integer         quantity         Quantity. Set to 0 for random integer.
+// @tparam      integer         disposition      Creatures disposition. See DISPOSITION_*
+// @tparam      boolean         never_flees      Disallows creatures to flee.
+// @tparam      boolean         does_not_grow    Disallows creatures to grow.
 static int creature (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -72,7 +94,9 @@ static int creature (lua_State *L) {
   return 0;
 }
 
-// :description(description)
+/// Set map description.
+// @function    description
+// @tparam      string         description    Map description.
 static int description (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -83,7 +107,9 @@ static int description (lua_State *L) {
   return 0;
 }
 
-// :difficulty(difficulty)
+/// Set map difficulty.
+// @function    difficulty
+// @tparam      integer       difficulty    Map difficulty. See DIFFICULTY_*
 static int difficulty (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -94,7 +120,11 @@ static int difficulty (lua_State *L) {
   return 0;
 }
 
-// :hero(hero, {x, y, z}, player)
+/// Place a hero.
+// @function    hero
+// @tparam      string          hero      Hero name. See HERO_*
+// @tparam      homm3lua_xyz    xyz       Position in {x, y, z} format.
+// @tparam      integer         player    Player. See PLAYER_*
 static int hero (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -137,7 +167,11 @@ static int hero (lua_State *L) {
   return 0;
 }
 
-// :mine(mine, {x, y, z}, owner)
+/// Place a mine.
+// @function    mine
+// @tparam      string          mine      Mine name. See MINE_*
+// @tparam      homm3lua_xyz    xyz       Position in {x, y, z} format.
+// @tparam      integer         player    Owner. See OWNER_*
 static int mine (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -157,7 +191,9 @@ static int mine (lua_State *L) {
   return 0;
 }
 
-// :name(name)
+/// Set map name.
+// @function    name
+// @tparam      string    name    Map name.
 static int name (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -168,7 +204,9 @@ static int name (lua_State *L) {
   return 0;
 }
 
-// :player(player)
+/// Enables player.
+// @function    player
+// @tparam      integer    player    Player. See PLAYER_*
 static int player (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -179,7 +217,10 @@ static int player (lua_State *L) {
   return 0;
 }
 
-// :obstacle(obstacle, {x, y, z})
+/// Place an obstacle.
+// @function    obstacle
+// @tparam      string          obstacle    Obstacle name. No constants so far.
+// @tparam      homm3lua_xyz    xyz         Position in {x, y, z} format.
 static int obstacle (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -194,7 +235,11 @@ static int obstacle (lua_State *L) {
   return 0;
 }
 
-// :resource(resource, {x, y, z}, quantity)
+/// Place a resource.
+// @function    resource
+// @tparam      string          resource    Obstacle name. No constants so far.
+// @tparam      homm3lua_xyz    xyz         Position in {x, y, z} format.
+// @tparam      integer         quantity    Quantity. Set to 0 for random integer.
 static int resource (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -214,7 +259,9 @@ static int resource (lua_State *L) {
   return 0;
 }
 
-// :terrain(terrain | {x, y, z} -> (terrain?, road?, river?))
+/// Draws terrain.
+// @function    terrain
+// @tparam      integer|function    terrain    Either a constant or a generating function of signature (homm3lua_xyz) -> (terrain?, road?, river?). See TERRAIN_*
 static int terrain (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -263,7 +310,7 @@ static int terrain (lua_State *L) {
       break;
     }
 
-    case LUA_TNUMBER: {
+    case LUA_Tinteger: {
       const int terrain = luaL_checkinteger(L, 2);
 
       if (h3m_terrain_fill(*h3m, terrain))
@@ -278,7 +325,11 @@ static int terrain (lua_State *L) {
   return 0;
 }
 
-// :text(text, {x, y, z}, object)
+/// Write text with given object.
+// @function    text
+// @tparam      string          text       Text.
+// @tparam      homm3lua_xyz    xyz        Position in {x, y, z} format. Left top corner.
+// @tparam      string          object     Object.
 static int text (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -292,7 +343,12 @@ static int text (lua_State *L) {
   return 0;
 }
 
-// :town(town, {x, y, z}, owner[, is_main_town])
+/// Place a town.
+// @function    town
+// @tparam      string         town            Town name. See TOWN_*
+// @tparam      homm3lua_xyz   xyz             Position in {x, y, z} format. Entry is at {x - 2, y, z}.
+// @tparam      integer        owner           Owner. See OWNER_*
+// @tparam      boolean        is_main_town    Optional. Set town as player main one.
 static int town (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -336,7 +392,9 @@ static int town (lua_State *L) {
   return 0;
 }
 
-// :underground(has_two_levels)
+/// Configures underground presence.
+// @function    underground
+// @tparam      boolean        has_two_levels    Allows underground.
 static int underground (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -347,7 +405,9 @@ static int underground (lua_State *L) {
   return 0;
 }
 
-// :write(path)
+/// Export map to a file.
+// @function    write
+// @tparam      string     path    File path.
 static int write (lua_State *L) {
   h3mlib_ctx_t *h3m = (h3mlib_ctx_t *) luaL_checkudata(L, 1, "homm3lua");
 
@@ -363,6 +423,8 @@ static int write (lua_State *L) {
 
   return 0;
 }
+
+// -----------------------------------------------------------------------------
 
 static const struct luaL_Reg h3mlua_instance[] = {
   {"__gc", __gc},
@@ -388,6 +450,8 @@ static const struct luaL_Reg h3mlua[] = {
   {"new", new},
   {NULL, NULL}
 };
+
+// -----------------------------------------------------------------------------
 
 int luaopen_homm3lua (lua_State *L) {
   luaL_newmetatable(L, "homm3lua");
