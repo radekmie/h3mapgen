@@ -3,9 +3,8 @@
 Just a short note here
 
 
-
 ### Testing
-Call `test_lml.lua` from lua5.3, it runs configs from the `_test` directory, should be strightforward
+Call `test_lml.lua` from lua5.3, it runs configs from the [_test](_test) directory, should be strightforward
 
 To draw graph images [Graphviz](http://www.graphviz.org/) is required
 
@@ -21,5 +20,4 @@ Files h3pgm are Lua configs storing map info
 
 
 ### Grammar
-Only one production for now, see `LogicMapLayout/Grammar/Grammar.lua`
-
+Only simple productions for now, see [LogicMapLayout/Grammar/Grammar.lua](LogicMapLayout/Grammar/Grammar.lua)

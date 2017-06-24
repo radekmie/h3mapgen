@@ -17,7 +17,7 @@ local function test_lml(filename, regenerate_graph)
     lml:Generate(Grammar, CONFIG.LML_max_steps, CONFIG.LML_draw_steps and fpath)
     h3pgm.LML_graph = lml
   end
-  h3pgm.LML_interface = lml:Interface()
+  h3pgm.LML_interface = h3pgm.LML_graph:Interface()
   CH.Write(fpath..'.h3pgm', h3pgm)
   local gd = lml:Drawer()
   if CONFIG.LML_draw_final then gd:Draw(fpath, true) end

@@ -25,3 +25,16 @@
 
 -- co jeśli buffer wyląduje bez żadnej outer edge???
 
+- produkcje powinny mieć dostęp do map_settings? Tzn. danych typu liniowość mapy, PvE/PvP, richness, itd?
+
+
+
+==============================================
+===========  GRAMATYKA
+
+- można dodać gadżety specyficzne dla danej sytuacji, np. początkowe, lub jakies określone patterny (zakładając, że istnieją odpowiednie okoliczności)
+
+
+
+
+

@@ -52,9 +52,9 @@ end
 -- @param item Lua object to write down
 -- @param level Level of indentation (default 0 for the root)
 -- @param iskey True (non-nil) if we try to write table key
--- @param shrink_testrun Level of testing run to check pretty-printed shrinked version (optional, technical only, depends on CONFIG settings)
--- @return String containing pretty-printed item, and true if result was shrinked
-function Serialization.Value(item, level, iskey, shrink_testrun)
+-- @param inline_testrun Level of testing run to check pretty-printed inlined version (optional, technical only, depends on CONFIG settings)
+-- @return String containing pretty-printed item, and true if result was inlined
+function Serialization.Value(item, level, iskey, inline_testrun)
   if not level then level = 0 end
   if type(item) == 'nil' then
     return iskey and '[nil]' or 'nil'
@@ -66,7 +66,7 @@ function Serialization.Value(item, level, iskey, shrink_testrun)
     if item then return iskey and '[true]' or 'true'
     else return iskey and '[false]' or 'false' end
   elseif type(item) == 'table' then
-    local str, shrnk = Serialization.Table(item, level, iskey, shrink_testrun)
+    local str, shrnk = Serialization.Table(item, level, iskey, inline_testrun)
     return iskey and '['..str..']' or str, shrnk
   else
     error('Serialization called for unsupported-type item: '..tostring(item), 2)
@@ -78,21 +78,21 @@ end
 -- @param item Lua object to write down
 -- @param level Level of indentation (default 0 for the root, -1 removes outer braces)
 -- @param iskey True (non-nil) if we try to write table key
--- @patam shrink_testrun Level of testing run to check pretty-printed shrinked version (optional, technical only, depends on CONFIG settings)
--- @return String containing pretty-printed item, and true if result was shrinked
-function Serialization.Table(item, level, iskey, shrink_testrun)
+-- @patam inline_testrun Level of testing run to check pretty-printed inlined version (optional, technical only, depends on CONFIG settings)
+-- @return String containing pretty-printed item, and true if result was inlined
+function Serialization.Table(item, level, iskey, inline_testrun)
   if type(item)~='table' then Serialization.Value(item, level, iskey) end
   if not level then level = 0 end
   local numkeys = table_issequence(item)
   local tabdepth = table_depth(item)
   local innertables = tabdepth > 0
-  shrink_testrun = shrink_testrun or 0
+  inline_testrun = inline_testrun or 0
   
-  if shrink_testrun > 0 then
+  if inline_testrun > 0 then
     innertables = false
-  elseif level > -1 and tabdepth < 2 and CONFIG.Serialization_shrinking_limit > 0 then   -- changing works the old way tabdepth < 1
-    local str = Serialization.Table(item, level, iskey, shrink_testrun+1)
-    if #str <= CONFIG.Serialization_shrinking_limit  then return str, true end 
+  elseif level > -1 and tabdepth < 2 and CONFIG.Serialization_inline_limit > 0 then   -- changing works the old way tabdepth < 1
+    local str = Serialization.Table(item, level, iskey, inline_testrun+1)
+    if #str <= CONFIG.Serialization_inline_limit  then return str, true end 
   end
   
   local str = level > -1  and indent:rep(level)..'{' or ''
@@ -118,17 +118,17 @@ function Serialization.Table(item, level, iskey, shrink_testrun)
       end
       str=str..indent:rep(level)
     end
-  else -- not innertables  (or called with shrink_testrun) 
+  else -- not innertables  (or called with inline_testrun) 
     if numkeys then -- { v1, v2, v3, }
       str=str..' ' 
       for _, v in ipairs(item) do 
-        str=str..Serialization.Value(v, level, nil, shrink_testrun+1)..', '
+        str=str..Serialization.Value(v, level, nil, inline_testrun+1)..', '
       end
     else  -- { k1=v1, k2=v2, k3=v3, }
       str=indent:rep(level)..'{ ' 
-      if shrink_testrun > 1 then str = '{ ' end
+      if inline_testrun > 1 then str = '{ ' end
       for _, k in ipairs(order_keys(item)) do
-        str=str..Serialization.Value(k, level, true, shrink_testrun+1)..'='..Serialization.Value(item[k], level, nil, shrink_testrun+1)..', '
+        str=str..Serialization.Value(k, level, true, inline_testrun+1)..'='..Serialization.Value(item[k], level, nil, inline_testrun+1)..', '
       end
     end
   end

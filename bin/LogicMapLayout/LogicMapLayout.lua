@@ -5,10 +5,39 @@ local LML = {}
 local LML_mt = { __index = LML, __metatable = "Access resticted." }
 
 
--- todo ordered_productions
-local function ordered_productions(grammar)                                                       ------------ TODO
-  local i = 0
-  return function () i = i + 1; return grammar[i] end
+--- Function for choosing  map entry using the roulette wheel random strategy.
+-- @param id_to_prior Map from dentifiers to priorities (weights with values > 0)
+-- @return Identifier of the chosen entry or nil if map is empty
+local function roulette_choice(id_to_prior)
+  local rand = math.random
+  local sum = 0
+  for id, prior in pairs(id_to_prior) do sum = sum + prior end
+  if sum == 0 then return nil end
+  local shot = math.random()*sum
+  for id, prior in pairs(id_to_prior) do 
+    if shot <= prior then
+        return id
+      else
+        shot = shot - prior
+      end
+  end
+  error('roulette_choice function ended without any result.')
+end
+
+
+--- Iterator providing grammar productions randomized by priorty weights
+-- @param grammar Sequence with grammar rules
+-- @return Iterfunction providing next chosen production
+local function ordered_productions(grammar)
+  local id_to_prior = {}
+  for i, prod in ipairs(grammar) do
+    if prod.priority > 0 then id_to_prior[i] = prod.priority end
+  end
+  return function () 
+              local choice = roulette_choice(id_to_prior)
+              id_to_prior[choice] = nil
+              return grammar[ choice ]
+            end 
 end
 
 
@@ -35,10 +64,11 @@ end
 --- Generates LML accortding to given grammar
 -- LML object have to be initialized before calling Generate.
 -- Random seed has to be properly set.
--- @param grammar Table with grammar rules
+-- @param grammar Sequence with grammar rules
 -- @param max_steps Constant containing upper bound for the number of production application (error when exceeded)
 -- @param debugimg_path If provided, produces image output every step
 function LML:Generate(grammar, max_steps, debuging_path)
+  if CONFIG.LML_verbose_debug then print('LML Generation started with grammar containing '..#grammar..' rules.') end
   if debuging_path then self:Drawer():Draw(debuging_path..'-'..0) end
   local c, id, fc = self:IsConsistent()
   if not c then error(string.format('Initial grammar node %d is inconsistent (feature class: %s).', id, fc)) end 
@@ -46,12 +76,18 @@ function LML:Generate(grammar, max_steps, debuging_path)
   if isuniform then return end 
   for step = 1, max_steps do
     local success = false
+    i = 1
     for prod in ordered_productions(grammar) do
       success = prod.f(self, nonuniform_ids)
       local c, id, fc = self:IsConsistent()
       if not c then error(string.format('Production %s made node %d inconsistent (feature class: %s).', prod.short_desc, id, fc)) end 
-      if success then break end
+      if success then 
+        if CONFIG.LML_verbose_debug then print ('LML Succesfully applied production ('..i..' try): '..prod.short_desc) end
+        break 
+      end
+      i = i + 1
     end
+    
     if not success then print('WARNING: No succesfull production found.') end
     if debugimg_path then self:Drawer():Draw(debuging_path..'-'..step) end
     isuniform, nonuniform_ids = self:IsUniform()
