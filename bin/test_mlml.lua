@@ -1,3 +1,4 @@
+CONFIG = require'Auxiliary/ConfigHandler'.Read('config.cfg')
 
 local LML = require'LogicMapLayout/LogicMapLayout'
 local MLML = require'LogicMapLayout/MultiLogicMapLayout'
