@@ -8,7 +8,7 @@ all: $(TARGETS)
 bin/cellular: Makefile src/cellular/board.o src/cellular/cellular_terrain.o src/cellular/main.cpp
 	 $(CXX) $(CXXFLAGS) -o bin/cellular src/cellular/*.o src/cellular/main.cpp
 
-bin/voronoi: Makefile src/voronoi/Common.o src/voronoi/Constants.o src/voronoi/Sector.o src/voronoi/Tile.o src/voronoi/TileDivider.o src/voronoi/SectorLoader.o src/voronoi/BresenhamSectorLoader.o src/voronoi/ExactSectorLoader.o src/voronoi/Main.cpp
+bin/voronoi: Makefile src/voronoi/Constants.o src/voronoi/Sector.o src/voronoi/Tile.o src/voronoi/TileDivider.o src/voronoi/SectorLoader.o src/voronoi/BresenhamSectorLoader.o src/voronoi/ExactSectorLoader.o src/voronoi/Main.cpp
 	$(CXX) $(CXXFLAGS) -o bin/voronoi src/voronoi/*.o src/voronoi/Main.cpp
 
 clean:
