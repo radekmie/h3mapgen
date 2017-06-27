@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	output << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
 	ofstream output2("graphMapText.txt");
 	output2 << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
-	for (int y = Constants::tilesVerti; y < 0; --y)
+	for (int y = Constants::tilesVerti - 1; y >= 0; --y)
 	{
 		for (int x = 0; x < Constants::tilesHoriz; ++x)
 		{
