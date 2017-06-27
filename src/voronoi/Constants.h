@@ -8,12 +8,12 @@
 class Constants
 {
 public:
-	static int	GetPointsNum();
-	static int	GetTilesHoriz();
-	static int	GetTilesVerti();
-	static int	GetSectorRows();
-	static int	GetSectorCols();
-	static bool	GetUseGrid();
+	static int	tilesHoriz;
+	static int	tilesVerti;
+	static int	sectorRows;
+	static int	sectorCols;
+
+	void LoadCustomValues();
 
 };
 

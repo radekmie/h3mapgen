@@ -11,24 +11,22 @@
 class Sector
 {
 public:
-	floatPoint topLeft;
-	floatPoint bottomRight;
-	int id;
+	int			id;
+	int			weight;
+	floatPoint	topLeft;
+	floatPoint	bottomRight;
+	floatPoint	repr;
+
+protected:
+	vector<sectorIndex>	connected;
 
 public:
-	Sector(floatPoint _topLeft = { 0.0f, 0.0f }, floatPoint _bottomRight = { 0.0f, 0.0f }, int _id = -1);
+	Sector(floatPoint _topLeft = { 0.0f, 0.0f }, floatPoint _bottomRight = { 0.0f, 0.0f }, int _id = -1, int _weight = 1);
 
-	bool Contains(floatPoint point);
+	bool Contains(floatPoint _point);
+	void AddConnection(sectorIndex _sectorIndex);
+
 };
-
-
-inline bool Sector::Contains(floatPoint point)
-{
-	return (this->topLeft.x <= point.x
-		&& this->topLeft.y <= point.y
-		&& this->bottomRight.x >= point.x
-		&& this->bottomRight.y >= point.y);
-}
 
 
 #endif /* __MGR_Sector_h__ */
