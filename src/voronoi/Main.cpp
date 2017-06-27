@@ -29,6 +29,8 @@ int main(int argc, char** argv)
 
 	ofstream output("graphMap.txt");
 	output << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
+	ofstream output2("graphMapText.txt");
+	output2 << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
 	for (int y = 0; y < Constants::tilesVerti; ++y)
 	{
 		for (int x = 0; x < Constants::tilesHoriz; ++x)
@@ -38,11 +40,13 @@ int main(int argc, char** argv)
 			{
 				// superwhite
 				output << ".";
+				output2 << ".";
 			}
 			else if (newTiles[y][x].isEdge)
 			{
 				// superblack
 				output << "$";
+				output2 << "$";
 			}
 			else
 			{
@@ -50,17 +54,21 @@ int main(int argc, char** argv)
 				{
 					// black
 					output << "#";
+					output << "#";
 				}
 				else
 				{
 					// white
-					output << ownerId % 10;
+					output << " ";
+					output2 << (char)('a' + ownerId);
 				}
 			}
 		}
 		output << "\n";
+		output2 << "\n";
 	}
 	output.close();
+	output2.close();
 
 	int x;
 	cin >> x;
