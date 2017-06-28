@@ -36,8 +36,8 @@ local function text2map (pathInData, pathInText, pathOut)
         local info = y * (w + 2) + x + 3 -- +2 for line breaks, +3 for the initial offset
         local char = data:sub(info, info)
 
-        if char == '#' then instance:obstacle('Trees', {x=x, y=y, z=z}) end
-        if char == '$' then instance:obstacle('Rock',  {x=x, y=y, z=z}) end
+        if char == '#' then instance:obstacle('Trees',  {x=x, y=y, z=z}) end
+        if char == '$' then instance:obstacle('Cactus', {x=x, y=y, z=z}) end
 
         local code = char:byte() - ('a'):byte()
 
