@@ -5,6 +5,10 @@
 #define __MGR_Constants_h__
 
 
+#include <string>
+#include "Common.h"
+
+
 class Constants
 {
 public:
@@ -13,7 +17,7 @@ public:
 	static int	sectorRows;
 	static int	sectorCols;
 
-	void LoadCustomValues();
+	static void LoadCustomValues(std::string configFile);
 
 };
 

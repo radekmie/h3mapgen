@@ -13,7 +13,9 @@ int Constants::sectorRows = SECTOR_ROWS;
 int Constants::sectorCols = SECTOR_COLS;
 
 
-void Constants::LoadCustomValues()
+void Constants::LoadCustomValues(std::string configFile)
 {
-	// for now it does nothing, but will be used to read new constants from config file.
+	ifstream input(configFile);
+	input >> Constants::tilesVerti >> Constants::tilesHoriz >> Constants::sectorRows >> Constants::sectorCols;
+	input.close();
 }
