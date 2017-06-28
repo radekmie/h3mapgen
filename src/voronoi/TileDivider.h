@@ -28,7 +28,7 @@ public:
 	void DivideBySectors(vector<sectorIndex> _sectorIndexes);
 
 protected:
-	virtual void CreateSites(vector<pair<int, floatPoint> > &_sites, int _id, floatPoint _position);
+	virtual void CreateSites(vector<pair<int, floatPoint> > &_sites, Sector& _sector);
 
 private:
 	void RunVoronoi(vector<pair<int, floatPoint> > _sites);

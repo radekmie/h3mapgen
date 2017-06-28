@@ -36,17 +36,29 @@ void TileDivider::DivideBySectors(vector<sectorIndex> _sectorIndexes)
 	for (int i = 0; i < _sectorIndexes.size(); ++i)
 	{
 		Sector& sector = this->sectors[_sectorIndexes[i].row][_sectorIndexes[i].col];
-		this->CreateSites(sites, sector.id, sector.repr);
+		this->CreateSites(sites, sector);
 	}
 
 	this->RunVoronoi(sites);
 }
 
 
-void TileDivider::CreateSites(vector<pair<int, floatPoint> > &_sites, int _id, floatPoint _position)
+void TileDivider::CreateSites(vector<pair<int, floatPoint> > &_sites, Sector& _sector)
 {
-	_sites.push_back({ _id, _position });
-	cout << "Created site " << _id << ", pos " << _position.x << ", " << _position.y << endl;
+//	_sites.push_back({ _sector.id, _sector.repr });
+	for (int i = 0; i < 3; ++i)
+	{
+		float dX = _sector.bottomRight.x - _sector.topLeft.x;
+		float dY = _sector.bottomRight.y - _sector.topLeft.y;
+		int randX = rand() % 71;
+		int randY = rand() % 71;
+		float posX = _sector.topLeft.x + dX / 2.0f + ((float)randX / 71.0f - 0.5f) * dX * 0.7f;
+		float posY = _sector.topLeft.y + dY / 2.0f + ((float)randY / 71.0f - 0.5f) * dY * 0.7f;
+		_sites.push_back({ _sector.id, {posX, posY} });
+	}
+
+//	_sites.push_back({ _id, _position });
+//	cout << "Created sites for id " << _id << ", pos " << _position.x << ", " << _position.y << endl;
 }
 
 
