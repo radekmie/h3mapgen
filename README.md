@@ -15,6 +15,8 @@ conf/
 doc/
     user_gide.txt
     ...
+homm3lua/
+    (lua API to .h3m format)
 lua/
     script1.lua
     ...
