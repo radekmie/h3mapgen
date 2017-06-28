@@ -11,10 +11,16 @@
 
 int main(int argc, char** argv)
 {
+	if (argc < 3)
+	{
+		return -1;
+	}
+
 	srand((unsigned int)time(NULL));
 
 	BresenhamSectorLoader sectorLoader;
-	sectorLoader.LoadSectors("graphInput.txt");
+	std::string graphInput = argv[1];
+	sectorLoader.LoadSectors(graphInput);
 
 	TileDivider voronoiDivider(sectorLoader.GetSectors(), sectorLoader.GetDimensions());
 	voronoiDivider.DivideBySectors(sectorLoader.GetSectorIndexes());
@@ -27,9 +33,12 @@ int main(int argc, char** argv)
 	//newTiles[10][10].ownerId = 1;
 	//newTiles[10][10].isBridge = true;
 
-	ofstream output("graphMap.txt");
+	std::string graphOutput = argv[2];
+	ofstream output(graphOutput);
 	output << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
-	ofstream output2("graphMapText.txt");
+
+	std::string graphOutputText = graphOutput.substr(0, graphOutput.length() - 4).append("Text.txt");
+	ofstream output2(graphOutputText);
 	output2 << Constants::tilesVerti << " " << Constants::tilesHoriz << "\n";
 	for (int y = Constants::tilesVerti - 1; y >= 0; --y)
 	{
@@ -70,7 +79,5 @@ int main(int argc, char** argv)
 	output.close();
 	output2.close();
 
-	int x;
-	cin >> x;
 	return 0;
 }
