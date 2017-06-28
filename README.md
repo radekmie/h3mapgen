@@ -1,7 +1,8 @@
 ```shell
 $ make
 $ make doc # requires ldoc
-$ lua homm3luatest/init.lua
+$ lua homm3luademo/init.lua # Showcase map
+$ lua homm3luatest/init.lua # Map generated from test input
 ```
 
 ### FAQ
