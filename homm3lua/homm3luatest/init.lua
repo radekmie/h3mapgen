@@ -36,18 +36,23 @@ local function text2map (pathInData, pathInText, pathOut)
         local info = y * (w + 2) + x + 3 -- +2 for line breaks, +3 for the initial offset
         local char = data:sub(info, info)
 
-        if char == '#' then instance:obstacle('Trees',  {x=x, y=y, z=z}) end
-        if char == '$' then instance:obstacle('Cactus', {x=x, y=y, z=z}) end
+        -- see  https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in
+        if char == '#' then instance:obstacle('Oak Trees',  {x=x, y=y, z=z}) end
+        if char == '$' then instance:obstacle('Pine Trees', {x=x, y=y, z=z}) end
 
         local code = char:byte() - ('a'):byte()
 
         for _, zone in pairs(MLML) do
-            if zone.baseid == code then
+            if zone.id == code then
                 if zone.type == 'BUFFER' then
                     return homm3lua.TERRAIN_LAVA
                 end
-
-                return code % 7 -- 8 is reserved for the BUFFER zone
+                
+                local firstplayer = nil
+                for p, _ in pairs(zone.players) do firstplayer = p break end
+                return firstplayer % 7 -- 8 is reserved for the BUFFER zone
+                -- alternative version (based on the base id):
+                --return zone.baseid % 7 -- 8 is reserved for the BUFFER zone
             end
         end
 
