@@ -77,6 +77,26 @@ function MLML:Interface()
 end
 
 
+function MLML:PrintToMDS(filename)
+  local file = io.open(filename, "w")
+  local count = 0
+  for _,_ in pairs(self) do
+    count = count + 1
+  end
+  file:write(count, "\n")
+  
+  for i,node in pairs(self) do
+    if type(i) == 'number' then
+      local line = ''..node.id..' '..node.weight
+      for k,_ in pairs(node.edges) do
+        line = line..' '..k
+      end
+      file:write(line, "\n")
+    end
+  end
+end
+
+
 return MLML
 
 

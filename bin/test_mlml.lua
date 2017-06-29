@@ -30,6 +30,7 @@ local function test_mlml(testfiles, regenerate_graph, players)
       cfg.MLML_graph = mlml
     end
     cfg.MLML_interface = cfg.MLML_graph:Interface()
+    cfg.MLML_graph:PrintToMDS('_test/'..fname..'.txt')
     
     CH.Write('_test/'..fname..'.h3pgm', cfg) -- todo
   end
