@@ -43,3 +43,10 @@ src/voronoi/mapa.txt
 *.exe
 *.out
 *.app
+
+# Python biniaries
+*.pyc
+
+# Python notebook
+*.ipynb
+*.ipynb_checkpoints
