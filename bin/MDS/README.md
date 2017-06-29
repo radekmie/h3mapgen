@@ -1,8 +1,10 @@
 # Usage
 
-Run `python embed_graph.py path_to_graph mode`.
+Run `python embed_graph.py path_to_graph output_file_name`.
 
-Example: `python embed_graph.py graphs/g1`.
+`output_file_name` is optional, default is the path_to_graph with "_emb" appended.
+
+Example: `python embed_graph.py graphs/g1 result` will produce `result.png` and `result.txt`.
 
 Graph should be represented by a text file. First line contains one integer (number of vertices). The rest of the lines have the following structure: first string (until the first whitespace) in a line is the ID of the node, after that there is an integer representing size, the rest is a list of node's neighbors (represented by their IDs). Examples are in the `graphs` folder. DO NOT put a new line at the end of the file, it will be interpreted as a vertex with no neighbors.
 
