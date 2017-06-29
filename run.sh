@@ -19,3 +19,5 @@ python MDS/embed_graph.py $path/$graph_file $path/"$1_emb"
 bin/voronoi $path/$mds_out $path/$vor_out
 
 bin/cellular 0.5 1 2 < $path/$vor_out > $path/$cell_out
+
+sed 's/./& /g' $path/$cell_out | grep --color '\$'

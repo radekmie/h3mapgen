@@ -3,44 +3,15 @@ LML_graph =
 {
   {
     class = { { level=0, type="LOCAL", }, },
-    edges = { [2]=1, [3]=5, [4]=1, },
+    edges = { },
     features = 
     {
       { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
     },
   },
   {
-    class = { { level=5, type="LOCAL", }, },
-    edges = { [1]=1, [5]=1, },
-    features = 
-    {
-      { class={ level=5, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
-    },
-  },
-  {
-    class = { { level=3, type="LOCAL", }, },
-    edges = { 5, },
-    features = 
-    {
-      { class={ level=3, type="LOCAL", }, type="OUTER", value=6, },
-    },
-  },
-  {
-    class = { { level=1, type="LOCAL", }, },
-    edges = { [1]=1, [6]=1, [7]=1, },
-    features = 
-    {
-      { class={ level=1, type="LOCAL", }, type="MINE", value="???", },
-    },
-  },
-  {
-    class = { { level=4, type="BUFFER", }, },
-    edges = { [2]=1, [8]=1, [9]=1, },
-    features = { },
-  },
-  {
     class = { { level=2, type="LOCAL", }, },
-    edges = { [4]=1, },
+    edges = { [1]=2, [5]=2, [6]=1, [7]=1, },
     features = 
     {
       { class={ level=2, type="LOCAL", }, type="MINE", value="???", },
@@ -48,12 +19,20 @@ LML_graph =
   },
   {
     class = { { level=2, type="LOCAL", }, },
-    edges = { [4]=1, },
+    edges = { 1, },
     features = { },
   },
   {
+    class = { { level=1, type="LOCAL", }, },
+    edges = { [1]=1, [5]=1, },
+    features = 
+    {
+      { class={ level=1, type="LOCAL", }, type="MINE", value="???", },
+    },
+  },
+  {
     class = { { level=5, type="BUFFER", }, },
-    edges = { [5]=1, },
+    edges = { [2]=2, [4]=1, },
     features = 
     {
       { class={ level=5, type="BUFFER", }, type="MINE", value="???", },
@@ -61,8 +40,29 @@ LML_graph =
     },
   },
   {
+    class = { { level=5, type="LOCAL", }, },
+    edges = { [1]=1, [2]=1, [8]=1, },
+    features = 
+    {
+      { class={ level=5, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
+    },
+  },
+  {
+    class = { { level=3, type="LOCAL", }, },
+    edges = { [2]=1, },
+    features = 
+    {
+      { class={ level=3, type="LOCAL", }, type="OUTER", value=6, },
+    },
+  },
+  {
     class = { { level=4, type="BUFFER", }, },
-    edges = { [5]=1, },
+    edges = { [6]=1, [9]=1, },
+    features = { },
+  },
+  {
+    class = { { level=4, type="BUFFER", }, },
+    edges = { [8]=1, },
     features = 
     {
       { class={ level=4, type="BUFFER", }, type="TOWN", value="NEUTRAL", },
@@ -105,34 +105,26 @@ LML_init =
 
 LML_interface = 
 {
-  { edges=  { 2, 3, 3, 3, 3, 3, 4, }, id=1, outer=  { }, type="LOCAL", },
-  { edges=  { 1, 5, }, id=2, outer=  { }, type="LOCAL", },
-  { edges=  { 1, 1, 1, 1, 1, }, id=3, outer=  { 6, }, type="LOCAL", },
-  { edges=  { 1, 6, 7, }, id=4, outer=  { }, type="LOCAL", },
-  { edges=  { 8, 9, 2, }, id=5, outer=  { }, type="BUFFER", },
-  { edges=  { 4, }, id=6, outer=  { }, type="LOCAL", },
-  { edges=  { 4, }, id=7, outer=  { }, type="LOCAL", },
-  { edges=  { 5, }, id=8, outer=  { 0, }, type="BUFFER", },
-  { edges=  { 5, }, id=9, outer=  { 0, 0, 0, }, type="BUFFER", },
+  { edges=  { 2, 2, 3, 4, 6, }, id=1, outer=  { }, type="LOCAL", },
+  { edges=  { 1, 1, 5, 5, 6, 7, }, id=2, outer=  { }, type="LOCAL", },
+  { edges=  { 1, }, id=3, outer=  { }, type="LOCAL", },
+  { edges=  { 1, 5, }, id=4, outer=  { }, type="LOCAL", },
+  { edges=  { 2, 2, 4, }, id=5, outer=  { 0, }, type="BUFFER", },
+  { edges=  { 1, 2, 8, }, id=6, outer=  { }, type="LOCAL", },
+  { edges=  { 2, }, id=7, outer=  { 6, }, type="LOCAL", },
+  { edges=  { 6, 9, }, id=8, outer=  { }, type="BUFFER", },
+  { edges=  { 8, }, id=9, outer=  { 0, 0, 0, }, type="BUFFER", },
 }
 
 LML_seed = -1
 
 MLML_graph = 
 {
-  [1] = 
-  {
-    baseid = 1,
-    edges = { [2]=true, [3]=true, [4]=true, },
-    id = 1,
-    players = { true, },
-    type = "LOCAL",
-    weight = 5,
-  },
+  [1] = { baseid=1, edges=  { }, id=1, players=  { true, }, type="LOCAL", weight=5, },
   [2] = 
   {
     baseid = 2,
-    edges = { [1]=true, [5]=true, },
+    edges = { [1]=true, [5]=true, [6]=true, [7]=true, },
     id = 2,
     players = { true, },
     type = "LOCAL",
@@ -150,7 +142,7 @@ MLML_graph =
   [4] = 
   {
     baseid = 4,
-    edges = { [1]=true, [6]=true, [7]=true, },
+    edges = { [1]=true, [5]=true, },
     id = 4,
     players = { true, },
     type = "LOCAL",
@@ -159,7 +151,7 @@ MLML_graph =
   [5] = 
   {
     baseid = 5,
-    edges = { [2]=true, [8]=true, [9]=true, [11]=true, },
+    edges = { [2]=true, [4]=true, [11]=true, [13]=true, },
     id = 5,
     players = { true, true, },
     type = "BUFFER",
@@ -168,7 +160,7 @@ MLML_graph =
   [6] = 
   {
     baseid = 6,
-    edges = { [4]=true, },
+    edges = { [1]=true, [2]=true, [8]=true, },
     id = 6,
     players = { true, },
     type = "LOCAL",
@@ -177,7 +169,7 @@ MLML_graph =
   [7] = 
   {
     baseid = 7,
-    edges = { [4]=true, },
+    edges = { [2]=true, },
     id = 7,
     players = { true, },
     type = "LOCAL",
@@ -186,7 +178,7 @@ MLML_graph =
   [8] = 
   {
     baseid = 8,
-    edges = { [5]=true, },
+    edges = { [6]=true, [9]=true, [15]=true, },
     id = 8,
     players = { true, true, },
     type = "BUFFER",
@@ -195,7 +187,7 @@ MLML_graph =
   [9] = 
   {
     baseid = 9,
-    edges = { [5]=true, },
+    edges = { [8]=true, },
     id = 9,
     players = { true, true, },
     type = "BUFFER",
@@ -204,7 +196,7 @@ MLML_graph =
   [10] = 
   {
     baseid = 1,
-    edges = { [11]=true, [12]=true, [13]=true, },
+    edges = { [11]=true, [12]=true, [13]=true, [15]=true, },
     id = 10,
     players = { [2]=true, },
     type = "LOCAL",
@@ -213,7 +205,7 @@ MLML_graph =
   [11] = 
   {
     baseid = 2,
-    edges = { [5]=true, [10]=true, },
+    edges = { [5]=true, [10]=true, [15]=true, [16]=true, },
     id = 11,
     players = { [2]=true, },
     type = "LOCAL",
@@ -231,7 +223,7 @@ MLML_graph =
   [13] = 
   {
     baseid = 4,
-    edges = { [10]=true, [15]=true, [16]=true, },
+    edges = { [5]=true, [10]=true, },
     id = 13,
     players = { [2]=true, },
     type = "LOCAL",
@@ -240,7 +232,7 @@ MLML_graph =
   [15] = 
   {
     baseid = 6,
-    edges = { [13]=true, },
+    edges = { [8]=true, [10]=true, [11]=true, },
     id = 15,
     players = { [2]=true, },
     type = "LOCAL",
@@ -249,7 +241,7 @@ MLML_graph =
   [16] = 
   {
     baseid = 7,
-    edges = { [13]=true, },
+    edges = { [11]=true, },
     id = 16,
     players = { [2]=true, },
     type = "LOCAL",
@@ -259,21 +251,21 @@ MLML_graph =
 
 MLML_interface = 
 {
-  { edges=  { 2, 3, 4, }, id=1, weight=5, },
-  { edges=  { 1, 5, }, id=2, weight=5, },
+  { edges=  { 2, 3, 4, 6, }, id=1, weight=5, },
+  { edges=  { 1, 5, 6, 7, }, id=2, weight=5, },
   { edges=  { 1, }, id=3, weight=5, },
-  { edges=  { 1, 6, 7, }, id=4, weight=5, },
-  { edges=  { 8, 2, 11, 9, }, id=5, weight=5, },
-  { edges=  { 4, }, id=6, weight=5, },
-  { edges=  { 4, }, id=7, weight=5, },
-  { edges=  { 5, }, id=8, weight=5, },
-  { edges=  { 5, }, id=9, weight=5, },
-  { edges=  { 12, 13, 11, }, id=10, weight=5, },
-  { edges=  { 10, 5, }, id=11, weight=5, },
+  { edges=  { 1, 5, }, id=4, weight=5, },
+  { edges=  { 4, 13, 2, 11, }, id=5, weight=5, },
+  { edges=  { 1, 2, 8, }, id=6, weight=5, },
+  { edges=  { 2, }, id=7, weight=5, },
+  { edges=  { 9, 6, 15, }, id=8, weight=5, },
+  { edges=  { 8, }, id=9, weight=5, },
+  { edges=  { 12, 13, 15, 11, }, id=10, weight=5, },
+  { edges=  { 16, 5, 10, 15, }, id=11, weight=5, },
   { edges=  { 10, }, id=12, weight=5, },
-  { edges=  { 16, 10, 15, }, id=13, weight=5, },
-  { edges=  { 13, }, id=15, weight=5, },
-  { edges=  { 13, }, id=16, weight=5, },
+  { edges=  { 10, 5, }, id=13, weight=5, },
+  { edges=  { 8, 10, 11, }, id=15, weight=5, },
+  { edges=  { 11, }, id=16, weight=5, },
 }
 
 version = "0.0001a"
