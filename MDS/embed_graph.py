@@ -129,7 +129,7 @@ def calc_weights(graph, sizes):
         for u in graph:
             if v != u:
                 ws[(u,v)] = len(set(graph[u]).union(graph[v])) - \
-                len(set(graph[u]).intersection(graph[v]))
+                    len(set(graph[u]).intersection(graph[v]))
 #                 uid, vid = vert_id(u), vert_id(v)
 #                 ws[(u,v)] *= np.sqrt((sizes[uid] + sizes[vid]) / 2)
     return ws

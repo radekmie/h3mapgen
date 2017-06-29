@@ -39,3 +39,4 @@ end
 test_mlml({'test-1'}, true, 4)
 test_mlml({'test-2'}, true, 2)
 
+test_mlml({arg[1]}, true, arg[2])
