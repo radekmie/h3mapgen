@@ -92,20 +92,21 @@ void TileDivider::RunVoronoi(vector<pair<int, floatPoint> > _sites)
 			Tile& tile = this->tiles[y][x];
 			int myOwnerId = tile.ownerId;
 			float myOwnerDist = tile.ownerDist;
-			if (myOwnerId == -1)
+			if (myOwnerId == -1 || tile.isBridge || tile.isEdge)
 			{
 				continue;
 			}
 			vector<pair<int, int> > neighbors = tile.GetNeighbors(Constants::tilesHoriz, Constants::tilesVerti);
 			for (pair<int, int> neighbor : neighbors)
 			{
-				int hisOwnerId = this->tiles[neighbor.second][neighbor.first].ownerId;
-				float hisOwnerDist = this->tiles[neighbor.second][neighbor.first].ownerDist;
-				if (hisOwnerId != -1 && hisOwnerId != myOwnerId)
+				Tile& hisTile = this->tiles[neighbor.second][neighbor.first];
+				int hisOwnerId = hisTile.ownerId;
+				float hisOwnerDist = hisTile.ownerDist;
+				if (hisOwnerId != -1 && !hisTile.isBridge && !hisTile.isEdge && hisOwnerId != myOwnerId)
 				{
 					if (myOwnerDist > hisOwnerDist || myOwnerDist == hisOwnerDist && myOwnerId < hisOwnerId)
 					{
-						tile.ResetValues();
+//						tile.ResetValues();
 						tile.isEdge = true;
 						break;
 					}

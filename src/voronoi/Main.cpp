@@ -56,33 +56,27 @@ int main(int argc, char** argv)
 		for (int x = 0; x < Constants::tilesHoriz; ++x)
 		{
 			int ownerId = newTiles[y][x].ownerId;
-			if (newTiles[y][x].isBridge)
+			if (newTiles[y][x].isBridge) // superwhite
 			{
-				// superwhite
 				output << ".";
-				output2 << ".";
 			}
-			else if (newTiles[y][x].isEdge)
+			else if (newTiles[y][x].isEdge) // superblack
 			{
-				// superblack
 				output << "$";
-				output2 << "$";
 			}
 			else
 			{
-				if (newTiles[y][x].ownerDist > 60.0f)
+				if (newTiles[y][x].ownerDist > 60.0f) // black
 				{
-					// black
-					output << "#";
 					output << "#";
 				}
-				else
+				else // white
 				{
-					// white
 					output << " ";
-					output2 << (char)('a' + ownerId);
 				}
 			}
+
+			output2 << (char)('a' + ownerId);
 		}
 		output << "\n";
 		output2 << "\n";
