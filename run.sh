@@ -5,7 +5,6 @@ mlml_file="bin/_test/$1.h3pgm"
 graph_file="$1_graph.txt"
 mds_out="$1_emb.txt"
 vor_out="$1_map.txt"
-vor2_out="$1_mapText.txt"
 cell_out="$1_cell.txt"
 map_out="$1.h3m"
 path="output/$1_$2"
@@ -25,4 +24,4 @@ bin/cellular 0.5 1 2 < $path/$vor_out > $path/$cell_out
 
 sed 's/./& /g' $path/$cell_out | grep --color '\$'
 
-lua5.3 homm3lua/homm3luatest/init.lua $mlml_file $path/$vor2_out $path/$map_out
+lua5.3 homm3lua/homm3luatest/init.lua $mlml_file $path/$cell_out $path/$map_out

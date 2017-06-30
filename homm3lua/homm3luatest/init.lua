@@ -33,7 +33,7 @@ local function text2map (pathInData, pathInText, pathOut)
             return homm3lua.TERRAIN_WATER
         end
 
-        local info = y * (w + 2) + x + 3 -- +2 for line breaks, +3 for the initial offset
+        local info = y * (w + 1) + x + 3 -- +1 for line break, +3 for the initial offset
         local char = data:sub(info, info)
 
         -- see  https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in
