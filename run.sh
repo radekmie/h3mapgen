@@ -28,3 +28,4 @@ bin/cellular 0.5 1 2 < $path/$vor_out > $path/$cell_out
 sed 's/./& /g' $path/$cell_out | grep --color '\$'
 
 lua5.3 homm3lua/homm3luatest/init.lua $mlml_file $path/$vor2_out $path/$cell_out $path/$map_out
+WINEPREFIX="$HOME/.wine32" WINEARCH=win32 WINEDEBUG=-all wine ~/.wine32/drive_c/Program\ Files/HoMM\ 3\ Complete/h3maped.exe $path/$map_out
