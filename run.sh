@@ -19,7 +19,9 @@ mv bin/_test/$lua_out $path/$graph_file
 
 python MDS/embed_graph.py $path/$graph_file $path/"$1_emb"
 
-bin/voronoi $path/$mds_out $path/$vor_out
+cd bin
+./voronoi ../$path/$mds_out ../$path/$vor_out
+cd ..
 
 bin/cellular 0.5 1 2 < $path/$vor_out > $path/$cell_out
 
