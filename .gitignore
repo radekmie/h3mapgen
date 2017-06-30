@@ -2,6 +2,9 @@
 
 /bin/_test/*.dot
 /bin/_test/*.png
+/bin/voronoi
+/bin/cellular
+/output/*/*
 
 #Visual Studio files
 *.sln

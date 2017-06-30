@@ -36,6 +36,9 @@ local function test_mlml(testfiles, regenerate_graph, players)
   end
 end
 
-test_mlml({'test-1'}, true, 4)
-test_mlml({'test-2'}, true, 2)
-
+if arg[1] == nil then
+  test_mlml({'test-1'}, true, 4)
+  test_mlml({'test-2'}, true, 2)
+else
+  test_mlml({arg[1]}, true, arg[2])
+end

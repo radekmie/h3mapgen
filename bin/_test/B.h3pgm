@@ -3,7 +3,7 @@ LML_graph =
 {
   {
     class = { { level=0, type="LOCAL", }, },
-    edges = { [2]=1, [3]=2, },
+    edges = { [2]=2, [3]=1, },
     features = 
     {
       { class={ level=0, type="LOCAL", }, type="TOWN", value="PLAYER", },
@@ -11,7 +11,7 @@ LML_graph =
   },
   {
     class = { { level=3, type="LOCAL", }, },
-    edges = { [1]=1, [4]=1, [5]=1, },
+    edges = { [1]=2, [4]=1, [5]=1, },
     features = 
     {
       { class={ level=3, type="LOCAL", }, type="TOWN", value="NEUTRAL", },
@@ -19,23 +19,17 @@ LML_graph =
   },
   {
     class = { { level=1, type="LOCAL", }, },
-    edges = { [1]=2, [6]=1, },
+    edges = { [1]=1, [4]=1, [6]=1, },
     features = { },
   },
   {
-    class = { { level=4, type="BUFFER", }, },
-    edges = { [2]=1, [7]=1, },
-    features = 
-    {
-      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
-      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
-      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
-      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
-    },
+    class = { { level=5, type="BUFFER", }, },
+    edges = { [2]=1, [3]=1, },
+    features = { },
   },
   {
     class = { { level=2, type="BUFFER", }, },
-    edges = { [2]=1, },
+    edges = { [2]=1, [7]=1, },
     features = 
     {
       { class={ level=2, type="BUFFER", }, type="OUTER", value=0, },
@@ -50,9 +44,15 @@ LML_graph =
     },
   },
   {
-    class = { { level=5, type="BUFFER", }, },
-    edges = { [4]=1, },
-    features = { },
+    class = { { level=4, type="BUFFER", }, },
+    edges = { [5]=1, },
+    features = 
+    {
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=0, },
+    },
   },
 }
 
@@ -83,16 +83,214 @@ LML_init =
 
 LML_interface = 
 {
-  { edges=  { 2, 3, 3, }, id=1, outer=  { }, type="LOCAL", },
-  { edges=  { 1, 4, 5, }, id=2, outer=  { }, type="LOCAL", },
-  { edges=  { 1, 1, 6, }, id=3, outer=  { }, type="LOCAL", },
-  { edges=  { 2, 7, }, id=4, outer=  { 0, 0, 0, 0, }, type="BUFFER", },
-  { edges=  { 2, }, id=5, outer=  { 0, }, type="BUFFER", },
+  { edges=  { 2, 2, 3, }, id=1, outer=  { }, type="LOCAL", },
+  { edges=  { 1, 1, 4, 5, }, id=2, outer=  { }, type="LOCAL", },
+  { edges=  { 1, 6, 4, }, id=3, outer=  { }, type="LOCAL", },
+  { edges=  { 2, 3, }, id=4, outer=  { }, type="BUFFER", },
+  { edges=  { 2, 7, }, id=5, outer=  { 0, }, type="BUFFER", },
   { edges=  { 3, }, id=6, outer=  { }, type="LOCAL", },
-  { edges=  { 4, }, id=7, outer=  { }, type="BUFFER", },
+  { edges=  { 5, }, id=7, outer=  { 0, 0, 0, 0, }, type="BUFFER", },
 }
 
 LML_seed = -1
+
+MLML_graph = 
+{
+  [1] = 
+  {
+    baseid = 1,
+    edges = { [2]=true, [3]=true, },
+    id = 1,
+    players = { true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [2] = 
+  {
+    baseid = 2,
+    edges = { [1]=true, [4]=true, [5]=true, },
+    id = 2,
+    players = { true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [3] = 
+  {
+    baseid = 3,
+    edges = { [1]=true, [4]=true, [6]=true, },
+    id = 3,
+    players = { true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [4] = 
+  {
+    baseid = 4,
+    edges = { [2]=true, [3]=true, [9]=true, [10]=true, [16]=true, [17]=true, [23]=true, [24]=true, },
+    id = 4,
+    players = { true, true, true, true, },
+    type = "BUFFER",
+    weight = 5,
+  },
+  [5] = 
+  {
+    baseid = 5,
+    edges = { [2]=true, [7]=true, [9]=true, [16]=true, [23]=true, },
+    id = 5,
+    players = { true, true, true, true, },
+    type = "BUFFER",
+    weight = 5,
+  },
+  [6] = 
+  {
+    baseid = 6,
+    edges = { [3]=true, },
+    id = 6,
+    players = { true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [7] = 
+  {
+    baseid = 7,
+    edges = { [5]=true, },
+    id = 7,
+    players = { true, true, true, true, },
+    type = "BUFFER",
+    weight = 5,
+  },
+  [8] = 
+  {
+    baseid = 1,
+    edges = { [9]=true, [10]=true, },
+    id = 8,
+    players = { [2]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [9] = 
+  {
+    baseid = 2,
+    edges = { [4]=true, [5]=true, [8]=true, },
+    id = 9,
+    players = { [2]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [10] = 
+  {
+    baseid = 3,
+    edges = { [4]=true, [8]=true, [13]=true, },
+    id = 10,
+    players = { [2]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [13] = 
+  {
+    baseid = 6,
+    edges = { [10]=true, },
+    id = 13,
+    players = { [2]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [15] = 
+  {
+    baseid = 1,
+    edges = { [16]=true, [17]=true, },
+    id = 15,
+    players = { [3]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [16] = 
+  {
+    baseid = 2,
+    edges = { [4]=true, [5]=true, [15]=true, },
+    id = 16,
+    players = { [3]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [17] = 
+  {
+    baseid = 3,
+    edges = { [4]=true, [15]=true, [20]=true, },
+    id = 17,
+    players = { [3]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [20] = 
+  {
+    baseid = 6,
+    edges = { [17]=true, },
+    id = 20,
+    players = { [3]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [22] = 
+  {
+    baseid = 1,
+    edges = { [23]=true, [24]=true, },
+    id = 22,
+    players = { [4]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [23] = 
+  {
+    baseid = 2,
+    edges = { [4]=true, [5]=true, [22]=true, },
+    id = 23,
+    players = { [4]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [24] = 
+  {
+    baseid = 3,
+    edges = { [4]=true, [22]=true, [27]=true, },
+    id = 24,
+    players = { [4]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+  [27] = 
+  {
+    baseid = 6,
+    edges = { [24]=true, },
+    id = 27,
+    players = { [4]=true, },
+    type = "LOCAL",
+    weight = 5,
+  },
+}
+
+MLML_interface = 
+{
+  { edges=  { 2, 3, }, id=1, weight=5, },
+  { edges=  { 1, 4, 5, }, id=2, weight=5, },
+  { edges=  { 1, 6, 4, }, id=3, weight=5, },
+  { edges=  { 16, 9, 2, 3, 10, 24, 17, 23, }, id=4, weight=5, },
+  { edges=  { 16, 9, 2, 23, 7, }, id=5, weight=5, },
+  { edges=  { 3, }, id=6, weight=5, },
+  { edges=  { 5, }, id=7, weight=5, },
+  { edges=  { 10, 9, }, id=8, weight=5, },
+  { edges=  { 4, 5, 8, }, id=9, weight=5, },
+  { edges=  { 8, 13, 4, }, id=10, weight=5, },
+  { edges=  { 10, }, id=13, weight=5, },
+  { edges=  { 16, 17, }, id=15, weight=5, },
+  { edges=  { 4, 5, 15, }, id=16, weight=5, },
+  { edges=  { 20, 4, 15, }, id=17, weight=5, },
+  { edges=  { 17, }, id=20, weight=5, },
+  { edges=  { 24, 23, }, id=22, weight=5, },
+  { edges=  { 4, 5, 22, }, id=23, weight=5, },
+  { edges=  { 4, 22, 27, }, id=24, weight=5, },
+  { edges=  { 24, }, id=27, weight=5, },
+}
 
 version = "0.0001a"
 

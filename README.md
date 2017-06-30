@@ -1,6 +1,20 @@
 # h3mapgen
 An attempt to build a comprehensive map generator for Heroes of Might and Magic III
 
+## Run generator
+From the project root directory run `bash run.sh graph_name num_players`.
+File called `graph_name`.h3pgm should be in bin/_test directory. The output from all stages of generation is saved in `output/<graph_name>_<num_players>`. That directory should contain 9 files:
+
+- `*graph.txt` with the graph structure
+- two pngs with graph embedding results
+- two txts with coordinates of the embeddings
+- `*map.txt` with zone borders after running voronoi
+- `*mapText.txt` with filled zones
+- `*cell.txt` with the CA result
+- `*.h3m` with the complete map
+
+Example: results of `bash run.sh test-1 4` and `bash run.sh test-1 8` are in the output folder.
+
 ## Repo tree:
 It's subject to discussion although this schema seems reasonable to me.
 ```

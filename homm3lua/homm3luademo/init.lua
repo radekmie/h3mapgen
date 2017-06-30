@@ -1,5 +1,5 @@
 -- Either set it here or in LUA_CPATH
-package.cpath = package.cpath .. ';dist/?.so;../dist/?.so'
+package.cpath = package.cpath .. ';dist/?.so;../dist/?.so;homm3lua/dist/?.so'
 
 -- Yay!
 local homm3lua = require('homm3lua')

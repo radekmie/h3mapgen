@@ -1,53 +1,67 @@
 -- Either set it here or in LUA_CPATH
-package.cpath = package.cpath .. ';dist/?.so;../dist/?.so'
+package.cpath = package.cpath .. ';dist/?.so;../dist/?.so;homm3lua/dist/?.so'
 
-local function text2map (pathInData, pathInText, pathOut)
+local function text2map (pathInData, pathInTerrain, pathInWorld, pathOut)
     -- Data
     local env = {}
     assert(loadfile(pathInData, nil, env))()
     local MLML = env.MLML_graph
 
-    -- Text
-    local file = assert(io.open(pathInText))
-    local h, w, data = file:read('*number', '*number', '*all')
+    -- Terrain
+    local file = assert(io.open(pathInTerrain))
+    local h2, w2, terrain = file:read('*number', '*number', '*all')
     file:close()
 
-    if h ~= w then
+    if h2 ~= w2 then
         error('Map have to be a square!')
+    end
+
+    -- World
+    local file = assert(io.open(pathInWorld))
+    local h1, w1, world = file:read('*number', '*number', '*all')
+    file:close()
+
+    if h1 ~= w1 then
+        error('Map have to be a square!')
+    end
+
+    if h1 ~= h2 then
+        error('Map terrain and world differ in size!')
     end
 
     -- Yay!
     local homm3lua = require('homm3lua')
 
     local size = nil
-        if w <= homm3lua.SIZE_SMALL      then size = homm3lua.SIZE_SMALL
-    elseif w <= homm3lua.SIZE_MEDIUM     then size = homm3lua.SIZE_MEDIUM
-    elseif w <= homm3lua.SIZE_LARGE      then size = homm3lua.SIZE_LARGE
-    elseif w <= homm3lua.SIZE_EXTRALARGE then size = homm3lua.SIZE_EXTRALARGE
+        if w1 <= homm3lua.SIZE_SMALL      then size = homm3lua.SIZE_SMALL
+    elseif w1 <= homm3lua.SIZE_MEDIUM     then size = homm3lua.SIZE_MEDIUM
+    elseif w1 <= homm3lua.SIZE_LARGE      then size = homm3lua.SIZE_LARGE
+    elseif w1 <= homm3lua.SIZE_EXTRALARGE then size = homm3lua.SIZE_EXTRALARGE
     else error('Map too big!') end
 
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, size)
 
     instance:terrain(function (x, y, z)
-        if x >= w or y >= w then
+        if x >= w1 or y >= w1 then
             return homm3lua.TERRAIN_WATER
         end
 
-        local info = y * (w + 2) + x + 3 -- +2 for line breaks, +3 for the initial offset
-        local char = data:sub(info, info)
+        local info = y * (w1 + 1) + x + 3 -- +1 for line break, +3 for the initial offset
+        local char = terrain:sub(info, info)
+        local wall = world:sub(info, info)
 
         -- see  https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in
-        if char == '#' then instance:obstacle('Oak Trees',  {x=x, y=y, z=z}) end
-        if char == '$' then instance:obstacle('Pine Trees', {x=x, y=y, z=z}) end
+        if wall == '#' then instance:obstacle('Oak Trees',  {x=x, y=y, z=z}) end
+        if wall == '$' then instance:obstacle('Pine Trees', {x=x, y=y, z=z}) end
 
-        local code = char:byte() - ('a'):byte()
+        local code = (char:byte() or 0) - ('a'):byte()
 
         for _, zone in pairs(MLML) do
             if zone.id == code then
                 if zone.type == 'BUFFER' then
                     return homm3lua.TERRAIN_LAVA
                 end
-                
+
                 local firstplayer = nil
                 for p, _ in pairs(zone.players) do firstplayer = p break end
                 return firstplayer % 7 -- 8 is reserved for the BUFFER zone
@@ -63,4 +77,7 @@ local function text2map (pathInData, pathInText, pathOut)
     instance:write(pathOut)
 end
 
-text2map('test.h3pgm', 'test.txt', 'test.h3m')
+if arg[1] ~= nil then
+    text2map(table.unpack(arg))
+end
+
