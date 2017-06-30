@@ -13,9 +13,17 @@ int Constants::sectorRows = SECTOR_ROWS;
 int Constants::sectorCols = SECTOR_COLS;
 
 
+void Constants::LoadCustomValues(char** argv)
+{
+    Constants::tilesVerti = atoi(argv[3]);
+    Constants::tilesHoriz = atoi(argv[4]);
+    Constants::sectorRows = atoi(argv[5]);
+    Constants::sectorCols = atoi(argv[6]);
+}
+
 void Constants::LoadCustomValues(std::string configFile)
 {
-	ifstream input(configFile);
-	input >> Constants::tilesVerti >> Constants::tilesHoriz >> Constants::sectorRows >> Constants::sectorCols;
-	input.close();
+    ifstream input(configFile);
+    input >> Constants::tilesVerti >> Constants::tilesHoriz >> Constants::sectorRows >> Constants::sectorCols;
+    input.close();
 }

@@ -18,16 +18,18 @@ int main(int argc, char** argv)
 
 	srand((unsigned int)time(NULL));
 
-	std::string configFile = "";
-	if (argc > 3)
+	if (argc == 3)
 	{
-		configFile = argv[3];
+		Constants::LoadCustomValues("../output/mapConfig.txt");
 	}
-	else
+	else if (argc == 4)
 	{
-		configFile = "../output/mapConfig.txt";
+		Constants::LoadCustomValues(argv[3]);
 	}
-	Constants::LoadCustomValues(configFile);
+	else if (argc == 7)
+	{
+		Constants::LoadCustomValues(argv);
+	}
 
 	BresenhamSectorLoader sectorLoader;
 	std::string graphInput = argv[1];

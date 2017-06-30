@@ -17,6 +17,7 @@ public:
 	static int	sectorRows;
 	static int	sectorCols;
 
+    static void LoadCustomValues(char** argv);
 	static void LoadCustomValues(std::string configFile);
 
 };

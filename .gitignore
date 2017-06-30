@@ -4,7 +4,7 @@
 /bin/_test/*.png
 /bin/voronoi
 /bin/cellular
-/output/*/*
+/output
 
 #Visual Studio files
 *.sln
