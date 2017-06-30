@@ -24,15 +24,16 @@ end
 
 
 local function connect_uniform (lml, nonuniform_ids) 
-  local uniform_ids = {}
+  local ids = {}
   for id, zone in ipairs(lml) do
-    if zone:IsUniform() then uniform_ids[#uniform_ids+1] = id end
+    --if zone:IsUniform() then ids[#ids+1] = id end
+    if true then ids[#ids+1] = id end
   end
-  if #uniform_ids < 2 then return false end
+  if #ids < 2 then return false end
   
-  local id1 = math.random(#uniform_ids)
+  local id1 = math.random(#ids)
   local id2 = id1
-  while id2 == id1 do id2 = math.random(#uniform_ids) end
+  while id2 == id1 do id2 = math.random(#ids) end
   
   lib.AddEdge(lml, id1, id2)
   return true
