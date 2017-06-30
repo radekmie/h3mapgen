@@ -1,5 +1,5 @@
 -- Either set it here or in LUA_CPATH
-package.cpath = package.cpath .. ';dist/?.so;../dist/?.so'
+package.cpath = package.cpath .. ';dist/?.so;../dist/?.so;homm3lua/dist/?.so'
 
 local function text2map (pathInData, pathInText, pathOut)
     -- Data
@@ -40,14 +40,14 @@ local function text2map (pathInData, pathInText, pathOut)
         if char == '#' then instance:obstacle('Oak Trees',  {x=x, y=y, z=z}) end
         if char == '$' then instance:obstacle('Pine Trees', {x=x, y=y, z=z}) end
 
-        local code = char:byte() - ('a'):byte()
+        local code = (char:byte() or 0) - ('a'):byte()
 
         for _, zone in pairs(MLML) do
             if zone.id == code then
                 if zone.type == 'BUFFER' then
                     return homm3lua.TERRAIN_LAVA
                 end
-                
+
                 local firstplayer = nil
                 for p, _ in pairs(zone.players) do firstplayer = p break end
                 return firstplayer % 7 -- 8 is reserved for the BUFFER zone
@@ -63,4 +63,7 @@ local function text2map (pathInData, pathInText, pathOut)
     instance:write(pathOut)
 end
 
-text2map('test.h3pgm', 'test.txt', 'test.h3m')
+if arg[1] ~= nil then
+    text2map(arg[1], arg[2], arg[3])
+end
+
