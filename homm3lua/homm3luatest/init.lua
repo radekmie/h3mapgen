@@ -42,11 +42,14 @@ local function text2map (pathInData, pathInTerrain, pathInWorld, pathOut)
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, size)
 
     instance:terrain(function (x, y, z)
-        if x >= w1 or y >= w1 then
+        local x2 = x - (size - w1) // 2
+        local y2 = y - (size - w1) // 2
+
+        if x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1 then
             return homm3lua.TERRAIN_WATER
         end
 
-        local info = y * (w1 + 1) + x + 3 -- +1 for line break, +3 for the initial offset
+        local info = y2 * (w1 + 1) + x2 + 2 -- +1 for line break, +2 for the initial offset
         local char = terrain:sub(info, info)
         local wall = world:sub(info, info)
 
@@ -55,23 +58,21 @@ local function text2map (pathInData, pathInTerrain, pathInWorld, pathOut)
         if wall == '$' then instance:obstacle('Pine Trees', {x=x, y=y, z=z}) end
 
         local code = (char:byte() or 0) - ('a'):byte()
-
-        for _, zone in pairs(MLML) do
-            if zone.id == code then
-                if zone.type == 'BUFFER' then
-                    return homm3lua.TERRAIN_LAVA
-                end
-
-                local firstplayer = nil
-                for p, _ in pairs(zone.players) do firstplayer = p break end
-                return firstplayer % 7 -- 8 is reserved for the BUFFER zone
-                -- alternative version (based on the base id):
-                --return zone.baseid % 7 -- 8 is reserved for the BUFFER zone
+        local zone = MLML[code]
+        if zone then
+            if zone.type == 'BUFFER' then
+                return homm3lua.TERRAIN_LAVA
             end
+
+            local firstplayer = nil
+            for p, _ in pairs(zone.players) do firstplayer = p break end
+            return firstplayer % 7 -- 8 is reserved for the BUFFER zone
+            -- alternative version (based on the base id):
+            --return zone.baseid % 7 -- 8 is reserved for the BUFFER zone
         end
 
         -- NOTE: It should NOT happen, but... You know.
-        return homm3lua.TERRAIN_GRASS
+        return homm3lua.TERRAIN_SUBTERRANEAN
     end)
 
     instance:write(pathOut)

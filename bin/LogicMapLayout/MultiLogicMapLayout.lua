@@ -44,7 +44,8 @@ function MLML:Generate(PLAYERS_NUM)
       print('removing '..i..' with zone id '..zone.id..' and base id '..zone.baseid)
       toRemove[i] = true
       
-      self[zone.baseid].weight = self[zone.baseid].weight + 2
+      -- NOTE: It's not so obvious.
+      -- self[zone.baseid].weight = self[zone.baseid].weight + 2
       for k,_ in pairs(zone.edges) do
         self[zone.baseid].edges[k] = true
         for p,_ in pairs(zone.players) do
