@@ -1,6 +1,3 @@
--- Either set it here or in LUA_CPATH
-package.cpath = package.cpath .. ';dist/?.so;../dist/?.so;homm3lua/dist/?.so'
-
 local function text2map (pathInData, pathInTerrain, pathInWorld, pathOut)
     -- Data
     local env = {}
@@ -59,6 +56,7 @@ local function text2map (pathInData, pathInTerrain, pathInWorld, pathOut)
 
         local code = (char:byte() or 0) - ('a'):byte()
         local zone = MLML[code]
+
         if zone then
             if zone.type == 'BUFFER' then
                 return homm3lua.TERRAIN_LAVA
