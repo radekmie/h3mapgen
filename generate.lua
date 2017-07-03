@@ -120,7 +120,6 @@ end
 local function generate (mlml, players, size, sectors)
     local isWindows = package.config[1] == '/'
 
-    local _conf = 'bin/config.cfg'
     local _mlml = 'bin/_test/' .. mlml .. '.h3pgm'
     local _path = 'output/' .. mlml .. '_' .. players
 
@@ -134,7 +133,7 @@ local function generate (mlml, players, size, sectors)
     local vor2  = _path .. '/mapText.txt'
 
     -- Preparation
-    shell('mkdir' .. (isWindows and '' or '-p ') .. _path)
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. _path)
 
     -- LML & LMLM
     local mlml = generateMLML(ConfigHandler.Read(_mlml), players, graph, pgm)
