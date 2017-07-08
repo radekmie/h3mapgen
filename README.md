@@ -2,7 +2,7 @@
 An attempt to build a comprehensive map generator for Heroes of Might and Magic III
 
 ## Run generator
-From the project root directory run `bash run.sh graph_name num_players size sectors`.
+From the project root directory run `lua generate.lua graph_name num_players size sectors`.
 File called `graph_name`.h3pgm should be in bin/_test directory. The output from all stages of generation is saved in `output/<graph_name>_<num_players>`. That directory should contain 10 files:
 
 | File              | Description                            |
@@ -24,7 +24,6 @@ Example: `bash run.sh test-1 4 72 4` or `bash run.sh test-2 8 144 36`.
 It's subject to discussion although this schema seems reasonable to me.
 ```
 bin/
-    generator.exe
     object1.o *
     object2.o *
     ...
@@ -36,24 +35,11 @@ doc/
     ...
 homm3lua/
     (lua API to .h3m format)
-lua/
-    script1.lua
-    ...
-output/
-    intervening_result1
-    intervening_result2
-    nice_map.h3m
-    ...
 src/
     voronoi/
     cellular/
-    ...
-test/
-    test_input1
-    ...
-generator.sh
+generator.lua
 Makefile
-
 ```
 \* For now the `.o` files are built in the `src` directory since this way makes the Makefile tremendously simple.
 
