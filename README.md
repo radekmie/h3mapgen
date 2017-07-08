@@ -2,8 +2,7 @@
 An attempt to build a comprehensive map generator for Heroes of Might and Magic III
 
 ## Run generator
-From the project root directory run `lua generate.lua graph_name num_players size sectors`.
-File called `graph_name`.h3pgm should be in bin/_test directory. The output from all stages of generation is saved in `output/<graph_name>_<num_players>`. That directory should contain 10 files:
+From the project root directory run `lua generate.lua num_players size sectors [seed]`. The output from all stages of generation is saved in `output/<seed>_<num_players>`. That directory should contain 10 files:
 
 | File              | Description                            |
 | ----------------- | -------------------------------------- |
@@ -18,7 +17,7 @@ File called `graph_name`.h3pgm should be in bin/_test directory. The output from
 | `mapText.txt`     | Filled zones                           |
 | `mlml.h3pgm`      | Logic map layout                       |
 
-Example: `bash run.sh test-1 4 72 4` or `bash run.sh test-2 8 144 36`.
+Example: `bash run.sh 4 72 4` or `bash run.sh 8 144 36`.
 
 ## Repo tree:
 It's subject to discussion although this schema seems reasonable to me.
