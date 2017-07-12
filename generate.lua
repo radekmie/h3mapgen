@@ -1,17 +1,8 @@
 package.cpath = package.cpath .. ';homm3lua/dist/?.so'
 package.path  = package.path  .. ';bin/?.lua'
 
-CONFIG = {
-    LML_draw_final = true, -- Do we want to draw the final LML graph (requires Graphviz)
-    LML_draw_steps = false, -- Do we want to draw LML graph after every step of generation (requires Graphviz)
-    LML_max_steps = 1000, -- Contains the upper bound for the number of production application (error when it is exceeded)
-    LML_verbose_debug = true, -- Additional debug information (about e.g. successfully applied grammar rules)
-
-    Graphviz_keep_dotsource = true, -- Do we want to keep temporary .dot files during graph generation
-
-    Serialization_indent_size = 2, -- Indentation size used by the Serialization module
-    Serialization_inline_limit = 80 -- Value greater than zero causes serialization to inline tables if result fits within given text column
-}
+-- TODO: Read more data from this config.
+CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
 
 local homm3lua = require('homm3lua')
 
@@ -91,9 +82,9 @@ local function generateH3M (mlml, terrain, world, out)
     instance:write(out)
 end
 
-local function generateMLML (init, seed, players, graph, pgm)
+local function generateMLML (init, iterations, seed, players, graph, pgm)
     local lml = LML.Initialize(init)
-    lml:Generate(Grammar, 100)
+    lml:Generate(Grammar, iterations)
 
     local mlml = MLML.Initialize(lml:Interface())
     mlml:Generate(players)
@@ -154,7 +145,7 @@ local function generate (players, size, sectors, seed)
 
     -- LML & LMLM
     local init = generateMLMLSeed()
-    local mlml = generateMLML(init, _seed, players, graph, pgm)
+    local mlml = generateMLML(init, CONFIG.LML_max_steps, _seed, players, graph, pgm)
 
     -- Terrain
     shell('python MDS/embed_graph.py ' .. graph .. ' ' .. emb)
@@ -171,7 +162,7 @@ end
 if arg[1] then
     generate(table.unpack(arg))
 else
-    print('generate.lua players size sectors [seed]')
+    print('generate.lua players size sectors players size sectors [seed]')
     print('  Example:')
     print('           lua generate.lua 8 144 36')
     print('           lua generate.lua 4 90 15')

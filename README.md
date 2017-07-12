@@ -2,7 +2,7 @@
 An attempt to build a comprehensive map generator for Heroes of Might and Magic III
 
 ## Run generator
-From the project root directory run `lua generate.lua num_players size sectors [seed]`. The output from all stages of generation is saved in `output/<seed>_<num_players>`. That directory should contain 10 files:
+From the project root directory run `lua generate.lua players size sectors [seed]`. The output from all stages of generation is saved in `output/<seed>_<players>`. That directory should contain 10 files:
 
 | File              | Description                            |
 | ----------------- | -------------------------------------- |
