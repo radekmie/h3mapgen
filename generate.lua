@@ -91,25 +91,23 @@ local function generateH3M (mlml, terrain, world, out)
     instance:write(out)
 end
 
-local function generateMLML (config, players, graph, pgm)
-    math.randomseed(config.LML_seed > -1 and config.LML_seed or os.time())
-
-    local lml = LML.Initialize(config.LML_init)
+local function generateMLML (init, seed, players, graph, pgm)
+    local lml = LML.Initialize(init)
     lml:Generate(Grammar, 100)
 
-    local mlml = MLML.Initialize(config.LML_interface)
+    local mlml = MLML.Initialize(lml:Interface())
     mlml:Generate(players)
     mlml:PrintToMDS(graph)
 
     if pgm then
         ConfigHandler.Write(pgm, {
-            LML_init       = config.LML_init,
-            LML_seed       = config.LML_seed,
+            LML_init = init,
+            LML_seed = seed,
 
-            LML_graph      = lml,
-            MLML_graph     = mlml,
+            LML_graph  = lml,
+            MLML_graph = mlml,
 
-            LML_interface  = lml:Interface(),
+            LML_interface  = mlml.lml,
             MLML_interface = mlml:Interface(),
         })
     end
@@ -117,11 +115,30 @@ local function generateMLML (config, players, graph, pgm)
     return mlml
 end
 
-local function generate (mlml, players, size, sectors)
+local function generateMLMLSeed ()
+    local init = {class={}, features={}}
+
+    for level = 0, math.floor(math.random() * 5) + 1 do
+        init.class[#init.class + 1] = {level=level, type='LOCAL'}
+        init.features[#init.features + 1] = {class={level=level, type='LOCAL'}, type='TOWN', value='PLAYER'}
+    end
+
+    for buffer = 1, math.floor(math.random() * 3) + 1 do
+        local level = math.floor(math.random() * 3) + 3
+        init.class[#init.class + 1] = {level=level, type='BUFFER'}
+        init.features[#init.features + 1] = {class={level=level, type='BUFFER'}, type='OUTER', value=0}
+    end
+
+    return init
+end
+
+local function generate (players, size, sectors, seed)
     local isWindows = package.config[1] == '/'
 
-    local _mlml = 'bin/_test/' .. mlml .. '.h3pgm'
-    local _path = 'output/' .. mlml .. '_' .. players
+    local _seed = seed or os.time()
+    local _path = 'output/' .. _seed .. '_' .. players
+
+    math.randomseed(_seed)
 
     local cell  = _path .. '/cell.txt'
     local emb   = _path .. '/emb'
@@ -136,7 +153,8 @@ local function generate (mlml, players, size, sectors)
     shell('mkdir ' .. (isWindows and '' or '-p ') .. _path)
 
     -- LML & LMLM
-    local mlml = generateMLML(ConfigHandler.Read(_mlml), players, graph, pgm)
+    local init = generateMLMLSeed()
+    local mlml = generateMLML(init, _seed, players, graph, pgm)
 
     -- Terrain
     shell('python MDS/embed_graph.py ' .. graph .. ' ' .. emb)
@@ -153,11 +171,9 @@ end
 if arg[1] then
     generate(table.unpack(arg))
 else
-    -- Debug
-    -- generate('test-2', 2, 72, 4)
-
-    print('generate.lua [seed] [players] [size] [sectors]')
+    print('generate.lua players size sectors [seed]')
     print('  Example:')
-    print('           lua generate.lua test-1 8 144 36')
-    print('           lua generate.lua test-2 2 72 4')
+    print('           lua generate.lua 8 144 36')
+    print('           lua generate.lua 4 90 15')
+    print('           lua generate.lua 2 72 4')
 end
