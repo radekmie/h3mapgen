@@ -358,7 +358,7 @@ if __name__ == '__main__':
     best_sol = None
     best_loss = np.inf, np.inf, np.inf
     print("Testing %i embeddings..." % max_it)
-    print("bad edges, inconsistent zones, embedding loss")
+    print("inconsistent zones, bad edges, embedding loss")
     for i in range(max_it):
         sol, vor, vor_zone_graph, cons, E, bad_edges, bad_zones = embed()
         loss = bad_zones, bad_edges, E
