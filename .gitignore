@@ -3,7 +3,7 @@
 /bin/_test/*.dot
 /bin/_test/*.png
 /bin/voronoi
-/bin/cellular
+/cellular/cellular
 /output
 
 #Visual Studio files

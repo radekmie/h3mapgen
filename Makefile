@@ -1,14 +1,14 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn-type -pedantic-errors -Wundef
 LDLIBS =
-TARGETS = bin/cellular bin/voronoi
+TARGETS = cellular/cellular bin/voronoi
 
 .PHONY: homm3lua
 
 all: $(TARGETS) | homm3lua
 
-bin/cellular: Makefile cellular/board.o cellular/cellular_terrain.o cellular/main.cpp
-	 $(CXX) $(CXXFLAGS) -o bin/cellular cellular/*.o cellular/main.cpp
+cellular/cellular: Makefile cellular/board.o cellular/cellular_terrain.o cellular/main.cpp
+	 $(CXX) $(CXXFLAGS) -o cellular/cellular cellular/*.o cellular/main.cpp
 
 bin/voronoi: Makefile src/voronoi/Constants.o src/voronoi/Sector.o src/voronoi/Tile.o src/voronoi/TileDivider.o src/voronoi/SectorLoader.o src/voronoi/BresenhamSectorLoader.o src/voronoi/ExactSectorLoader.o src/voronoi/Main.cpp
 	$(CXX) $(CXXFLAGS) -o bin/voronoi src/voronoi/*.o src/voronoi/Main.cpp
