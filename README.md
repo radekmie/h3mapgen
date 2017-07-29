@@ -36,7 +36,11 @@ homm3lua/
     (lua API to .h3m format)
 src/
     voronoi/
-    cellular/
+cellular/
+	cellular_binary
+	source1.cpp
+	source2.cpp
+	...
 generator.lua
 Makefile
 ```
