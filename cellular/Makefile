@@ -3,6 +3,7 @@ CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn
 
 # Auto-dependency generation method from:
 # http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
+
 DEPDIR := .d
 $(shell mkdir -p $(DEPDIR) >/dev/null)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
@@ -27,7 +28,7 @@ clean:
 distclean: clean
 	rm -f $(TARGETS)
 
-cellular: Makefile $(OBJS)
+cellular: $(OBJS)
 	$(LINKER) $(OBJS) 
 
 $(OBJS): %.o: %.cpp $(DEPDIR)/%.d
