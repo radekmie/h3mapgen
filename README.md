@@ -1,6 +1,13 @@
 # h3mapgen
 An attempt to build a comprehensive map generator for Heroes of Might and Magic III
 
+## Setup
+
+```shell
+$ git submodule update --init --recursive
+$ make
+```
+
 ## Run generator
 From the project root directory run `lua generate.lua players size sectors [seed]`. The output from all stages of generation is saved in `output/<seed>_<players>`. That directory should contain 10 files:
 
