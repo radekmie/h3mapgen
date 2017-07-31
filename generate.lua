@@ -162,7 +162,7 @@ end
 if arg[1] then
     generate(table.unpack(arg))
 else
-    print('generate.lua players size sectors players size sectors [seed]')
+    print('generate.lua players size sectors [seed]')
     print('  Example:')
     print('           lua generate.lua 8 144 36')
     print('           lua generate.lua 4 90 15')
