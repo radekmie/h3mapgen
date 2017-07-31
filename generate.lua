@@ -150,7 +150,7 @@ local function generate (players, size, sectors, seed)
     -- Terrain
     shell('python MDS/embed_graph.py ' .. graph .. ' ' .. emb)
     shell('bin/voronoi ' .. mds .. ' ' .. vor1 .. ' ' .. size .. ' ' .. size .. ' ' .. sectors .. ' ' .. sectors)
-    shell('bin/cellular 0.5 1 2 < ' .. vor1 .. ' > ' .. cell)
+    shell('bin/cellular 0.5 3 2 < ' .. vor1 .. ' > ' .. cell)
 
     -- Debug
     -- shell('sed \'s/./& /g\' ' .. cell .. ' | grep --color \'\\$\'')
