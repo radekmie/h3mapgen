@@ -7,7 +7,13 @@ An attempt to build a comprehensive map generator for Heroes of Might and Magic 
   <img src="design.png" alt="Design" height="357">
 </p>
 
-<details><summary>[nomnoml](http://nomnoml.com/) source</summary>
+<details>
+<summary>
+
+[nomnoml](http://nomnoml.com/) source
+
+</summary>
+
 ```
 #arrowSize: 0.75
 #direction: right
@@ -41,6 +47,7 @@ An attempt to build a comprehensive map generator for Heroes of Might and Magic 
   [Renderable] -> [<end> .]
 ]
 ```
+
 </details>
 
 ## Setup
