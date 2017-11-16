@@ -2,8 +2,8 @@
 
 /bin/_test/*.dot
 /bin/_test/*.png
-/bin/voronoi
-/bin/cellular
+/components/ca/ca
+/components/voronoi/voronoi
 /output
 
 #Visual Studio files
