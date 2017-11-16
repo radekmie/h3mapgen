@@ -26,30 +26,6 @@ From the project root directory run `lua generate.lua players size sectors [seed
 
 Example: `bash run.sh 4 72 4` or `bash run.sh 8 144 36`.
 
-## Repo tree:
-It's subject to discussion although this schema seems reasonable to me.
-```
-bin/
-    object1.o *
-    object2.o *
-    ...
-conf/
-    voronoi.conf
-    ...
-doc/
-    user_gide.txt
-    ...
-homm3lua/
-    (lua API to .h3m format)
-src/
-    voronoi/
-    cellular/
-generator.lua
-Makefile
-```
-\* For now the `.o` files are built in the `src` directory since this way makes the Makefile tremendously simple.
-
-
 ## Random notes:
 - In case you don't know that: the first rule is that the code in `master` is compilable at all times. You should check that before commiting.
 - I've created a separate branch for development of cellular automata. Creating branches for other parts of the project is highly encouraged.
