@@ -1,5 +1,9 @@
-package.cpath = package.cpath .. ';homm3lua/dist/?.so'
-package.path  = package.path  .. ';components/mlml/?.lua'
+-- Instead of LUA_CPATH
+package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
+
+-- Instead of LUA_PATH
+package.path = package.path .. ';components/mlml/?.lua'
+package.path = package.path .. ';libs/?.lua'
 
 -- TODO: Read more data from this config.
 CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')

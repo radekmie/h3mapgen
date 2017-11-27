@@ -14,7 +14,7 @@ components/voronoi/voronoi: Makefile components/voronoi/Constants.o components/v
 	$(CXX) $(CXXFLAGS) -o components/voronoi/voronoi components/voronoi/*.o components/voronoi/Main.cpp
 
 clean:
-	$(MAKE) -C homm3lua clean
+	$(MAKE) -C libs/homm3lua clean
 	rm -f components/ca/*.o components/voronoi/*.o
 	rm -rf output
 
@@ -22,4 +22,4 @@ distclean: clean
 	rm -f $(TARGETS)
 
 homm3lua:
-	$(MAKE) -C homm3lua
+	$(MAKE) -C libs/homm3lua
