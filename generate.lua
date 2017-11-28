@@ -1,5 +1,9 @@
-package.cpath = package.cpath .. ';homm3lua/dist/?.so'
-package.path  = package.path  .. ';bin/?.lua'
+-- Instead of LUA_CPATH
+package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
+
+-- Instead of LUA_PATH
+package.path = package.path .. ';components/mlml/?.lua'
+package.path = package.path .. ';libs/?.lua'
 
 -- TODO: Read more data from this config.
 CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
@@ -148,9 +152,9 @@ local function generate (players, size, sectors, seed)
     local mlml = generateMLML(init, CONFIG.LML_max_steps, _seed, players, graph, pgm)
 
     -- Terrain
-    shell('python MDS/embed_graph.py ' .. graph .. ' ' .. emb)
-    shell('bin/voronoi ' .. mds .. ' ' .. vor1 .. ' ' .. size .. ' ' .. size .. ' ' .. sectors .. ' ' .. sectors)
-    shell('bin/cellular 0.5 3 2 < ' .. vor1 .. ' > ' .. cell)
+    shell('python components/mds/embed_graph.py ' .. graph .. ' ' .. emb)
+    shell('components/voronoi/voronoi ' .. mds .. ' ' .. vor1 .. ' ' .. size .. ' ' .. size .. ' ' .. sectors .. ' ' .. sectors)
+    shell('components/ca/ca 0.5 3 2 < ' .. vor1 .. ' > ' .. cell)
 
     -- Debug
     -- shell('sed \'s/./& /g\' ' .. cell .. ' | grep --color \'\\$\'')
