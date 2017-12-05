@@ -101,7 +101,7 @@ end
 
 local function step_initMLML (state)
     local mlml = MLML.Initialize(state.LML_interface)
-    mlml:Generate(state.players)
+    mlml:Generate(state._params.players)
 
     -- TODO: Should be stored in state, not in a file.
     mlml:PrintToMDS(state.paths.graph)
@@ -115,7 +115,7 @@ local function step_initPaths (state)
     local isWindows = package.config[1] == '/'
 
     -- Initialize paths.
-    state.path = 'output/' .. state.seed .. '_' .. state.players
+    state.path = 'output/' .. state.seed .. '_' .. state._params.players
     state.paths = {
         cell  = state.path .. '/cell.txt',
         dumps = state.path .. '/dumps/',
@@ -135,6 +135,12 @@ end
 
 local function step_initSeed (state)
     -- Set shared seed for determinacy.
+    if state._params.seed == -1 then
+        state.seed = os.time()
+    else
+        state.seed = state._params.seed
+    end
+
     math.randomseed(state.seed)
 end
 
@@ -225,10 +231,10 @@ local function step_voronoi (state)
         'components/voronoi/voronoi',
         state.paths.mds,
         state.paths.vor1,
-        state.size,
-        state.size,
-        state.sectors,
-        state.sectors
+        state._params.size,
+        state._params.size,
+        state._params.sectors,
+        state._params.sectors
     }, ' '))
 end
 
@@ -236,10 +242,12 @@ end
 if arg[1] then
     local seed = {
         _config = CONFIG,
-        players = tonumber(arg[1]),
-        sectors = tonumber(arg[3]),
-        seed    = tonumber(arg[4] or os.time()),
-        size    = tonumber(arg[2])
+        _params = {
+            players = tonumber(arg[1]),
+            sectors = tonumber(arg[3]),
+            seed    = tonumber(arg[4] or -1),
+            size    = tonumber(arg[2])
+        }
     }
 
     generate(seed, {
