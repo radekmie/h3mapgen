@@ -9,7 +9,7 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
     represents a feature.  On completion, y contains the corresponding
     co-ordinates of each point on the map.  By default, a two-dimensional
     map is created.  Note if x contains any duplicated rows, SAMMON will
-    fail (ungracefully). 
+    fail (ungracefully).
 
     [y,E] = sammon(x) also returns the value of the cost function in E (i.e.
     the stress of the mapping).
@@ -22,7 +22,7 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
        maxiter        - maximum number of iterations
        tolfun         - relative tolerance on objective function
        maxhalves      - maximum number of step halvings
-       input          - {'raw','distance'} if set to 'distance', X is 
+       input          - {'raw','distance'} if set to 'distance', X is
                         interpreted as a matrix of pairwise distances.
        display        - 0 to 2. 0 least verbose, 2 max verbose.
        init           - {'pca', 'random'}
@@ -33,7 +33,7 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
     File        : sammon.py
     Date        : 18 April 2014
     Authors     : Tom J. Pollard (tom.pollard.11@ucl.ac.uk)
-                : Ported from MATLAB implementation by 
+                : Ported from MATLAB implementation by
                   Gavin C. Cawley and Nicola L. C. Talbot
 
     Description : Simple python implementation of Sammon's non-linear
@@ -60,7 +60,7 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
     """
-    
+
     from scipy.spatial.distance import cdist
 
     def euclid(a,b):
@@ -81,15 +81,15 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
     Dinv[np.isinf(Dinv)] = 0 # Fix by replacing inf with 0 (default Matlab behaviour).
     if init == 'pca':
         [UU,DD,_] = np.linalg.svd(x)
-        y = UU[:,:n]*DD[:n] 
+        y = UU[:,:n]*DD[:n]
     else:
         y = np.random.normal(0.0,1.0,[N,n])
     one = np.ones([N,n])
     d = euclid(y,y) + np.eye(N)
-    dinv = 1. / d # Returns inf where d = 0. 
+    dinv = 1. / d # Returns inf where d = 0.
     dinv[np.isinf(dinv)] = 0 # Fix by replacing inf with 0 (default Matlab behaviour).
-    delta = D-d 
-    E = ((delta**2)*Dinv).sum() 
+    delta = D-d
+    E = ((delta**2)*Dinv).sum()
 
     # Get on with it
     for i in range(maxiter):
@@ -112,7 +112,7 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
             s_reshape = s.reshape(2, int(len(s) / 2)).T
             y = y_old + s_reshape
             d = euclid(y, y) + np.eye(N)
-            dinv = 1 / d # Returns inf where D = 0. 
+            dinv = 1 / d # Returns inf where D = 0.
             dinv[np.isinf(dinv)] = 0 # Fix by replacing inf with 0 (default Matlab behaviour).
             delta = D - d
             E_new = ((delta**2)*Dinv).sum()
@@ -138,5 +138,5 @@ def sammon(x, n = 2, display = 2, inputdist = 'raw', maxhalves = 20, maxiter = 5
 
     # Fiddle stress to match the original Sammon paper
     E = E * scale
-    
+
     return [y,E]

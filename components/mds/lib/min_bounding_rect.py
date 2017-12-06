@@ -2,12 +2,12 @@
 
 # Find the minimum-area bounding box of a set of 2D points
 #
-# The input is a 2D convex hull, in an Nx2 numpy array of x-y co-ordinates. 
+# The input is a 2D convex hull, in an Nx2 numpy array of x-y co-ordinates.
 # The first and last points points must be the same, making a closed polygon.
 # This program finds the rotation angles of each edge of the convex polygon,
 # then tests the area of a bounding box aligned with the unique angles in
 # 90 degrees of the 1st Quadrant.
-# Returns the 
+# Returns the
 #
 # Tested with Python 2.6.5 on Ubuntu 10.04.4
 # Results verified using Matlab
@@ -97,7 +97,7 @@ def minBoundingRect(hull_points_2d):
         width = max_x - min_x
         height = max_y - min_y
         area = width*height
-        #print "Potential bounding box ", i, ":  width: ", width, " height: ", height, "  area: ", area 
+        #print "Potential bounding box ", i, ":  width: ", width, " height: ", height, "  area: ", area
 
         # Store the smallest rect found first (a simple convex hull might have 2 answers with same area)
         if (area < min_bbox[1]):
@@ -106,7 +106,7 @@ def minBoundingRect(hull_points_2d):
         #min_bbox = ( edge_angles[i], area, width, height, min_x, max_x, min_y, max_y )
 
     # Re-create rotation matrix for smallest rect
-    angle = min_bbox[0]   
+    angle = min_bbox[0]
     R = array([ [ math.cos(angle), math.cos(angle-(math.pi/2)) ], [ math.cos(angle+(math.pi/2)), math.cos(angle) ] ])
     #print "Projection matrix: \n", R
 
