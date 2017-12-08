@@ -207,6 +207,8 @@ local function step_initPaths (state)
         vor2  = state.path .. '/mapText.txt'
     }
 
+    print('Generating ' .. state.path .. '...')
+
     -- Create dir.
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.dumps)
