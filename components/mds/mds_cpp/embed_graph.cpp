@@ -2,6 +2,8 @@
 #include <list>
 #include <fstream>
 #include <sstream>
+#include <set>
+#include <random>
 #include "min_bounding_rect.hpp"
 #include "qhull_2d.hpp"
 #include "sammon.hpp"
@@ -10,7 +12,9 @@
 #define MAKE_A_PLOT false
 #define GRAV_POINTS_PER_EDGE 6
 
-#define Sizes std::map<std::string, double>
+#define Sizes       std::map<std::string, int>
+#define Graph       std::map<Vert, std::set<Vert> >
+#define EdgeWeights std::map<std::pair<Vert, Vert>, int>
 
 using namespace arma;
 
@@ -18,6 +22,8 @@ using namespace arma;
 // from scipy.spatial import Voronoi
 // from heapq import heappop, heappush
 
+std::random_device rd;
+std::mt19937 rng(rd());
 
 struct Vert {
     std::string id;
@@ -26,21 +32,19 @@ struct Vert {
     bool operator<(const Vert& rhs) const {
         return std::tie(id, sub_id) < std::tie(rhs.id, rhs.sub_id);
     }
-};
 
-struct Graph {
-    std::map<Vert, std::list<Vert> > graph;
-
-    std::list<Vert> &operator[](const Vert v) {
-        return graph[v];
+    bool operator==(const Vert& rhs) const {
+        return id == rhs.id && sub_id == rhs.sub_id;
     }
 };
 
+// struct Graph {
+//     std::map<Vert, std::list<Vert> > graph;
 
-bool same_vert(Vert a, Vert b) {
-    return a.id == b.id;
-}
-
+//     std::list<Vert> &operator[](const Vert v) {
+//         return graph[v];
+//     }
+// };
 
 mat pull_points(mat points, mat grav_points, vec mass, double g) {
     mat dists = euclid(points, grav_points) + 1;
@@ -89,20 +93,18 @@ std::pair<Graph, Sizes> load_graph(std::string path) {
     std::string line;
     int line_number = 0;
 
-    while(std::getline(graph_file, line)) {
+    while (std::getline(graph_file, line)) {
         if (line_number > 0) {
             std::stringstream linestream(line);
             std::string name, data;
-            double size;
+            int size;
 
             linestream >> name >> size;
             sizes[name] = size;
             Vert v = {name, 0};
 
-            while(std::getline(linestream, data, ' ')) {
-                if (data.length() > 0)
-                    graph[v].push_back(Vert({data, 0}));
-            }
+            while (linestream >> data)
+                graph[v].insert({data, 0});
         }
         line_number += 1;
     }
@@ -110,11 +112,94 @@ std::pair<Graph, Sizes> load_graph(std::string path) {
     return std::make_pair(graph, sizes);
 }
 
-int main(int argc, char** argv)
-{
+std::string edg(std::string s1, std::string s2) {
+    return s1 + " " + s2;
+}
+
+Graph reshape_graph(Graph graph, Sizes sizes) {
+    Graph new_graph = Graph();
+    std::set<std::string> done = {};
+
+    for (auto const& v_us : graph) {
+        Vert v = v_us.first;
+        for (auto const& u : v_us.second)
+            if (done.find(edg(v.id, u.id)) != done.end()) {
+                std::uniform_int_distribution<int> univ(1, sizes[v.id]);
+                std::uniform_int_distribution<int> uniu(1, sizes[u.id]);
+                Vert v_ = {v.id, univ(rng)};
+                Vert u_ = {u.id, uniu(rng)};
+                new_graph[v_].insert(u_);
+                new_graph[u_].insert(v_);
+                done.insert(edg(v.id, u.id));
+                done.insert(edg(u.id, v.id));
+            }
+    }
+
+    for (auto const& v_us : graph) {
+        Vert v = v_us.first;
+        if (sizes[v.id] > 1)
+            for (int k = 1; k <= sizes[v.id]; k++) {
+                Vert u1 = {v.id, k};
+                Vert u2 = {v.id, (k % sizes[v.id]) + 1};
+                new_graph[u1].insert(u2);
+                new_graph[u2].insert(u1);
+            }
+    }
+
+    return new_graph;
+}
+
+mat squeeze(mat data, vec lxy = {0, 0}, vec hxy = {1, 1}) {
+    mat mins = min(data);
+    mat maxs = max(data) - mins;
+    mat new_data = data.each_row() - mins;
+    new_data.each_row() /= maxs;
+    new_data.each_row() %= hxy - lxy;
+    new_data.each_row() += lxy;
+    return new_data;
+}
+
+EdgeWeights calc_weights(Graph graph, Sizes sizes) {
+    EdgeWeights ws = {};
+
+    for (auto const& v_vs : graph) {
+        Vert v = v_vs.first;
+        for (auto const& u_us : graph) {
+            Vert u = u_us.first;
+            if (!(v == u)) {
+                std::set<Vert> vs = v_vs.second;
+                std::set<Vert> us = u_us.second;
+                std::set<Vert> vs_or_us;
+                std::set<Vert> vs_and_us;
+                std::set_union(
+                    vs.begin(), vs.end(), us.begin(), us.end(),
+                    std::inserter(vs_or_us, vs_or_us.begin()));
+                std::set_intersection(
+                    vs.begin(), vs.end(), us.begin(), us.end(),
+                    std::inserter(vs_and_us, vs_and_us.begin()));
+                ws[ {u, v}] = vs_and_us.size() - vs_and_us.size();
+            }
+        }
+    }
+    return ws;
+}
+
+int main(int argc, char** argv) {
+    // for (int i = 0; i < 10; i++) {
+    //     std::uniform_int_distribution<int> uni(100*i, 101*i);
+    //     cout << uni(rng) << "\n";
+    //     cout << uni(rng) << "\n";
+    //     cout << uni(rng) << "\n";
+    // }
+    EdgeWeights ws = {};
     Graph g = Graph();
     Vert v = {"1", 2};
-    g[v].push_back(v);
-    cout << (g.graph.size());
+    Vert u = {"1", 2};
+    ws[ {v, u}] = 1;
+    std::pair<Vert, int> d = {v, 1};
+    g[v].insert({"2", 5});
+    g[u].insert(u);
+    cout << g[v].size();
+    cout << (v == Vert({"1", 3}));
     return 0;
 }
