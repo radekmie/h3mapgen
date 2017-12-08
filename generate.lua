@@ -36,12 +36,16 @@ end
 local function saveH3M (state, path)
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, state.world_size)
 
+    for _, town in ipairs(state.world_towns) do
+        instance:town(table.unpack(town))
+    end
+
     for _, obstacle in ipairs(state.world_obstacles) do
         instance:obstacle(table.unpack(obstacle))
     end
 
     instance:terrain(function (x, y, z)
-        return table.unpack(state.world[position(x, y, z)])
+        return table.unpack(state.world[position(x, y, z)].cell)
     end)
 
     instance:write(path)
@@ -70,6 +74,81 @@ end
 
 local function step_dumpH3M (state, index)
     saveH3M(state, state.paths.dumps .. index .. '.h3m')
+end
+
+local function step_gameCastles (state)
+    for zoneId, zone in pairs(state.MLML_graph) do
+        local base = state.LML_graph[zone.baseid]
+        local town = false
+
+        for _, feature in ipairs(base.features) do
+            if feature.type == 'TOWN' then
+                town = true
+                break
+            end
+        end
+
+        if town then
+            local play = 0
+            for player in pairs(zone.players) do
+                play = player
+                break
+            end
+
+            local cells = {}
+
+            for cellId, cell in pairs(state.world) do
+                if cell.zone == zoneId then
+                    cells[cellId] = true
+                end
+            end
+
+            local valid = {}
+
+            for cellId in pairs(cells) do
+                local _ = string.gmatch(cellId, '[^%s]+')
+                local x = tonumber(_())
+                local y = tonumber(_())
+                local z = tonumber(_())
+
+                if  not state.world_grid[position(x - 2,     y,     z)]
+                and not state.world_grid[position(x - 2 + 1, y + 1, z)]
+                and not state.world_grid[position(x - 2 + 1, y,     z)]
+                and not state.world_grid[position(x - 2 - 1, y + 1, z)]
+                and not state.world_grid[position(x - 2 - 1, y,     z)]
+                and not state.world_grid[position(x - 2,     y + 1, z)] then
+                    -- TODO: Check if this position is valid.
+                    table.insert(valid, cellId)
+                end
+            end
+
+            if #valid > 0 then
+                for _, cellId in ipairs(valid) do
+                    local _ = string.gmatch(cellId, '[^%s]+')
+                    local x = tonumber(_())
+                    local y = tonumber(_())
+                    local z = tonumber(_())
+
+                    local sprite = ({
+                        homm3lua.TOWN_CASTLE,
+                        homm3lua.TOWN_DUNGEON,
+                        homm3lua.TOWN_FORTRESS,
+                        homm3lua.TOWN_INFERNO,
+                        homm3lua.TOWN_NECROPOLIS,
+                        homm3lua.TOWN_RAMPART,
+                        homm3lua.TOWN_STRONGHOLD,
+                        homm3lua.TOWN_TOWER
+                    })[play]
+
+                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1})
+
+                    break
+                end
+            else
+                print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
+            end
+        end
+    end
 end
 
 local function step_initLML (state)
@@ -169,8 +248,10 @@ local function step_parseWorld (state)
 
     -- Yay!
     state.world = {}
+    state.world_grid = {}
     state.world_obstacles = {}
     state.world_size = nil
+    state.world_towns = {}
 
         if w1 <= homm3lua.SIZE_SMALL      then state.world_size = homm3lua.SIZE_SMALL
     elseif w1 <= homm3lua.SIZE_MEDIUM     then state.world_size = homm3lua.SIZE_MEDIUM
@@ -197,8 +278,11 @@ local function step_parseWorld (state)
         local wall = world:sub(info, info)
 
         -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
-        if wall == '#' then table.insert(state.world_obstacles, {'Oak Trees',  {x=x, y=y, z=z}}) end
-        if wall == '$' then table.insert(state.world_obstacles, {'Pine Trees', {x=x, y=y, z=z}}) end
+        if wall == '#' or wall == '$' then
+            local sprite = wall == '#' and 'Oak Trees' or 'Pine Trees'
+            state.world_grid[position(x, y, z)] = true
+            table.insert(state.world_obstacles, {sprite, {x=x, y=y, z=z}})
+        end
 
         local code = (char:byte() or 0) - ('a'):byte()
         local zone = state.MLML_graph[code]
@@ -216,7 +300,7 @@ local function step_parseWorld (state)
         -- NOTE: It should NOT happen, but... You know.
         cell = cell or {homm3lua.H3M_TERRAIN_ROCK}
 
-        state.world[position(x, y, z)] = cell
+        state.world[position(x, y, z)] = {cell = cell, zone = code}
     end
     end
     end
@@ -266,6 +350,7 @@ if arg[1] then
         -- step_dump,
         -- NOTE: This makes state renderable, i.e. .h3m-able.
         step_parseWorld,
+        step_gameCastles,
         -- step_dump,
         -- step_dumpH3M,
         step_saveH3M
