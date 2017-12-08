@@ -36,6 +36,9 @@ end
 local function saveH3M (state, path)
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, state.world_size)
 
+    instance:name('Random Map')
+    instance:description('Seed: ' .. state.seed)
+
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
@@ -206,6 +209,8 @@ local function step_initPaths (state)
         vor1  = state.path .. '/map.txt',
         vor2  = state.path .. '/mapText.txt'
     }
+
+    print('Generating ' .. state.path .. '...')
 
     -- Create dir.
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
