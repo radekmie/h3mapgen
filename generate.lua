@@ -36,6 +36,9 @@ end
 local function saveH3M (state, path)
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, state.world_size)
 
+    instance:name('Random Map')
+    instance:description('Seed: ' .. state.seed)
+
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
