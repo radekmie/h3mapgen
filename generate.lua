@@ -6,6 +6,7 @@ package.path = package.path .. ';components/mlml/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
 -- TODO: Read more data from this config.
+-- TODO: Auxiliary/Serialization should be able to work without this global.
 CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
 
 local homm3lua = require('homm3lua')
@@ -17,6 +18,46 @@ local Grammar = require('LogicMapLayout/Grammar/Grammar')
 local LML     = require('LogicMapLayout/LogicMapLayout')
 local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
 
+-- Utils.
+local function generate (state, steps)
+    for index, step in ipairs(steps) do
+        step(state, index)
+    end
+end
+
+local function position2xyz (p)
+    return p % 256, p // 256 % 256, p // 256 // 256
+end
+
+local function xyz2position (x, y, z)
+    return x + y * 256 + z * 256 * 256
+end
+
+local function save (state, path)
+    ConfigHandler.Write(path, state)
+end
+
+local function saveH3M (state, path)
+    local instance = homm3lua.new(homm3lua.FORMAT_ROE, state.world_size)
+
+    instance:name('Random Map')
+    instance:description('Seed: ' .. state.seed)
+
+    for _, town in ipairs(state.world_towns) do
+        instance:town(table.unpack(town))
+    end
+
+    for _, obstacle in ipairs(state.world_obstacles) do
+        instance:obstacle(table.unpack(obstacle))
+    end
+
+    instance:terrain(function (x, y, z)
+        return table.unpack(state.world[xyz2position(x, y, z)].cell)
+    end)
+
+    instance:write(path)
+end
+
 local function shell (command)
     local handle = io.popen(command)
     local result = handle:read('*a')
@@ -25,14 +66,182 @@ local function shell (command)
     return result:gsub('^%s*(.-)%s*$', '%1')
 end
 
-local function generateH3M (mlml, terrain, world, out)
+-- Steps.
+local function step_ca (state)
+    shell(table.concat({
+        'components/ca/ca 0.5 3 2',
+        '<', state.paths.vor1,
+        '>', state.paths.cell
+    }, ' '))
+end
+
+local function step_dump (state, index)
+    save(state, state.paths.dumps .. index .. '.h3pgm')
+end
+
+local function step_dumpH3M (state, index)
+    saveH3M(state, state.paths.dumps .. index .. '.h3m')
+end
+
+local function step_gameCastles (state)
+    for zoneId, zone in pairs(state.MLML_graph) do
+        local base = state.LML_graph[zone.baseid]
+        local town = false
+
+        for _, feature in ipairs(base.features) do
+            if feature.type == 'TOWN' then
+                town = true
+                break
+            end
+        end
+
+        if town then
+            local play = 0
+            for player in pairs(zone.players) do
+                play = player
+                break
+            end
+
+            local cells = {}
+
+            for cellId, cell in pairs(state.world) do
+                if cell.zone == zoneId then
+                    cells[cellId] = true
+                end
+            end
+
+            local valid = {}
+
+            for cellId in pairs(cells) do
+                local x, y, z = position2xyz(cellId)
+
+                if  not state.world_grid[xyz2position(x - 2,     y,     z)]
+                and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
+                and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
+                and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
+                and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
+                and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
+                    -- TODO: Check if this position is valid.
+                    table.insert(valid, cellId)
+                end
+            end
+
+            if #valid > 0 then
+                for _, cellId in ipairs(valid) do
+                    local x, y, z = position2xyz(cellId)
+
+                    local sprite = ({
+                        homm3lua.TOWN_CASTLE,
+                        homm3lua.TOWN_DUNGEON,
+                        homm3lua.TOWN_FORTRESS,
+                        homm3lua.TOWN_INFERNO,
+                        homm3lua.TOWN_NECROPOLIS,
+                        homm3lua.TOWN_RAMPART,
+                        homm3lua.TOWN_STRONGHOLD,
+                        homm3lua.TOWN_TOWER
+                    })[play]
+
+                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1})
+
+                    break
+                end
+            else
+                print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
+            end
+        end
+    end
+end
+
+local function step_initLML (state)
+    local init = {class={}, features={}}
+    local rand = function (from, to)
+        return math.floor(math.random() * (to - from)) + from
+    end
+
+    for level = 0, rand(1, 6) do
+        table.insert(init.class,           {level=level, type='LOCAL'})
+        table.insert(init.features, {class={level=level, type='LOCAL'}, type='TOWN', value='PLAYER'})
+    end
+
+    for buffer = 1, rand(1, 4) do
+        local level = rand(3, 6)
+
+        table.insert(init.class,           {level=level, type='BUFFER'})
+        table.insert(init.features, {class={level=level, type='BUFFER'}, type='OUTER', value=0})
+    end
+
+    local lml = LML.Initialize(init)
+    -- TODO: Do not use a state._config?
+    lml:Generate(Grammar, state._config.LML_max_steps)
+
+    state.LML_graph = lml
+    state.LML_init = init
+    state.LML_interface = lml:Interface()
+end
+
+local function step_initMLML (state)
+    local mlml = MLML.Initialize(state.LML_interface)
+    mlml:Generate(state._params.players)
+
+    -- TODO: Should be stored in state, not in a file.
+    mlml:PrintToMDS(state.paths.graph)
+
+    state.MLML_graph = mlml
+    state.MLML_interface = mlml:Interface()
+end
+
+local function step_initPaths (state)
+    -- NOTE: Store it somewhere?
+    local isWindows = package.config[1] == '/'
+
+    -- Initialize paths.
+    state.path = 'output/' .. state.seed .. '_' .. state._params.players
+    state.paths = {
+        cell  = state.path .. '/cell.txt',
+        dumps = state.path .. '/dumps/',
+        emb   = state.path .. '/emb',
+        graph = state.path .. '/graph.txt',
+        map   = state.path .. '/map.h3m',
+        mds   = state.path .. '/emb.txt',
+        pgm   = state.path .. '/mlml.h3pgm',
+        vor1  = state.path .. '/map.txt',
+        vor2  = state.path .. '/mapText.txt'
+    }
+
+    print('Generating ' .. state.path .. '...')
+
+    -- Create dir.
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.dumps)
+end
+
+local function step_initSeed (state)
+    -- Set shared seed for determinacy.
+    if state._params.seed == -1 then
+        state.seed = os.time()
+    else
+        state.seed = state._params.seed
+    end
+
+    math.randomseed(state.seed)
+end
+
+local function step_mds (state)
+    shell(table.concat({
+        'python components/mds/embed_graph.py',
+        state.paths.graph,
+        state.paths.emb
+    }, ' '))
+end
+
+local function step_parseWorld (state)
     -- Terrain
-    local file = assert(io.open(terrain))
+    local file = assert(io.open(state.paths.vor2))
     local h1, w1, terrain = file:read('*number', '*number', '*all')
     file:close()
 
     -- World
-    local file = assert(io.open(world))
+    local file = assert(io.open(state.paths.cell))
     local h2, w2, world = file:read('*number', '*number', '*all')
     file:close()
 
@@ -41,130 +250,114 @@ local function generateH3M (mlml, terrain, world, out)
     if h1 ~= h2 then error('Map terrain and world differ in size!') end
 
     -- Yay!
-    local size = nil
-        if w1 <= homm3lua.SIZE_SMALL      then size = homm3lua.SIZE_SMALL
-    elseif w1 <= homm3lua.SIZE_MEDIUM     then size = homm3lua.SIZE_MEDIUM
-    elseif w1 <= homm3lua.SIZE_LARGE      then size = homm3lua.SIZE_LARGE
-    elseif w1 <= homm3lua.SIZE_EXTRALARGE then size = homm3lua.SIZE_EXTRALARGE
+    state.world = {}
+    state.world_grid = {}
+    state.world_obstacles = {}
+    state.world_size = nil
+    state.world_towns = {}
+
+        if w1 <= homm3lua.SIZE_SMALL      then state.world_size = homm3lua.SIZE_SMALL
+    elseif w1 <= homm3lua.SIZE_MEDIUM     then state.world_size = homm3lua.SIZE_MEDIUM
+    elseif w1 <= homm3lua.SIZE_LARGE      then state.world_size = homm3lua.SIZE_LARGE
+    elseif w1 <= homm3lua.SIZE_EXTRALARGE then state.world_size = homm3lua.SIZE_EXTRALARGE
     else error('Map too big!') end
 
-    local instance = homm3lua.new(homm3lua.FORMAT_ROE, size)
+    -- TODO: Store underground info somewhere.
+    for z = 0, 0 do
+    for y = 0, state.world_size do
+    for x = 0, state.world_size do
+        local cell = nil
 
-    instance:terrain(function (x, y, z)
-        local x2 = x - (size - w1) // 2
-        local y2 = y - (size - w1) // 2
+        local x2 = x - (state.world_size - w1) // 2
+        local y2 = y - (state.world_size - w1) // 2
 
         if x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1 then
-            return homm3lua.TERRAIN_WATER
+            cell = cell or {homm3lua.TERRAIN_WATER}
         end
 
-        local info = y2 * (w1 + 1) + x2 + 2 -- +1 for line break, +2 for the initial offset
+        -- NOTE: +1 for line break, +2 for the initial offset.
+        local info = y2 * (w1 + 1) + x2 + 2
         local char = terrain:sub(info, info)
         local wall = world:sub(info, info)
 
-        -- see  https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in
-        if wall == '#' then instance:obstacle('Oak Trees',  {x=x, y=y, z=z}) end
-        if wall == '$' then instance:obstacle('Pine Trees', {x=x, y=y, z=z}) end
+        -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
+        if wall == '#' or wall == '$' then
+            local sprite = wall == '#' and 'Oak Trees' or 'Pine Trees'
+            state.world_grid[xyz2position(x, y, z)] = true
+            table.insert(state.world_obstacles, {sprite, {x=x, y=y, z=z}})
+        end
 
         local code = (char:byte() or 0) - ('a'):byte()
-        local zone = mlml[code]
+        local zone = state.MLML_graph[code]
 
         if zone then
             if zone.type == 'BUFFER' then
-                return homm3lua.TERRAIN_LAVA
+                cell = cell or {homm3lua.TERRAIN_LAVA}
             end
 
             for player in pairs(zone.players) do
-                return player % 7
+                cell = cell or {player % 7}
             end
         end
 
         -- NOTE: It should NOT happen, but... You know.
-        return homm3lua.H3M_TERRAIN_ROCK
-    end)
+        cell = cell or {homm3lua.H3M_TERRAIN_ROCK}
 
-    instance:write(out)
-end
-
-local function generateMLML (init, iterations, seed, players, graph, pgm)
-    local lml = LML.Initialize(init)
-    lml:Generate(Grammar, iterations)
-
-    local mlml = MLML.Initialize(lml:Interface())
-    mlml:Generate(players)
-    mlml:PrintToMDS(graph)
-
-    if pgm then
-        ConfigHandler.Write(pgm, {
-            LML_init = init,
-            LML_seed = seed,
-
-            LML_graph  = lml,
-            MLML_graph = mlml,
-
-            LML_interface  = mlml.lml,
-            MLML_interface = mlml:Interface(),
-        })
+        state.world[xyz2position(x, y, z)] = {cell = cell, zone = code}
     end
-
-    return mlml
-end
-
-local function generateMLMLSeed ()
-    local init = {class={}, features={}}
-
-    for level = 0, math.floor(math.random() * 5) + 1 do
-        init.class[#init.class + 1] = {level=level, type='LOCAL'}
-        init.features[#init.features + 1] = {class={level=level, type='LOCAL'}, type='TOWN', value='PLAYER'}
     end
-
-    for buffer = 1, math.floor(math.random() * 3) + 1 do
-        local level = math.floor(math.random() * 3) + 3
-        init.class[#init.class + 1] = {level=level, type='BUFFER'}
-        init.features[#init.features + 1] = {class={level=level, type='BUFFER'}, type='OUTER', value=0}
     end
-
-    return init
 end
 
-local function generate (players, size, sectors, seed)
-    local isWindows = package.config[1] == '/'
-
-    local _seed = seed or os.time()
-    local _path = 'output/' .. _seed .. '_' .. players
-
-    math.randomseed(_seed)
-
-    local cell  = _path .. '/cell.txt'
-    local emb   = _path .. '/emb'
-    local graph = _path .. '/graph.txt'
-    local map   = _path .. '/map.h3m'
-    local mds   = _path .. '/emb.txt'
-    local pgm   = _path .. '/mlml.h3pgm'
-    local vor1  = _path .. '/map.txt'
-    local vor2  = _path .. '/mapText.txt'
-
-    -- Preparation
-    shell('mkdir ' .. (isWindows and '' or '-p ') .. _path)
-
-    -- LML & LMLM
-    local init = generateMLMLSeed()
-    local mlml = generateMLML(init, CONFIG.LML_max_steps, _seed, players, graph, pgm)
-
-    -- Terrain
-    shell('python components/mds/embed_graph.py ' .. graph .. ' ' .. emb)
-    shell('components/voronoi/voronoi ' .. mds .. ' ' .. vor1 .. ' ' .. size .. ' ' .. size .. ' ' .. sectors .. ' ' .. sectors)
-    shell('components/ca/ca 0.5 3 2 < ' .. vor1 .. ' > ' .. cell)
-
-    -- Debug
-    -- shell('sed \'s/./& /g\' ' .. cell .. ' | grep --color \'\\$\'')
-
-    -- H3M
-    generateH3M(mlml, vor2, cell, map)
+local function step_saveH3M (state)
+    saveH3M(state, state.paths.map)
 end
 
+local function step_voronoi (state)
+    shell(table.concat({
+        'components/voronoi/voronoi',
+        state.paths.mds,
+        state.paths.vor1,
+        state._params.size,
+        state._params.size,
+        state._params.sectors,
+        state._params.sectors
+    }, ' '))
+end
+
+-- Main.
 if arg[1] then
-    generate(table.unpack(arg))
+    local seed = {
+        _config = CONFIG,
+        _params = {
+            players = tonumber(arg[1]),
+            sectors = tonumber(arg[3]),
+            seed    = tonumber(arg[4] or -1),
+            size    = tonumber(arg[2])
+        }
+    }
+
+    generate(seed, {
+        step_initSeed,
+        step_initPaths,
+        -- step_dump,
+        step_initLML,
+        -- step_dump,
+        step_initMLML,
+        -- step_dump,
+        step_mds,
+        -- step_dump,
+        step_voronoi,
+        -- step_dump,
+        step_ca,
+        -- step_dump,
+        -- NOTE: This makes state renderable, i.e. .h3m-able.
+        step_parseWorld,
+        step_gameCastles,
+        -- step_dump,
+        -- step_dumpH3M,
+        step_saveH3M
+    })
 else
     print('generate.lua players size sectors [seed]')
     print('  Example:')
