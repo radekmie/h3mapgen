@@ -4,6 +4,7 @@
 #include <sstream>
 #include <set>
 #include <random>
+#include <queue>
 #include "min_bounding_rect.hpp"
 #include "qhull_2d.hpp"
 #include "sammon.hpp"
@@ -18,9 +19,7 @@
 
 using namespace arma;
 
-// from sklearn.preprocessing import scale
 // from scipy.spatial import Voronoi
-// from heapq import heappop, heappush
 
 std::random_device rd;
 std::mt19937 rng(rd());
@@ -63,23 +62,22 @@ mat pull_points(mat points, mat grav_points, vec mass, double g) {
     return points + movements;
 }
 
-mat make_grav_points(int points_per_edge, double xliml, double xlimh,
-                     double yliml, double ylimh) {
-    vec lx = linspace(xliml, xlimh, points_per_edge);
-    vec ly = linspace(yliml, ylimh, points_per_edge);
+mat make_grav_points(int points_per_edge, vec xlim, vec ylim) {
+    vec lx = linspace(xlim(0), xlim(1), points_per_edge);
+    vec ly = linspace(ylim(0), ylim(1), points_per_edge);
 
     mat res = mat(0, 2);
 
-    mat pt1 = join_horiz(lx, ones(lx.size()) * yliml);
+    mat pt1 = join_horiz(lx, ones(lx.size()) * ylim[0]);
     res = join_vert(res, pt1);
 
-    mat pt2 = join_horiz(lx, ones(lx.size()) * ylimh);
+    mat pt2 = join_horiz(lx, ones(lx.size()) * ylim[1]);
     res = join_vert(res, pt2);
 
-    mat pt3 = join_horiz(ones(ly.size()) * yliml, ly);
+    mat pt3 = join_horiz(ones(ly.size()) * ylim[0], ly);
     res = join_vert(res, pt3.rows(1, points_per_edge - 2));
 
-    mat pt4 = join_horiz(ones(ly.size()) * ylimh, ly);
+    mat pt4 = join_horiz(ones(ly.size()) * ylim[1], ly);
     res = join_vert(res, pt4.rows(1, points_per_edge - 2));
 
     return res;
@@ -149,6 +147,22 @@ Graph reshape_graph(Graph graph, Sizes sizes) {
     return new_graph;
 }
 
+mat scale(mat X, bool with_mean = true, bool with_std = true) {
+    if (with_mean) {
+        X = X.each_row() - mean(X);
+        X.each_row() -= mean(X); // in case of very large values in X
+    }
+    if (with_std) {
+        mat scale_ = stddev(X, 1);
+        scale_.replace(0, 1);
+
+        X = X.each_row() / scale_;
+        if (with_mean)
+            X.each_row() -= mean(X);
+    }
+    return X;
+}
+
 mat squeeze(mat data, vec lxy = {0, 0}, vec hxy = {1, 1}) {
     mat mins = min(data);
     mat maxs = max(data) - mins;
@@ -184,6 +198,58 @@ EdgeWeights calc_weights(Graph graph, Sizes sizes) {
     return ws;
 }
 
+int dijksta(Graph graph, EdgeWeights weights, Vert v1, Vert v2) {
+    std::priority_queue<std::pair<int, Vert> > Q;
+    Q.push({0, v1});
+
+    std::set<Vert> seen;
+
+    while (!Q.empty()) {
+        std::pair<int, Vert> w_v = Q.top();
+        int w = w_v.first;
+        Vert v = w_v.second;
+        Q.pop();
+
+        if (seen.find(v) == seen.end()) {
+            seen.insert(v);
+            if (v == v2)
+                return w;
+
+            for (auto const& u : graph[v])
+                if (seen.find(u) == seen.end())
+                    Q.push({w + weights[{v, u}], u});
+        }
+    }
+    return datum::inf;
+}
+
+mat calc_dists(Graph graph, EdgeWeights weights) {
+    int n = graph.size();
+    mat dists = zeros<mat>(n, n);
+
+    int i = 0;
+    for (auto it = graph.begin(); it != graph.end(); it++) {
+        int j = 0;
+        for (auto jt = std::next(it); jt != graph.end(); jt++) {
+            dists(i, j) = dijksta(graph, weights, it->first, jt->first);
+            j++;
+        }
+        i++;
+    }
+    return dists + dists.t();
+}
+
+void save_embedding(mat data, Graph graph, std::string fname) {
+    std::ofstream emb_file(fname);
+    emb_file << data.n_rows << "\n";
+    int i = 0;
+    for (auto const& v_vs : graph) {
+        emb_file << v_vs.first.id << " " << data(i, 0) << " " << data(i, 1);
+        emb_file << " 1 0\n";
+        i++;
+    }
+}
+
 int main(int argc, char** argv) {
     // for (int i = 0; i < 10; i++) {
     //     std::uniform_int_distribution<int> uni(100*i, 101*i);
@@ -198,8 +264,24 @@ int main(int argc, char** argv) {
     ws[ {v, u}] = 1;
     std::pair<Vert, int> d = {v, 1};
     g[v].insert({"2", 5});
+    g[v].insert({"2", 3});
+    g[v].insert({"2", 2});
+    g[v].insert({"2", 0});
+    g[v].insert({"2", 8});
     g[u].insert(u);
+
     cout << g[v].size();
-    cout << (v == Vert({"1", 3}));
+    cout << (v == Vert({"1", 3})) << "\n";
+
+    mat A = {
+        {1,2},
+        {4,6},
+        {200,10000},
+        {0,-3},
+        {-3,-1}
+    };
+    cout << A << "\n";
+    cout << scale(A) << "\n";
+    cout << A << "\n";
     return 0;
 }
