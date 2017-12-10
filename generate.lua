@@ -166,7 +166,23 @@ local function step_debugZoneSigns (state)
     end
     
     local generateZoneDescription = function (zoneId)
-      return 'zone '..zoneId..' {?}'
+      local descr = {}
+      descr[1] = 'Zone ID: '..zoneId
+      local mlmlNode = state.MLML_graph[zoneId]
+      descr[2] = 'Zone Base-ID: '..mlmlNode.baseid
+      local lmlNode = state.LML_graph[mlmlNode.baseid]
+      descr[3] = 'Level: '..lmlNode.class[1].level
+      local players = {}
+      for p=1,8 do
+        if mlmlNode.players[p] then table.insert(players, p) end
+      end
+      descr[4] = mlmlNode.type..' for players: '..table.concat(players,',')
+      local features = {}
+      for _, feature in ipairs(lmlNode.features) do
+        table.insert(features, feature.type)
+      end
+      descr[5] = 'Features: '..table.concat(features,',')
+      return table.concat(descr, '\n')
     end
    
     for cellId, cell in pairs(state.world) do
