@@ -25,8 +25,12 @@ local function generate (state, steps)
     end
 end
 
-local function position (x, y, z)
-    return x .. ' ' .. y .. ' ' .. z
+local function position2xyz (p)
+    return p % 256, p // 256 % 256, p // 256 // 256
+end
+
+local function xyz2position (x, y, z)
+    return x + y * 256 + z * 256 * 256
 end
 
 local function save (state, path)
@@ -48,7 +52,7 @@ local function saveH3M (state, path)
     end
 
     instance:terrain(function (x, y, z)
-        return table.unpack(state.world[position(x, y, z)].cell)
+        return table.unpack(state.world[xyz2position(x, y, z)].cell)
     end)
 
     instance:write(path)
@@ -109,17 +113,14 @@ local function step_gameCastles (state)
             local valid = {}
 
             for cellId in pairs(cells) do
-                local _ = string.gmatch(cellId, '[^%s]+')
-                local x = tonumber(_())
-                local y = tonumber(_())
-                local z = tonumber(_())
+                local x, y, z = position2xyz(cellId)
 
-                if  not state.world_grid[position(x - 2,     y,     z)]
-                and not state.world_grid[position(x - 2 + 1, y + 1, z)]
-                and not state.world_grid[position(x - 2 + 1, y,     z)]
-                and not state.world_grid[position(x - 2 - 1, y + 1, z)]
-                and not state.world_grid[position(x - 2 - 1, y,     z)]
-                and not state.world_grid[position(x - 2,     y + 1, z)] then
+                if  not state.world_grid[xyz2position(x - 2,     y,     z)]
+                and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
+                and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
+                and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
+                and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
+                and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
                     -- TODO: Check if this position is valid.
                     table.insert(valid, cellId)
                 end
@@ -127,10 +128,7 @@ local function step_gameCastles (state)
 
             if #valid > 0 then
                 for _, cellId in ipairs(valid) do
-                    local _ = string.gmatch(cellId, '[^%s]+')
-                    local x = tonumber(_())
-                    local y = tonumber(_())
-                    local z = tonumber(_())
+                    local x, y, z = position2xyz(cellId)
 
                     local sprite = ({
                         homm3lua.TOWN_CASTLE,
@@ -285,7 +283,7 @@ local function step_parseWorld (state)
         -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
         if wall == '#' or wall == '$' then
             local sprite = wall == '#' and 'Oak Trees' or 'Pine Trees'
-            state.world_grid[position(x, y, z)] = true
+            state.world_grid[xyz2position(x, y, z)] = true
             table.insert(state.world_obstacles, {sprite, {x=x, y=y, z=z}})
         end
 
@@ -305,7 +303,7 @@ local function step_parseWorld (state)
         -- NOTE: It should NOT happen, but... You know.
         cell = cell or {homm3lua.H3M_TERRAIN_ROCK}
 
-        state.world[position(x, y, z)] = {cell = cell, zone = code}
+        state.world[xyz2position(x, y, z)] = {cell = cell, zone = code}
     end
     end
     end
