@@ -165,95 +165,42 @@ local function step_debugZoneSigns (state)
       zonestocheck[zoneId] = true
     end
     
+    local generateZoneDescription = function (zoneId)
+      return 'zone '..zoneId..' {?}'
+    end
+   
     for cellId, cell in pairs(state.world) do
       if zonestocheck[cell.zone] then
         local _ = string.gmatch(cellId, '[^%s]+')
-        local x = tonumber(_())
-        local y = tonumber(_())
-        local z = tonumber(_())
+        local x, y, z = tonumber(_()), tonumber(_()), tonumber(_())
 
-        if  not state.world_grid[position(x,     y,     z)] then
-          table.insert(state.world_debugZoneSigns, {'ZONE '..cell.zone..'.', {x=x, y=y, z=z}})
-          print ('zone '..cell.zone..' inserted at '..x..','..y..','..z..' :-)')
+        if  not state.world_grid[position(x,     y,     z)]
+        and not state.world_grid[position(x + 1, y + 0, z)]
+        and not state.world_grid[position(x - 1, y + 0, z)]
+        and not state.world_grid[position(x + 0, y + 1, z)]
+        and not state.world_grid[position(x + 0, y - 1, z)]
+        and not state.world_grid[position(x - 1, y - 1, z)]
+        and not state.world_grid[position(x + 1, y - 1, z)]
+        and not state.world_grid[position(x - 1, y + 1, z)]
+        and not state.world_grid[position(x + 1, y + 1, z)] then
+          table.insert(state.world_debugZoneSigns, {generateZoneDescription(cell.zone), {x=x, y=y, z=z}})
           zonestocheck[cell.zone] = nil
         end
       end
     end
-    
-    --[[
-    for zoneId, zone in pairs(state.MLML_graph) do
-        local base = state.LML_graph[zone.baseid]
-        local town = false
+ 
+    for cellId, cell in pairs(state.world) do
+      if zonestocheck[cell.zone] then
+        local _ = string.gmatch(cellId, '[^%s]+')
+        local x, y, z = tonumber(_()), tonumber(_()), tonumber(_())
 
-        for _, feature in ipairs(base.features) do
-            if feature.type == 'TOWN' then
-                town = true
-                break
-            end
+        if  not state.world_grid[position(x,     y,     z)] then
+          table.insert(state.world_debugZoneSigns, {generateZoneDescription(cell.zone), {x=x, y=y, z=z}})
+          zonestocheck[cell.zone] = nil
         end
-
-        if town then
-            local play = 0
-            for player in pairs(zone.players) do
-                play = player
-                break
-            end
-
-            local cells = {}
-
-            for cellId, cell in pairs(state.world) do
-                if cell.zone == zoneId then
-                    cells[cellId] = true
-                end
-            end
-
-            local valid = {}
-
-            for cellId in pairs(cells) do
-                local _ = string.gmatch(cellId, '[^%s]+')
-                local x = tonumber(_())
-                local y = tonumber(_())
-                local z = tonumber(_())
-
-                if  not state.world_grid[position(x - 2,     y,     z)]
-                and not state.world_grid[position(x - 2 + 1, y + 1, z)]
-                and not state.world_grid[position(x - 2 + 1, y,     z)]
-                and not state.world_grid[position(x - 2 - 1, y + 1, z)]
-                and not state.world_grid[position(x - 2 - 1, y,     z)]
-                and not state.world_grid[position(x - 2,     y + 1, z)] then
-                    -- TODO: Check if this position is valid.
-                    table.insert(valid, cellId)
-                end
-            end
-
-            if #valid > 0 then
-                for _, cellId in ipairs(valid) do
-                    local _ = string.gmatch(cellId, '[^%s]+')
-                    local x = tonumber(_())
-                    local y = tonumber(_())
-                    local z = tonumber(_())
-
-                    local sprite = ({
-                        homm3lua.TOWN_CASTLE,
-                        homm3lua.TOWN_DUNGEON,
-                        homm3lua.TOWN_FORTRESS,
-                        homm3lua.TOWN_INFERNO,
-                        homm3lua.TOWN_NECROPOLIS,
-                        homm3lua.TOWN_RAMPART,
-                        homm3lua.TOWN_STRONGHOLD,
-                        homm3lua.TOWN_TOWER
-                    })[play]
-
-                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1})
--- instance:sign('Params\nXXX test + 4-@#W!$%^^\n"x"...', {x=4, y=4, z=0})
--- world_debugZoneSigns
-                    break
-                end
-            else
-                print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
-            end
-        end
-    end --]]
+      end
+    end
+    -- Let's be silent about fails here
 end
 
 local function step_initLML (state)
