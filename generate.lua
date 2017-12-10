@@ -43,6 +43,10 @@ local function saveH3M (state, path)
     instance:name('Random Map')
     instance:description('Seed: ' .. state.seed)
 
+    for _, sign in ipairs(state.world_debugZoneSigns) do
+        instance:sign(table.unpack(sign))
+    end
+    
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
@@ -54,10 +58,6 @@ local function saveH3M (state, path)
     instance:terrain(function (x, y, z)
         return table.unpack(state.world[xyz2position(x, y, z)].cell)
     end)
-  
-    for _, sign in ipairs(state.world_debugZoneSigns) do
-        instance:sign(table.unpack(sign))
-    end
 
     instance:write(path)
 end
@@ -164,39 +164,37 @@ local function step_debugZoneSigns (state)
     end
     
     local generateZoneDescription = function (zoneId)
-      local descr = {}
-      descr[1] = 'Zone ID: '..zoneId
+      local descr_zone = 'Zone ID: '..zoneId
       local mlmlNode = state.MLML_graph[zoneId]
-      descr[2] = 'Zone Base-ID: '..mlmlNode.baseid
+      local descr_bzone = 'Zone Base-ID: '..mlmlNode.baseid
       local lmlNode = state.LML_graph[mlmlNode.baseid]
-      descr[3] = 'Level: '..lmlNode.class[1].level
+      local descr_level = 'Level: '..lmlNode.class[1].level
       local players = {}
       for p=1,8 do
         if mlmlNode.players[p] then table.insert(players, p) end
       end
-      descr[4] = mlmlNode.type..' for players: '..table.concat(players,',')
+      local descr_type = mlmlNode.type..' for players: '..table.concat(players,',')
       local features = {}
       for _, feature in ipairs(lmlNode.features) do
         table.insert(features, feature.type)
       end
-      descr[5] = 'Features: '..table.concat(features,',')
-      return table.concat(descr, '\n')
+      local descr_features = 'Features: '..table.concat(features,',')
+      return table.concat({descr_zone, descr_bzone, descr_level, descr_type, descr_features}, '\n')
     end
    
     for cellId, cell in pairs(state.world) do
       if zonestocheck[cell.zone] then
-        local _ = string.gmatch(cellId, '[^%s]+')
-        local x, y, z = tonumber(_()), tonumber(_()), tonumber(_())
+        local x, y, z = position2xyz(cellId)
 
-        if  not state.world_grid[position(x,     y,     z)]
-        and not state.world_grid[position(x + 1, y + 0, z)]
-        and not state.world_grid[position(x - 1, y + 0, z)]
-        and not state.world_grid[position(x + 0, y + 1, z)]
-        and not state.world_grid[position(x + 0, y - 1, z)]
-        and not state.world_grid[position(x - 1, y - 1, z)]
-        and not state.world_grid[position(x + 1, y - 1, z)]
-        and not state.world_grid[position(x - 1, y + 1, z)]
-        and not state.world_grid[position(x + 1, y + 1, z)] then
+        if  not state.world_grid[xyz2position(x,     y,     z)]
+        and not state.world_grid[xyz2position(x + 1, y + 0, z)]
+        and not state.world_grid[xyz2position(x - 1, y + 0, z)]
+        and not state.world_grid[xyz2position(x + 0, y + 1, z)]
+        and not state.world_grid[xyz2position(x + 0, y - 1, z)]
+        and not state.world_grid[xyz2position(x - 1, y - 1, z)]
+        and not state.world_grid[xyz2position(x + 1, y - 1, z)]
+        and not state.world_grid[xyz2position(x - 1, y + 1, z)]
+        and not state.world_grid[xyz2position(x + 1, y + 1, z)] then
           table.insert(state.world_debugZoneSigns, {generateZoneDescription(cell.zone), {x=x, y=y, z=z}})
           zonestocheck[cell.zone] = nil
         end
@@ -205,10 +203,9 @@ local function step_debugZoneSigns (state)
  
     for cellId, cell in pairs(state.world) do
       if zonestocheck[cell.zone] then
-        local _ = string.gmatch(cellId, '[^%s]+')
-        local x, y, z = tonumber(_()), tonumber(_()), tonumber(_())
+        local x, y, z = position2xyz(cellId)
 
-        if  not state.world_grid[position(x,     y,     z)] then
+        if  not state.world_grid[xyz2position(x,     y,     z)] then
           table.insert(state.world_debugZoneSigns, {generateZoneDescription(cell.zone), {x=x, y=y, z=z}})
           zonestocheck[cell.zone] = nil
         end
@@ -410,7 +407,7 @@ if arg[1] then
         step_initLML,
         -- step_dump,
         step_initMLML,
-         step_dump,
+        step_dump,
         step_mds,
         -- step_dump,
         step_voronoi,
