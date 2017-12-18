@@ -9,51 +9,61 @@ Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies i
 
 ### input 
 
-- `config` - content of user's [config.cfg](../config.cfg) file
+- `config` - content of user's [config.cfg](../../config.cfg) file
 - `userParams` - parameters specifying map provided by the user: [detailed specification](#userparams-specification)
 
 ### output
 
 - `detailedParams` - concretization of `userParameters` (if random inputed) plus additional values computed based on that parameters: [detailed specification](#detailedparams-specification)
-- `LML_init` - initial node of the LML graph, containing all classes and map features (see [LML specification](mlml/README.md))
+- `LML_init` - initial node of the LML graph, containing all classes and map features (see [LML specification](../mlml/README.md))
 
 (Notka: właściwie to jeśli `detailedParams` już w tablicy istnieje to powinno być traktowane jako input, a nie output, bo to znaczy, że user wprowadził dane ręcznie?)
 
 ## `userParams` specification
 
-Partially based on arrangements pictured [here](../docs/17.02.01-MapParams-1.jpg).
+Partially based on arrangements pictured [here](../../docs/17.02.01-MapParams-1.jpg).
 
 ### `version`:string
 _**Map version**: Game version to generate map for_
+<details>
+  
 - `"RoE"` - _Resoration of Erathia_
 - `"SoD"` - _Shadow of Death_
+</details>
 
 ### `seed`:int
-_**Generation seed**: Value "-1" ganerates random map, provide other value if you want to reproduce concrete output_
+_**Generation seed**: Value "0" ganerates random map, provide other value if you want to reproduce concrete output_
 
 ### `size`:string
 _**Map size**: Size of the map_
+<details>
+  
 - `"S"` - _Small (36x36)_
 - `"M"` - _Medium (72x72)_
 - `"L"` - _Large (108x108)_
 - `"XL"` - _Extra Large (144x144)_
 
 (future feature: in theory we can allow any rectangular map size smaller then 144x144)
-
+</details>
 
 ### `underground`:bool
 _**Two level map**: If checked the map will contain underground level_
 
 ### `players`:table
 _**Players**: Set the number and specifics of the players_
+<details>
+  
 - _**Castle**: Choose castles available (randomized) for this player, check "random" to set town choosable at the beginning of a game_
 - _**Team**: Choose a team number for the player_
 - _**Computer only**: Set if the player should be AI only_
 
-`Player = {id:int=1..8, computerOnly:bool, team:int=1..8, castle:table={"Castle", "Tower", ...}/{} if in-game random }`
-
+`Player = {id:int=1..8, computerOnly:bool, team:int=1..8, castle:table={"Castle", "Tower",...}/{} if in-game random}`
+</details>
+  
 ### `winningcond`:int
 _**Winning condition**: The goal of the players_
+<details>
+  
 - `0` - _Random_
 - `1` - _Defeat all your enemies_
 - `2` - _Defeat Monster_
@@ -63,53 +73,70 @@ _**Winning condition**: The goal of the players_
 
 (możemy się ograniczyć tylko do `1`, ale kurde, dotychczas żaden generator nie pozwalał na pozostałe, a chyba jesteśmy w stanie to zrobić) 
 (z kolei z warunkami przegranej proponowałbym nie kombinować)
-
+</details>
+  
 ### `water`:int
 _**Water level**: Influences area of map covered by water_
+<details>
+  
 - `0` - _random_
 - `1` - _None_
 - `2` - _Low (lakes, seas)_
 - `3` - _Standard (continents)_
 - `4` - _High (islands)_
-
+</details>
+  
 ### `welfare`:int
 _**Welfare**: Influences the number of the available resources, artifacts, etc._
+<details>
+  
 - `0` - _Random_
 - `1` - _Very poor_
 - `2` - _Poor_
 - `3` - _Medium_
 - `4` - _Rich_
 - `5` - _Very rich_
-
+</details>
+  
 ### `branching`:int
 _**Branching**: Influences the number of the available routes between the map zones._
+<details>
 - `0` - _Random_
 - `1` - _All zones contain as small number of enterances as possible_
 - `2` - _Most zones contain only minimal number of eneterances_
 - `3` - _Some zones contain multiple enterances, some not_
 - `4` - _Most zones contain multiple eneterances_
 - `5` - _All zones contain multiple enterances_
-
+</details>
+  
 ### `focus`:int
 _**Challenge focus**: Influences the balance between fight against environment (PvE) and against other players (PvP)._
+<details>
+  
 - `0` - _Random_
 - `1` - _Strong PvP_
 - `2` - _More PvP_
 - `3` - _Balanced_
 - `4` - _More PvE_
 - `5` - _Strong PvE_
-
+</details>
+  
 ### `passability`:int
 _**Passability**: Influences the number of obstacles and shapes of available paths within zones_
+<details>
+  
 - `0` - _Random_
 - `1` - _Strongly mazelike zones_
 - `2` - _More zones containing mazelike style_
 - `3` - _Zones containing various styles_
 - `4` - _More zones containing open terrain_
 - `5` - _Strongly open terrain zones_
-
+</details>
+  
 ### `zonesize`:int
 _**Zone size**: Influences the size of a standard zone_
+<details>
+  
 - `0` - _random_
 - `1` - _Strongly decreased_
 - `2` - _Decreased_
@@ -118,10 +145,11 @@ _**Zone size**: Influences the size of a standard zone_
 - `5` - _Strongly increased_
 
 (Jakbyśmy jakoś mocno chcieli to ten parametr można by usunąć)
-
+</details>
+  
 ## `detailedParams` specification
 
-Apart from concretization of `userParameters`, `detailedParams` should contain values directly influencing process of initializing LML (including priorities of some specialized productions!) and other processes in later steps of the generator. However, specifying them directly here allow users to manipulate them easier. Sketch of the influence mapping from `userParams` to some of the more detailed map features [here](../docs/17.02.01-MapParams-2.jpg).
+Apart from concretization of `userParameters`, `detailedParams` should contain values directly influencing process of initializing LML (including priorities of some specialized productions!) and other processes in later steps of the generator. However, specifying them directly here allow users to manipulate them easier. Sketch of the influence mapping from `userParams` to some of the more detailed map features [here](../../docs/17.02.01-MapParams-2.jpg).
 
 ### _param ∈ userParams_
 
