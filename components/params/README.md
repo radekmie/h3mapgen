@@ -14,7 +14,7 @@ Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies i
 
 ### output
 
-- `detailedParams` - concretization of `userParameters` (if random inputed) plus additional values computed based on that parameters: [detailed specification](#detailedparams-specification)
+- `detailedParams` - concretization of `userParameters` (if random inputted) plus additional values computed based on that parameters: [detailed specification](#detailedparams-specification)
 - `LML_init` - initial node of the LML graph, containing all classes and map features (see [LML specification](../mlml/README.md))
 
 (Notka: właściwie to jeśli `detailedParams` już w tablicy istnieje to powinno być traktowane jako input, a nie output, bo to znaczy, że user wprowadził dane ręcznie?)
@@ -24,18 +24,18 @@ Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies i
 Partially based on arrangements pictured [here](../../docs/17.02.01-MapParams-1.jpg).
 
 ### `version`:string
-_**Map version**: Game version to generate map for_
+_**Map version**: Game version to generate map for._
 <details>
   
-- `"RoE"` - _Resoration of Erathia_
+- `"RoE"` - _Restoration of Erathia_
 - `"SoD"` - _Shadow of Death_
 </details>
 
 ### `seed`:int
-_**Generation seed**: Value "0" ganerates random map, provide other value if you want to reproduce concrete output_
+_**Generation seed**: Value "0" generates random map, provide other value if you want to reproduce concrete output._
 
 ### `size`:string
-_**Map size**: Size of the map_
+_**Map size**: Size of the map._
 <details>
   
 - `"S"` - _Small (36x36)_
@@ -43,14 +43,14 @@ _**Map size**: Size of the map_
 - `"L"` - _Large (108x108)_
 - `"XL"` - _Extra Large (144x144)_
 
-(future feature: in theory we can allow any rectangular map size smaller then 144x144)
+(future feature: in theory we can allow any rectangular map size `WxH` smaller then 144x144)
 </details>
 
 ### `underground`:bool
-_**Two level map**: If checked the map will contain underground level_
+_**Two level map**: If checked the map will contain underground level._
 
 ### `players`:table
-_**Players**: Set the number and specifics of the players_
+_**Players**: Set the number and specifics of the players._
 <details>
   
 - _**Castle**: Choose castles available (randomized) for this player, check "random" to set town choosable at the beginning of a game_
@@ -61,7 +61,7 @@ _**Players**: Set the number and specifics of the players_
 </details>
   
 ### `winningcond`:int
-_**Winning condition**: The goal of the players_
+_**Winning condition**: The goal of the players._
 <details>
   
 - `0` - _Random_
@@ -69,17 +69,17 @@ _**Winning condition**: The goal of the players_
 - `2` - _Defeat Monster_
 - `3` - _Capture Town_
 - `4` - _Acquire Artifact or Defeat All Enemies_
-- `5` - _Buile a Grail Structure or Defeat All Enemies_
+- `5` - _Build a Grail Structure or Defeat All Enemies_
 
 (możemy się ograniczyć tylko do `1`, ale kurde, dotychczas żaden generator nie pozwalał na pozostałe, a chyba jesteśmy w stanie to zrobić) 
 (z kolei z warunkami przegranej proponowałbym nie kombinować)
 </details>
   
 ### `water`:int
-_**Water level**: Influences area of map covered by water_
+_**Water level**: Influences proportion of map covered by water._
 <details>
   
-- `0` - _random_
+- `0` - _Random_
 - `1` - _None_
 - `2` - _Low (lakes, seas)_
 - `3` - _Standard (continents)_
@@ -87,7 +87,7 @@ _**Water level**: Influences area of map covered by water_
 </details>
   
 ### `welfare`:int
-_**Welfare**: Influences the number of the available resources, artifacts, etc._
+_**Welfare**: Influences the number of available resources, artifacts, etc._
 <details>
   
 - `0` - _Random_
@@ -99,18 +99,19 @@ _**Welfare**: Influences the number of the available resources, artifacts, etc._
 </details>
   
 ### `branching`:int
-_**Branching**: Influences the number of the available routes between the map zones._
+_**Branching**: Influences the number of available routes between the map zones._
 <details>
+
 - `0` - _Random_
-- `1` - _All zones contain as small number of enterances as possible_
-- `2` - _Most zones contain only minimal number of eneterances_
-- `3` - _Some zones contain multiple enterances, some not_
-- `4` - _Most zones contain multiple eneterances_
-- `5` - _All zones contain multiple enterances_
+- `1` - _All zones contain as small number of entrances as possible_
+- `2` - _Most zones contain only minimal number of entrances _
+- `3` - _Some zones contain multiple entrances, some not_
+- `4` - _Most zones contain multiple entrances _
+- `5` - _All zones contain multiple entrances _
 </details>
   
 ### `focus`:int
-_**Challenge focus**: Influences the balance between fight against environment (PvE) and against other players (PvP)._
+_**Challenge focus**: Influences the balance between fighting against environment (PvE) and against other players (PvP)._
 <details>
   
 - `0` - _Random_
@@ -122,7 +123,7 @@ _**Challenge focus**: Influences the balance between fight against environment (
 </details>
   
 ### `passability`:int
-_**Passability**: Influences the number of obstacles and shapes of available paths within zones_
+_**Passability**: Influences the number of obstacles and shapes of available paths within zones._
 <details>
   
 - `0` - _Random_
@@ -134,10 +135,10 @@ _**Passability**: Influences the number of obstacles and shapes of available pat
 </details>
   
 ### `zonesize`:int
-_**Zone size**: Influences the size of a standard zone_
+_**Zone size**: Influences the size of a standard zone._
 <details>
   
-- `0` - _random_
+- `0` - _Random_
 - `1` - _Strongly decreased_
 - `2` - _Decreased_
 - `3` - _Standard_
@@ -153,7 +154,7 @@ Apart from concretization of `userParameters`, `detailedParams` should contain v
 
 ### _param ∈ userParams_
 
-All keys given in [`userParams`](#userparams-specification) are available in `detailedParams`. If user's choice was not _random_ option, the paramer value is copied. If it was random, the value here is randomized over the valid values for that parameter.
+All keys given in [`userParams`](#userparams-specification) are available in `detailedParams`. If user's choice was not _Random_ option, the parameter value is copied. If it was random, the value here is randomized over the valid values for that parameter.
 
 ### _playerTowns_:int
 _Number of towns owned by the player at the beginning of the game._
