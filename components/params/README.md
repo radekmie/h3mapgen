@@ -10,16 +10,17 @@ Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies i
 ### input 
 
 - `config` - content of user's [config.cfg](../../config.cfg) file
-- `userParams` - parameters specifying map provided by the user: [detailed specification](#userparams-specification)
+- `userMapParams` - parameters specifying map provided by the user: [detailed specification](#userMapParams-specification)
+- `userDetailedParams` - user-provided values overriding (maybe partially) `detailedParams` (but `detailedParams` are always computed to ensure the system is deterministic). Additionally, [`seed`](#seedint) value cannot be override this way.
 
 ### output
 
-- `detailedParams` - concretization of `userParameters` (if random inputted) plus additional values computed based on that parameters: [detailed specification](#detailedparams-specification)
+- `detailedParams` - concretization of `userParameters` (if random inputted) plus additional values computed based on that parameters: [detailed specification](#detailedparams-specification). If user provides non-empty `userDetailedParams`, his values always (except for `seed`) override the generated ones.
 - `LML_init` - initial node of the LML graph, containing all classes and map features (see [LML specification](../mlml/README.md))
 
 (Notka: właściwie to jeśli `detailedParams` już w tablicy istnieje to powinno być traktowane jako input, a nie output, bo to znaczy, że user wprowadził dane ręcznie?)
 
-## `userParams` specification
+## `userMapParams` specification
 
 Partially based on arrangements pictured [here](../../docs/17.02.01-MapParams-1.jpg).
 
@@ -32,7 +33,7 @@ _**Map version**: Game version to generate map for._
 </details>
 
 ### `seed`:int
-_**Generation seed**: Value "0" generates random map, provide other value if you want to reproduce concrete output._
+_**Generation seed**: Value "0" generates random map, provide other value if you want to reproduce a concrete output._
 
 ### `size`:string
 _**Map size**: Size of the map._
@@ -47,7 +48,7 @@ _**Map size**: Size of the map._
 </details>
 
 ### `underground`:bool
-_**Two level map**: If checked the map will contain underground level._
+_**Two level map**: If checked the map will contain an underground level._
 
 ### `players`:table
 _**Players**: Set the number and specifics of the players._
@@ -76,7 +77,7 @@ _**Winning condition**: The goal of the players._
 </details>
   
 ### `water`:int
-_**Water level**: Influences proportion of map covered by water._
+_**Water level**: Influences proportion of map covered by the water._
 <details>
   
 - `0` - _Random_
@@ -86,6 +87,10 @@ _**Water level**: Influences proportion of map covered by water._
 - `4` - _High (islands)_
 </details>
   
+### `grail`:bool
+_**Grail**: If checked the map will contain Grail._
+
+
 ### `welfare`:int
 _**Welfare**: Influences the number of available resources, artifacts, etc._
 <details>
@@ -98,6 +103,18 @@ _**Welfare**: Influences the number of available resources, artifacts, etc._
 - `5` - _Very rich_
 </details>
   
+### `monsters`:int
+_**Monster Strength**: Influences the strength of monsters._
+<details>
+  
+- `0` - _Random_
+- `1` - _Very weak_
+- `2` - _Weak_
+- `3` - _Medium_
+- `4` - _Strong_
+- `5` - _Very strong_
+</details>
+
 ### `branching`:int
 _**Branching**: Influences the number of available routes between the map zones._
 <details>
@@ -111,7 +128,7 @@ _**Branching**: Influences the number of available routes between the map zones.
 </details>
   
 ### `focus`:int
-_**Challenge focus**: Influences the balance between fighting against environment (PvE) and against other players (PvP)._
+_**Challenge focus**: Influences the balance between fighting against environment (PvE) and fighting against other players (PvP)._
 <details>
   
 - `0` - _Random_
@@ -123,7 +140,7 @@ _**Challenge focus**: Influences the balance between fighting against environmen
 </details>
   
 ### `passability`:int
-_**Passability**: Influences the number of obstacles and shapes of available paths within zones._
+_**Passability**: Influences the number of obstacles and shapes of available paths within the zones._
 <details>
   
 - `0` - _Random_
@@ -134,8 +151,20 @@ _**Passability**: Influences the number of obstacles and shapes of available pat
 - `5` - _Strongly open terrain zones_
 </details>
   
+### `locations`:int
+_**Locations frequency**: Influences the frequency of interactive adventure map locations (universities, arenas, creature banks, swan ponds, etc.)._
+<details>
+  
+- `0` - _Random_
+- `1` - _Very rare_
+- `2` - _Rare_
+- `3` - _Standard_
+- `4` - _Common_
+- `5` - _Very common_
+</details>
+
 ### `zonesize`:int
-_**Zone size**: Influences the size of a standard zone._
+_**Zone size**: Influences the size of an average zone._
 <details>
   
 - `0` - _Random_
@@ -150,11 +179,13 @@ _**Zone size**: Influences the size of a standard zone._
   
 ## `detailedParams` specification
 
-Apart from concretization of `userParameters`, `detailedParams` should contain values directly influencing process of initializing LML (including priorities of some specialized productions!) and other processes in later steps of the generator. However, specifying them directly here allow users to manipulate them easier. Sketch of the influence mapping from `userParams` to some of the more detailed map features [here](../../docs/17.02.01-MapParams-2.jpg).
+Apart from concretization of `userParameters`, `detailedParams` should contain values directly influencing process of initializing LML (including priorities of some specialized productions!) and other processes in later steps of the generator. However, specifying them directly here allow users to manipulate them easier. Sketch of the influence mapping from `userMapParams` to some of the more detailed map features [here](../../docs/17.02.01-MapParams-2.jpg).
 
-### _param ∈ userParams_
+### _param ∈ userMapParams_
 
-All keys given in [`userParams`](#userparams-specification) are available in `detailedParams`. If user's choice was not _Random_ option, the parameter value is copied. If it was random, the value here is randomized over the valid values for that parameter.
+All keys given in [`userMapParams`](#usermapparams-specification) are available in `detailedParams`. If user's choice was not _Random_ option, the parameter value is copied. If it was _Random_, its value is randomized over the valid values for this parameter.
+
+After the generation, the values, except `seed`, are overrided by the content of `userDetailedParams` table.
 
 ### _playerTowns_:int
 _Number of towns owned by the player at the beginning of the game._
@@ -164,14 +195,14 @@ _Number of towns owned by the player at the beginning of the game._
 
 - number of zones (all, water, local, buffer)
 - levels of zones 
-- difficulty (easy, normal, Hard, Expert, Impossible) - as seen by editor  (moglibyśmy to dać ustawiać userowi, ale ma chyba wpływ tylko na random obiekty/potwory których raczej nie stawiamy, niech lepiej automatycznie wynika z innych parametrów)
+- difficulty (easy, normal, Hard, Expert, Impossible) - as seen by the map editor  (moglibyśmy to dać ustawiać userowi, ale ma chyba wpływ tylko na random obiekty/potwory których raczej nie stawiamy, niech lepiej automatycznie wynika z innych parametrów)
 - productions priority
 - ...
 
 
 ## other notes
 
-- Istnieje masa dodatkowych własności które możemy (chyba raczej w przyszłości) umożliwiać userom do ustawienia. Począwszy od stopnia rozbudowania zamku, zabronionych czarów w gildiach, dopuszczalnych skillach, artafaktach itd (np. tak jak jest to częściowo zrobione [tutaj](http://www.frozenspire.com/MapGenerator/Index.html)). Aczkolwiek proponowałbym, żeby w `detailedParams` były głównie rzeczy które wynikają z `userParams`. Co oznacza, że w `config` byłoby miejsce zarówno na dziwne wartości generatora jak liczba kroków generacji, jak i konkretne własności mapy.
+- Istnieje masa dodatkowych własności które możemy (chyba raczej w przyszłości) umożliwiać userom do ustawienia. Począwszy od stopnia rozbudowania zamku, zabronionych czarów w gildiach, dopuszczalnych skillach, artafaktach itd (np. tak jak jest to częściowo zrobione [tutaj](http://www.frozenspire.com/MapGenerator/Index.html)). Aczkolwiek proponowałbym, żeby w `detailedParams` były głównie rzeczy które wynikają z `userMapParams`. Co oznacza, że w `config` byłoby miejsce zarówno na dziwne wartości generatora jak liczba kroków generacji, jak i konkretne własności mapy.
 
 
 
