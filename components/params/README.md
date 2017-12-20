@@ -2,6 +2,18 @@
 
 Handles parameters given by the user (usually by gui) and config, producing concrete generation values and initial node for LML phase.
 
+### Obsługa features:
+
+- `WxH` map size: Na razie nie
+- Woda (płytka): Na razie nie, ale wysoki priorytet
+- Woda (wysoka, wiry): Na razie nie
+- Teleporty: Będą
+- Warunek zwycięstwa Town Capture: Będzie
+- Pozostałe warunki zwycięstwa: Na razie nie (poza graalem zależą od dużo dalszych komponentów)
+- Stawianie Graala: Po stronie parametrów chyba zrobię, ale ogólnie to będzie w jakimś późniejszym komponencie
+
+
+
 ## Input/output specification
 
 Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies it by adding new elements. 
@@ -58,17 +70,17 @@ _**Players**: Set the number and specifics of the players._
 - _**Team**: Choose a team number for the player_
 - _**Computer only**: Set if the player should be AI only_
 
-`Player = {id:int=1..8, computerOnly:bool, team:int=1..8, castle:table={"Castle", "Tower",...}/{} if in-game random}`
+`Player = {id:int=1..8, team:int=1..8, computerOnly:bool, castle:table={"Castle", "Tower",...}/{} if in-game random}`
 </details>
   
-### `winningcond`:int
+### `winning`:int
 _**Winning condition**: The goal of the players._
 <details>
   
 - `0` - _Random_
 - `1` - _Defeat all your enemies_
-- `2` - _Defeat Monster_
-- `3` - _Capture Town_
+- `2` - _Capture Town_
+- `3` - _Defeat Monster_
 - `4` - _Acquire Artifact or Defeat All Enemies_
 - `5` - _Build a Grail Structure or Defeat All Enemies_
 
@@ -139,8 +151,8 @@ _**Challenge focus**: Influences the balance between fighting against environmen
 - `5` - _Strong PvE_
 </details>
   
-### `passability`:int
-_**Passability**: Influences the number of obstacles and shapes of available paths within the zones._
+### `transitivity`:int
+_**Transitivity**: Influences the number of obstacles and shapes of available paths within the zones._
 <details>
   
 - `0` - _Random_
@@ -185,7 +197,9 @@ Apart from concretization of `userParameters`, `detailedParams` should contain v
 
 All keys given in [`userMapParams`](#usermapparams-specification) are available in `detailedParams`. If user's choice was not _Random_ option, the parameter value is copied. If it was _Random_, its value is randomized over the valid values for this parameter.
 
-After the generation, the values, except `seed`, are overrided by the content of `userDetailedParams` table.
+There is a special treatment of `players[p].castles` where, if table of length > 1 is provided, the value become string (randomized over the proposed castles). If table length is 0 (in-game random castle), its value in `detailedParams` is `nil`.
+
+After the generation, the values, except `seed`, are overridden by the content of `userDetailedParams` table.
 
 ### _playerTowns_:int
 _Number of towns owned by the player at the beginning of the game._
@@ -196,13 +210,14 @@ _Number of towns owned by the player at the beginning of the game._
 - number of zones (all, water, local, buffer)
 - levels of zones 
 - difficulty (easy, normal, Hard, Expert, Impossible) - as seen by the map editor  (moglibyśmy to dać ustawiać userowi, ale ma chyba wpływ tylko na random obiekty/potwory których raczej nie stawiamy, niech lepiej automatycznie wynika z innych parametrów)
-- productions priority
+- production priorities
+- number of obelisks
 - ...
 
 
 ## other notes
 
-- Istnieje masa dodatkowych własności które możemy (chyba raczej w przyszłości) umożliwiać userom do ustawienia. Począwszy od stopnia rozbudowania zamku, zabronionych czarów w gildiach, dopuszczalnych skillach, artafaktach itd (np. tak jak jest to częściowo zrobione [tutaj](http://www.frozenspire.com/MapGenerator/Index.html)). Aczkolwiek proponowałbym, żeby w `detailedParams` były głównie rzeczy które wynikają z `userMapParams`. Co oznacza, że w `config` byłoby miejsce zarówno na dziwne wartości generatora jak liczba kroków generacji, jak i konkretne własności mapy.
+- Istnieje masa dodatkowych własności które możemy (chyba raczej w przyszłości) umożliwiać userom do ustawienia. Począwszy od stopnia rozbudowania zamku, zabronionych czarów w gildiach, dopuszczalnych skillach, artefaktach itd (np. tak jak jest to częściowo zrobione [tutaj](http://www.frozenspire.com/MapGenerator/Index.html)). Aczkolwiek proponowałbym, żeby w `detailedParams` były głównie rzeczy które wynikają z `userMapParams`. Co oznacza, że w `config` byłoby miejsce zarówno na dziwne wartości generatora jak liczba kroków generacji, jak i konkretne własności mapy.
 
 
 
