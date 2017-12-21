@@ -43,6 +43,10 @@ local function saveH3M (state, path)
     instance:name('Random Map')
     instance:description('Seed: ' .. state.seed)
 
+    for _, sign in ipairs(state.world_debugZoneSigns) do
+        instance:sign(table.unpack(sign))
+    end
+    
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
@@ -152,6 +156,64 @@ local function step_gameCastles (state)
     end
 end
 
+local function step_debugZoneSigns (state)
+  
+    local zonestocheck={}
+    for zoneId, _ in pairs(state.MLML_graph) do
+      zonestocheck[zoneId] = true
+    end
+    
+    local generateZoneDescription = function (zoneId)
+      local descr_zone = 'Zone ID: '..zoneId
+      local mlmlNode = state.MLML_graph[zoneId]
+      local descr_bzone = 'Zone Base-ID: '..mlmlNode.baseid
+      local lmlNode = state.LML_graph[mlmlNode.baseid]
+      local descr_level = 'Level: '..lmlNode.class[1].level
+      local players = {}
+      for p=1,8 do
+        if mlmlNode.players[p] then table.insert(players, p) end
+      end
+      local descr_type = mlmlNode.type..' for players: '..table.concat(players,',')
+      local features = {}
+      for _, feature in ipairs(lmlNode.features) do
+        table.insert(features, feature.type)
+      end
+      local descr_features = 'Features: '..table.concat(features,',')
+      return table.concat({descr_zone, descr_bzone, descr_level, descr_type, descr_features}, '\n')
+    end
+   
+    for cellId, cell in pairs(state.world) do
+      if zonestocheck[cell.zone] then
+        local x, y, z = position2xyz(cellId)
+
+        if  not state.world_grid[xyz2position(x,     y,     z)]
+        and not state.world_grid[xyz2position(x + 1, y + 0, z)]
+        and not state.world_grid[xyz2position(x - 1, y + 0, z)]
+        and not state.world_grid[xyz2position(x + 0, y + 1, z)]
+        and not state.world_grid[xyz2position(x + 0, y - 1, z)]
+        and not state.world_grid[xyz2position(x - 1, y - 1, z)]
+        and not state.world_grid[xyz2position(x + 1, y - 1, z)]
+        and not state.world_grid[xyz2position(x - 1, y + 1, z)]
+        and not state.world_grid[xyz2position(x + 1, y + 1, z)] then
+          table.insert(state.world_debugZoneSigns, {generateZoneDescription(cell.zone), {x=x, y=y, z=z}})
+          zonestocheck[cell.zone] = nil
+        end
+      end
+    end
+ 
+    for cellId, cell in pairs(state.world) do
+      if zonestocheck[cell.zone] then
+        local x, y, z = position2xyz(cellId)
+
+        if  not state.world_grid[xyz2position(x,     y,     z)] then
+          table.insert(state.world_debugZoneSigns, {generateZoneDescription(cell.zone), {x=x, y=y, z=z}})
+          zonestocheck[cell.zone] = nil
+        end
+      end
+    end
+    -- Let's be silent about fails here
+end
+
 local function step_initLML (state)
     local init = {class={}, features={}}
     local rand = function (from, to)
@@ -255,6 +317,7 @@ local function step_parseWorld (state)
     state.world_obstacles = {}
     state.world_size = nil
     state.world_towns = {}
+    state.world_debugZoneSigns = {}
 
         if w1 <= homm3lua.SIZE_SMALL      then state.world_size = homm3lua.SIZE_SMALL
     elseif w1 <= homm3lua.SIZE_MEDIUM     then state.world_size = homm3lua.SIZE_MEDIUM
@@ -344,7 +407,7 @@ if arg[1] then
         step_initLML,
         -- step_dump,
         step_initMLML,
-        -- step_dump,
+        step_dump,
         step_mds,
         -- step_dump,
         step_voronoi,
@@ -354,7 +417,8 @@ if arg[1] then
         -- NOTE: This makes state renderable, i.e. .h3m-able.
         step_parseWorld,
         step_gameCastles,
-        -- step_dump,
+        step_debugZoneSigns,
+        step_dump,
         -- step_dumpH3M,
         step_saveH3M
     })
