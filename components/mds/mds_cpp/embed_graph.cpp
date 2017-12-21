@@ -10,7 +10,7 @@
 #include "sammon.hpp"
 
 #define MAX_IT 10
-#define MAKE_A_PLOT false
+#define GRAV_IT 10
 #define GRAV_POINTS_PER_EDGE 6
 
 #define Sizes       std::map<std::string, int>
@@ -18,8 +18,6 @@
 #define EdgeWeights std::map<std::pair<Vert, Vert>, int>
 
 using namespace arma;
-
-// from scipy.spatial import Voronoi
 
 std::random_device rd;
 std::mt19937 rng(rd());
@@ -168,8 +166,8 @@ mat squeeze(mat data, vec lxy = {0, 0}, vec hxy = {1, 1}) {
     mat maxs = max(data) - mins;
     mat new_data = data.each_row() - mins;
     new_data.each_row() /= maxs;
-    new_data.each_row() %= hxy - lxy;
-    new_data.each_row() += lxy;
+    new_data.each_row() %= hxy.t() - lxy.t();
+    new_data.each_row() += lxy.t();
     return new_data;
 }
 
@@ -251,37 +249,76 @@ void save_embedding(mat data, Graph graph, std::string fname) {
 }
 
 int main(int argc, char** argv) {
-    // for (int i = 0; i < 10; i++) {
-    //     std::uniform_int_distribution<int> uni(100*i, 101*i);
-    //     cout << uni(rng) << "\n";
-    //     cout << uni(rng) << "\n";
-    //     cout << uni(rng) << "\n";
-    // }
-    EdgeWeights ws = {};
-    Graph g = Graph();
-    Vert v = {"1", 2};
-    Vert u = {"1", 2};
-    ws[ {v, u}] = 1;
-    std::pair<Vert, int> d = {v, 1};
-    g[v].insert({"2", 5});
-    g[v].insert({"2", 3});
-    g[v].insert({"2", 2});
-    g[v].insert({"2", 0});
-    g[v].insert({"2", 8});
-    g[u].insert(u);
+    if (argc < 2) {
+        std::cerr << "Input file not provided.\n";
+        return 1;
+    }
 
-    cout << g[v].size();
-    cout << (v == Vert({"1", 3})) << "\n";
+    std::string input_path = argv[1];
+    std::string output_path;
 
-    mat A = {
-        {1,2},
-        {4,6},
-        {200,10000},
-        {0,-3},
-        {-3,-1}
+    if (argc > 2)
+        output_path = argv[2];
+    else
+        output_path = input_path + "_emb";
+
+    std::pair<Graph, Sizes> gs = load_graph(input_path);
+    Sizes sizes = gs.second;
+    Graph graph = reshape_graph(gs.first, sizes);
+    EdgeWeights weights = calc_weights(graph, sizes);
+    mat dists = calc_dists(graph, weights);
+
+    auto embed = [dists]() {
+        std::pair<mat, double> emb = sammon(dists);
+
+        mat data_trans_scaled = squeeze(emb.first, { -2.5, -2.5}, {2.5, 2.5});
+        data_trans_scaled = scale(data_trans_scaled);
+        mat ch = qhull2D(data_trans_scaled);
+
+        std::tuple<double, double, double> rect = minBoundingRect(ch);
+        double theta = std::get<0>(rect);
+        double width = std::get<1>(rect);
+        double height = std::get<2>(rect);
+
+        mat R = {
+            {cos(theta), -sin(theta)},
+            {sin(theta),  cos(theta)}
+        };
+
+        data_trans_scaled = data_trans_scaled * R;
+        data_trans_scaled.col(0) *= height / width;
+        data_trans_scaled = squeeze(data_trans_scaled,
+        { -2.2, -2.2}, {2.2, 2.2});
+
+        // "gravity"
+        mat grav_points = make_grav_points(GRAV_POINTS_PER_EDGE,
+        { -2.2, 2.2}, { -2.2, 2.2});
+
+        for (int i = 0; i < GRAV_IT; i++) {
+            mat mass = euclid(grav_points, data_trans_scaled);
+            data_trans_scaled = pull_points(data_trans_scaled, grav_points,
+                                            mass, 0.5);
+        }
+
+        return std::make_pair(data_trans_scaled, emb.second);
     };
-    cout << A << "\n";
-    cout << scale(A) << "\n";
-    cout << A << "\n";
+
+    std::pair<mat, double> sol;
+    mat best_sol;
+    double best_loss = datum::inf;
+    std::cout << "Testing " << MAX_IT << " embeddings...\n";
+
+    for (int i = 0; i < MAX_IT; i++) {
+        sol = embed();
+        double E = sol.second;
+        std::cout << E << "\n";
+        if (E < best_loss) {
+            best_loss = E;
+            best_sol = sol.first;
+        }
+    }
+
+    std::cout << "Best loss: " << best_loss << "\n";
+    save_embedding(best_sol, graph, output_path);
     return 0;
 }

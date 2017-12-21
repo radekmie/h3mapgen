@@ -13,8 +13,8 @@ mat euclid(mat A, mat B) {
     return dist;
 }
 
-std::pair<mat, double> sammon(mat D, int display = 2, int maxhalves = 20,
-                              int maxiter = 500, double tolfun = 1e-9) {
+std::pair<mat, double> sammon(mat D, int display, int maxhalves, int maxiter,
+                              double tolfun) {
     int dim = 2;
 
     // Remaining initialisation
