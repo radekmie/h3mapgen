@@ -1,0 +1,27 @@
+
+userMapParams = 
+{
+  version = "RoE",
+  seed = 0,
+  size = "S",
+  underground = false,
+  players = 
+  {
+    {id=1, team=1, computerOnly=false, castle={"Castle", "Rampart", "Tower", "Inferno", "Necropolis", "Dungeon", "Stronghold", "Fortress"}},
+    {id=2, team=2, computerOnly=false, castle={"Castle", "Rampart", "Tower", "Fortress"}},
+    {id=3, team=3, computerOnly=false, castle={}},
+    {id=4, team=4, computerOnly=false, castle={"Rampart"}},
+  },
+  winning = 1,
+  water = 1,
+  grail = false,
+  welfare=3,
+  monsters=0,
+  branching=3,
+  focus=3,
+  transitivity=3,
+  locations = 0,
+  zonesize=0,
+}
+
+config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, Serialization_indent_size=2, Serialization_inline_limit=80, }
