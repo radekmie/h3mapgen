@@ -102,6 +102,29 @@ _**Water level**: Influences proportion of map covered by the water._
 ### `grail`:bool
 _**Grail**: If checked the map will contain Grail._
 
+### `towns`:int
+_**Towns frequency**: Influences the number of towns placed on the map._
+<details>
+  
+- `0` - _Random_
+- `1` - _Very rare_
+- `2` - _Rare_
+- `3` - _Standard_
+- `4` - _Common_
+- `5` - _Very common_
+</details>
+
+### `monsters`:int
+_**Monster Strength**: Influences the strength of monsters._
+<details>
+  
+- `0` - _Random_
+- `1` - _Very weak_
+- `2` - _Weak_
+- `3` - _Medium_
+- `4` - _Strong_
+- `5` - _Very strong_
+</details>
 
 ### `welfare`:int
 _**Welfare**: Influences the number of available resources, artifacts, etc._
@@ -113,18 +136,6 @@ _**Welfare**: Influences the number of available resources, artifacts, etc._
 - `3` - _Medium_
 - `4` - _Rich_
 - `5` - _Very rich_
-</details>
-  
-### `monsters`:int
-_**Monster Strength**: Influences the strength of monsters._
-<details>
-  
-- `0` - _Random_
-- `1` - _Very weak_
-- `2` - _Weak_
-- `3` - _Medium_
-- `4` - _Strong_
-- `5` - _Very strong_
 </details>
 
 ### `branching`:int
