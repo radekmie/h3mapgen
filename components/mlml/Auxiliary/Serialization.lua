@@ -4,7 +4,13 @@
 -- @name Serialization
 local Serialization = {}
 
-local indent = (' '):rep(CONFIG.Serialization_indent_size or 2) -- level indentation string
+ -- Indentation size used by the Serialization module
+local serialization_indent_size = 2
+
+-- Value greater than zero causes serialization to inline tables if result fits within given text column
+local serialization_inline_limit = 80
+
+local indent = (' '):rep(serialization_indent_size) -- level indentation string
 
 
 --- Checks if table is a sequence
@@ -47,6 +53,14 @@ local function order_keys(item)
   return keys
 end
 
+--- Checks if string can be put as key without quotes.
+--@param item String to check
+--@return True iff string do not contain whitespace and is not a number
+local function is_keyable(str)
+  if tonumber(str) ~= nil          then return false end
+  if string.find(str, '%s') ~= nil then return false end
+  return true
+end
 
 --- Function for pretty-printing Lua values 
 -- @param item Lua object to write down
@@ -61,7 +75,7 @@ function Serialization.Value(item, level, iskey, inline_testrun)
   elseif type(item) == 'number' then
     return iskey and '['..tostring(item)..']' or tostring(item)
   elseif type(item) == 'string' then
-    return iskey and item or string.format("%q", item) 
+    return (iskey and is_keyable(item)) and item or string.format("%q", item) 
   elseif type(item) == 'boolean' then
     if item then return iskey and '[true]' or 'true'
     else return iskey and '[false]' or 'false' end
@@ -90,9 +104,9 @@ function Serialization.Table(item, level, iskey, inline_testrun)
   
   if inline_testrun > 0 then
     innertables = false
-  elseif level > -1 and tabdepth < 2 and CONFIG.Serialization_inline_limit > 0 then   -- changing works the old way tabdepth < 1
+  elseif level > -1 and tabdepth < 2 and serialization_inline_limit > 0 then   -- changing works the old way tabdepth < 1
     local str = Serialization.Table(item, level, iskey, inline_testrun+1)
-    if #str <= CONFIG.Serialization_inline_limit  then return str, true end 
+    if #str <= serialization_inline_limit  then return str, true end 
   end
   
   local str = level > -1  and indent:rep(level)..'{' or ''

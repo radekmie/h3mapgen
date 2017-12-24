@@ -6,8 +6,7 @@ package.path = package.path .. ';components/mlml/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
 -- TODO: Read more data from this config.
--- TODO: Auxiliary/Serialization should be able to work without this global.
-CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
+local CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
 
 local homm3lua = require('homm3lua')
 

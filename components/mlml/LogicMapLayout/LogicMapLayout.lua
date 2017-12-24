@@ -68,7 +68,7 @@ end
 -- @param max_steps Constant containing upper bound for the number of production application (error when exceeded)
 -- @param debugimg_path If provided, produces image output every step
 function LML:Generate(grammar, max_steps, debuging_path)
-  if CONFIG.LML_verbose_debug then print('LML Generation started with grammar containing '..#grammar..' rules.') end
+  if true or CONFIG.LML_verbose_debug then print('LML Generation started with grammar containing '..#grammar..' rules.') end -- get rid of global CONFIG usage
   if debuging_path then self:Drawer():Draw(debuging_path..'-'..0) end
   local c, id, fc = self:IsConsistent()
   if not c then error(string.format('Initial grammar node %d is inconsistent (feature class: %s).', id, fc)) end 
@@ -82,7 +82,7 @@ function LML:Generate(grammar, max_steps, debuging_path)
       local c, id, fc = self:IsConsistent()
       if not c then error(string.format('Production %s made node %d inconsistent (feature class: %s).', prod.short_desc, id, fc)) end 
       if success then 
-        if CONFIG.LML_verbose_debug then print ('LML Succesfully applied production ('..i..' try): '..prod.short_desc) end
+        if true or CONFIG.LML_verbose_debug then print ('LML Succesfully applied production ('..i..' try): '..prod.short_desc) end -- get rid of global CONFIG usage
         break 
       end
       i = i + 1
