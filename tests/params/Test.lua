@@ -1,15 +1,13 @@
 package.path = ";../../components/params/?.lua" .. package.path
-package.path = ";../../components/mlml/?.lua" .. package.path
+package.path = ";../../libs/?.lua" .. package.path
 
 local Params = require'Params'
-
-CONFIG = require('Auxiliary/ConfigHandler').Read('../../config.cfg')
-local ConfigHandler = require('Auxiliary/ConfigHandler')
+local ConfigHandler = require'ConfigHandler'
 
 
 local function Test(name)
   local state = ConfigHandler.Read(name..'-input.h3pgm')  
-  state.config = CONFIG
+  state.config = ConfigHandler.Read('../../config.cfg')
   
   local xx = {}
   

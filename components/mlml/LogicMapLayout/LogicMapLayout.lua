@@ -1,5 +1,5 @@
 local Zone = require'LogicMapLayout/Zone'
-local GD = require'Auxiliary/GraphvizDrawer'
+local GD = require'GraphvizDrawer'
 
 local LML = {}
 local LML_mt = { __index = LML, __metatable = "Access resticted." }

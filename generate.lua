@@ -6,12 +6,12 @@ package.path = package.path .. ';components/mlml/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
 -- TODO: Read more data from this config.
-local CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
+local CONFIG = require('ConfigHandler').Read('config.cfg')
 
 local homm3lua = require('homm3lua')
 
-local ConfigHandler = require('Auxiliary/ConfigHandler')
-local Serialization = require('Auxiliary/Serialization')
+local ConfigHandler = require('ConfigHandler')
+local Serialization = require('Serialization')
 
 local Grammar = require('LogicMapLayout/Grammar/Grammar')
 local LML     = require('LogicMapLayout/LogicMapLayout')
