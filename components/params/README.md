@@ -109,7 +109,7 @@ _**Towns frequency**: Influences the number of towns placed on the map._
 - `0` - _Random_
 - `1` - _Very rare_
 - `2` - _Rare_
-- `3` - _Standard_
+- `3` - _Normal_
 - `4` - _Common_
 - `5` - _Very common_
 </details>

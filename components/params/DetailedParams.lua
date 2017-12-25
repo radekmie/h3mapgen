@@ -17,36 +17,20 @@ local function RandomizeNotChosen(state)
     end
     dp.players[i] = np
   end
-  if dp.winning == 0 then
-    dp.winning = rand(5)
+  local function randIfZero(n, range)
+    if n == 0 then return rand(range) end
+    return n
   end
-  if dp.water == 0 then
-    dp.water = rand(4)
-  end
-  if dp.towns == 0 then
-    dp.towns = rand(4)
-  end
-  if dp.monsters == 0 then
-    dp.monsters = rand(5)
-  end
-  if dp.welfare == 0 then
-    dp.welfare = rand(5)
-  end
-  if dp.branching == 0 then
-    dp.branching = rand(5)
-  end
-  if dp.focus == 0 then
-    dp.focus = rand(5)
-  end
-  if dp.transitivity == 0 then
-    dp.transitivity = rand(5)
-  end
-  if dp.locations == 0 then
-    dp.locations = rand(5)
-  end
-  if dp.zonesize == 0 then
-    dp.zonesize = rand(5)
-  end
+  dp.winning = randIfZero(dp.winning, 5)
+  dp.water = randIfZero(dp.water, 4)
+  dp.towns = randIfZero(dp.towns, 4)
+  dp.monsters = randIfZero(dp.monsters, 5)
+  dp.welfare = randIfZero(dp.welfare, 5)
+  dp.branching = randIfZero(dp.branching, 5)
+  dp.focus = randIfZero(dp.focus, 5)
+  dp.transitivity = randIfZero(dp.transitivity, 5)
+  dp.locations = randIfZero(dp.locations, 5)
+  dp.zonesize = randIfZero(dp.zonesize, 5)
 end
 
 
