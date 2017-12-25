@@ -5,14 +5,10 @@ package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
 package.path = package.path .. ';components/mlml/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
--- TODO: Read more data from this config.
--- TODO: Auxiliary/Serialization should be able to work without this global.
-CONFIG = require('Auxiliary/ConfigHandler').Read('config.cfg')
-
 local homm3lua = require('homm3lua')
 
-local ConfigHandler = require('Auxiliary/ConfigHandler')
-local Serialization = require('Auxiliary/Serialization')
+local ConfigHandler = require('ConfigHandler')
+local Serialization = require('Serialization')
 
 local Grammar = require('LogicMapLayout/Grammar/Grammar')
 local LML     = require('LogicMapLayout/LogicMapLayout')
@@ -397,7 +393,7 @@ end
 -- Main.
 if arg[1] then
     local seed = {
-        _config = CONFIG,
+        _config = ConfigHandler.Read('config.cfg'),
         _params = {
             players = tonumber(arg[1]),
             sectors = tonumber(arg[3]),
