@@ -39,10 +39,14 @@ local function saveH3M (state, path)
     instance:name('Random Map')
     instance:description('Seed: ' .. state.seed)
 
+    for player = 1, state._params.players do
+        instance:player(player - 1)
+    end
+
     for _, sign in ipairs(state.world_debugZoneSigns) do
         instance:sign(table.unpack(sign))
     end
-    
+
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
@@ -141,7 +145,9 @@ local function step_gameCastles (state)
                         homm3lua.TOWN_TOWER
                     })[play]
 
-                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1})
+                    -- TODO: Define town as main one.
+                    local isMain = false
+                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1, isMain})
 
                     break
                 end
@@ -153,12 +159,12 @@ local function step_gameCastles (state)
 end
 
 local function step_debugZoneSigns (state)
-  
+
     local zonestocheck={}
     for zoneId, _ in pairs(state.MLML_graph) do
       zonestocheck[zoneId] = true
     end
-    
+
     local generateZoneDescription = function (zoneId)
       local descr_zone = 'Zone ID: '..zoneId
       local mlmlNode = state.MLML_graph[zoneId]
@@ -177,7 +183,7 @@ local function step_debugZoneSigns (state)
       local descr_features = 'Features: '..table.concat(features,',')
       return table.concat({descr_zone, descr_bzone, descr_level, descr_type, descr_features}, '\n')
     end
-   
+
     for cellId, cell in pairs(state.world) do
       if zonestocheck[cell.zone] then
         local x, y, z = position2xyz(cellId)
@@ -196,7 +202,7 @@ local function step_debugZoneSigns (state)
         end
       end
     end
- 
+
     for cellId, cell in pairs(state.world) do
       if zonestocheck[cell.zone] then
         local x, y, z = position2xyz(cellId)
