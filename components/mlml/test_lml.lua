@@ -1,4 +1,5 @@
-CONFIG = require('Auxiliary/ConfigHandler').Read('../config.cfg')
+-- w ogóle całe to jest DEPRECATED i nie działa, do przeniesienia to /test i do poprawienia w ramach #17
+CONFIG = require('Auxiliary/ConfigHandler').Read('../config.cfg') -- todo do poprawienia, config powienien być czytany ze state
 
 local ConfigHandler = require('Auxiliary/ConfigHandler')
 local Serialization = require('Auxiliary/Serialization')

@@ -1,0 +1,55 @@
+
+config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, Serialization_indent_size=2, Serialization_inline_limit=80, }
+
+detailedParams = 
+{
+  branching = 3,
+  focus = 1,
+  grail = false,
+  locations = 2,
+  monsters = 2,
+  players = 
+  {
+    { castle="Stronghold", computerOnly=false, id=1, team=1, },
+    { castle="Dungeon", computerOnly=false, id=2, team=2, },
+    { computerOnly=false, id=3, team=3, },
+    { castle="Rampart", computerOnly=false, id=4, team=4, },
+  },
+  seed = 1513970859,
+  size = "S",
+  towns = 4,
+  transitivity = 5,
+  underground = false,
+  version = "RoE",
+  water = 4,
+  welfare = 3,
+  winning = 5,
+  zonesize = 5,
+}
+
+userMapParams = 
+{
+  branching = 0,
+  focus = 0,
+  grail = false,
+  locations = 0,
+  monsters = 0,
+  players = 
+  {
+    { castle="Stronghold", computerOnly=false, id=1, team=1, },
+    { castle="Dungeon", computerOnly=false, id=2, team=2, },
+    { computerOnly=false, id=3, team=3, },
+    { castle="Rampart", computerOnly=false, id=4, team=4, },
+  },
+  seed = 0,
+  size = "S",
+  towns = 0,
+  transitivity = 0,
+  underground = false,
+  version = "RoE",
+  water = 0,
+  welfare = 0,
+  winning = 0,
+  zonesize = 0,
+}
+

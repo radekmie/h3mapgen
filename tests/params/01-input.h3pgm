@@ -2,7 +2,7 @@
 userMapParams = 
 {
   version = "RoE",
-  seed = 0,
+  seed = 1513970601,
   size = "S",
   underground = false,
   players = 
@@ -15,8 +15,9 @@ userMapParams =
   winning = 1,
   water = 1,
   grail = false,
-  welfare=3,
+  towns=4,
   monsters=0,
+  welfare=3,
   branching=3,
   focus=3,
   transitivity=3,
@@ -24,4 +25,9 @@ userMapParams =
   zonesize=0,
 }
 
-config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, Serialization_indent_size=2, Serialization_inline_limit=80, }
+
+userDetailedParams = 
+{
+  seed = 666, -- should have no effect
+  welfare = 2,
+}

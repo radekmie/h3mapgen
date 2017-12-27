@@ -24,7 +24,7 @@ end
 -- @param filepath The path to config file
 -- @param config Table to write
 function ConfigHandler.Write(filepath, config)
-  local Serialization = require'Auxiliary/Serialization' -- its here because of the CONFIG reading
+  local Serialization = require'Serialization' -- its here because of the CONFIG reading
   local str = Serialization.Table(config, -1)
   local file, e = io.open(filepath, "w")
   if file==nil then
