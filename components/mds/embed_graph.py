@@ -13,7 +13,7 @@ from lib.min_bounding_rect import minBoundingRect
 from lib.qhull_2d import qhull2D
 
 
-make_a_plot = True
+make_a_plot = False
 max_it = 10
 
 
