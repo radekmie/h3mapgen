@@ -72,22 +72,3 @@ std::tuple<double, double, double> minBoundingRect(mat hull_points_2d) {
     // rot_angle, width, height
     return std::make_tuple(best_angle, best_width, best_height);
 }
-
-// test
-// int main() {
-//     mat a = {
-//         {0.1006,   0.4466},
-//         {0.3247,   0.8609},
-//         {0.6200,   0.7578},
-//         {0.9327,   0.2649},
-//         {0.9609,   0.2063},
-//         {0.4614,   0.0161},
-//         {0.1569,   0.0583},
-//         {0.1006,   0.4466}
-//     };
-//     std::tuple<double, double, double> b = minBoundingRect(a);
-//     cout << std::get<0>(b) << "\n";
-//     cout << std::get<1>(b) << "\n";
-//     cout << std::get<2>(b) << "\n";
-//     return 0;
-// }

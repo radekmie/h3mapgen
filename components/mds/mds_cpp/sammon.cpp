@@ -3,6 +3,7 @@
 
 using namespace arma;
 
+
 // pairwise euclidean distance
 mat euclid(mat A, mat B) {
     mat dotsAA = repmat(diagvec(A * A.t()), 1, B.n_rows);
@@ -82,24 +83,3 @@ std::pair<mat, double> sammon(mat D, int display, int maxhalves, int maxiter,
     E = E * scale;
     return std::make_pair(y, E);
 }
-
-// test
-// int main() {
-//     mat A1 = {
-//         {0, 1, 2, 1},
-//         {1, 0, 1, 2},
-//         {2, 1, 0, 1},
-//         {1, 2, 1, 0}
-//     };
-
-//     mat A2 = {
-//         {0, 1},
-//         {1, 0}
-//     };
-
-//     std::pair<mat, double> p = sammon(A1);
-//     std::cout << std::get<0>(p) << "\n";
-//     std::cout << std::get<1>(p);
-
-//     return 0;
-// }
