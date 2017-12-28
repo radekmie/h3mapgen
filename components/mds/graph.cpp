@@ -70,7 +70,7 @@ Graph reshape_graph(Graph graph, Sizes sizes) {
     return new_graph;
 }
 
-EdgeWeights calc_weights(Graph graph, Sizes sizes) {
+EdgeWeights calc_weights(Graph graph) {
     EdgeWeights ws = {};
 
     for (auto const& v_vs : graph) {

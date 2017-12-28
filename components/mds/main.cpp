@@ -27,12 +27,12 @@ int main(int argc, char** argv) {
     if (argc > 2)
         output_path = argv[2];
     else
-        output_path = input_path + "_emb";
+        output_path = input_path + "_emb.txt";
 
     std::pair<Graph, Sizes> gs = load_graph(input_path);
     Sizes sizes = gs.second;
     Graph graph = reshape_graph(gs.first, sizes);
-    EdgeWeights weights = calc_weights(graph, sizes);
+    EdgeWeights weights = calc_weights(graph);
     mat dists = calc_dists(graph, weights);
 
     auto embed = [dists]() {

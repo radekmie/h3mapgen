@@ -7,7 +7,7 @@ using namespace arma;
 std::tuple<double, double, double> minBoundingRect(mat hull_points_2d) {
     // Compute edges (x2 - x1, y2 - y1)
     mat edges = mat(hull_points_2d.n_rows - 1, 2); // empty 2 column array
-    for (int i = 0; i < edges.n_rows; i++) {
+    for (unsigned i = 0; i < edges.n_rows; i++) {
         double edge_x = hull_points_2d(i + 1, 0) - hull_points_2d(i, 0);
         double edge_y = hull_points_2d(i + 1, 1) - hull_points_2d(i, 1);
         edges.row(i) = mat({edge_x, edge_y});
@@ -17,7 +17,7 @@ std::tuple<double, double, double> minBoundingRect(mat hull_points_2d) {
     mat edge_angles = atan2(edges.col(1), edges.col(0));
 
     // Check for angles in 1st quadrant
-    for (int i = 0; i < edge_angles.n_rows; i++)
+    for (unsigned i = 0; i < edge_angles.n_rows; i++)
         // want strictly positive answers
         edge_angles(i) = std::fabs(std::remainder(
                                        edge_angles(i), datum::pi / 2));
@@ -32,7 +32,7 @@ std::tuple<double, double, double> minBoundingRect(mat hull_points_2d) {
     double best_width = 0;
     double best_height = 0;
 
-    for (int i = 0; i < edge_angles.n_rows; i++) {
+    for (unsigned i = 0; i < edge_angles.n_rows; i++) {
         // Create rotation matrix to shift points to baseline
         mat R = {
             {

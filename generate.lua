@@ -263,10 +263,9 @@ local function step_initPaths (state)
     state.paths = {
         cell  = state.path .. '/cell.txt',
         dumps = state.path .. '/dumps/',
-        emb   = state.path .. '/emb',
+        emb   = state.path .. '/emb.txt',
         graph = state.path .. '/graph.txt',
         map   = state.path .. '/map.h3m',
-        mds   = state.path .. '/emb.txt',
         pgm   = state.path .. '/mlml.h3pgm',
         vor1  = state.path .. '/map.txt',
         vor2  = state.path .. '/mapText.txt'
@@ -292,7 +291,7 @@ end
 
 local function step_mds (state)
     shell(table.concat({
-        'python components/mds/embed_graph.py',
+        'components/mds/mds',
         state.paths.graph,
         state.paths.emb
     }, ' '))
@@ -381,7 +380,7 @@ end
 local function step_voronoi (state)
     shell(table.concat({
         'components/voronoi/voronoi',
-        state.paths.mds,
+        state.paths.emb,
         state.paths.vor1,
         state._params.size,
         state._params.size,

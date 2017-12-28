@@ -8,8 +8,8 @@ mat pull_points(mat points, mat grav_points, vec mass, double g) {
     mat dists2 = pow(dists, 2);
     mat force = mass.t() * g / dists2.each_row();
     cube diffs = cube(grav_points.n_rows, points.n_rows, 2);
-    for (int i = 0; i < grav_points.n_rows; i++)
-        for (int j = 0; j < points.n_rows; j++)
+    for (unsigned i = 0; i < grav_points.n_rows; i++)
+        for (unsigned j = 0; j < points.n_rows; j++)
             diffs.tube(i, j) = grav_points.row(i) - points.row(j);
     mat lengths = sqrt(sum(pow(diffs, 2), 2));
     lengths.replace(0, 1);

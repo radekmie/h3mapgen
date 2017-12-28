@@ -29,7 +29,7 @@ std::string edg(std::string s1, std::string s2);
 
 Graph reshape_graph(Graph graph, Sizes sizes);
 
-EdgeWeights calc_weights(Graph graph, Sizes sizes);
+EdgeWeights calc_weights(Graph graph);
 
 arma::mat calc_dists(Graph graph, EdgeWeights weights);
 

@@ -47,7 +47,7 @@ std::pair<mat, double> sammon(mat D, int display, int maxhalves, int maxiter,
 
         // Use step-halving procedure to ensure progress is made
         int j;
-        double E_new;
+        double E_new = 0;
         for (j = 0; j < maxhalves; j++) {
             mat s_reshape = reshape(s, s.size() / 2, 2);
             y = y_old + s_reshape;
