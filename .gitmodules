@@ -1,3 +1,6 @@
 [submodule "homm3lua"]
 	path = libs/homm3lua
 	url = git@github.com:radekmie/homm3lua.git
+[submodule "luigi"]
+	path = libs/luigi
+	url = git@github.com:airstruck/luigi.git

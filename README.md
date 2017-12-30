@@ -73,7 +73,14 @@ From the project root directory run `lua generate.lua players size sectors [seed
 | `mapText.txt`     | Filled zones                           |
 | `mlml.h3pgm`      | Logic map layout                       |
 
-Example: `bash run.sh 4 72 4` or `bash run.sh 8 144 36`.
+Example: `lua generate.lua 4 72 4` or `lua generate.lua 8 144 36`.
+
+## Run GUI
+There's no single executable file yet, but you can run it with [love2d](https://love2d.org/):
+
+```sh
+love components/gui
+```
 
 ## Random notes of Kuba S.:
 - In case you don't know that: the first rule is that the code in `master` is compilable at all times. You should check that before commiting.
