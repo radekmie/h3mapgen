@@ -5,10 +5,11 @@ local Serialization = require('Serialization')
 
 -- Defaults
 local model = {
-    version = 'RoE',
-    seed = 0,
-    size = 'S',
-    underground = false,
+    branching = 0,
+    focus = 0,
+    grail = false,
+    locations = 0,
+    monsters = 0,
     players = {
         {id = 1, team = 1, computerOnly = false},
         {id = 2, team = 2, computerOnly = false},
@@ -19,51 +20,61 @@ local model = {
         {id = 7, team = 7, computerOnly = false},
         {id = 8, team = 8, computerOnly = false}
     },
-    winning = 'Random',
-    water = 'Random',
-    grail = false,
-    towns = 'Random',
-    monsters = 'Random',
-    welfare = 'Random',
-    branching = 'Random',
-    focus = 'Random',
-    transitivity = 'Random',
-    locations = 'Random',
-    zonesize = 'Random'
+    seed = 0,
+    size = 'S',
+    towns = 0,
+    transitivity = 0,
+    underground = false,
+    version = 'RoE',
+    water = 0,
+    welfare = 0,
+    winning = 0,
+    zonesize = 0
 }
 
 -- Controls
-local function choose (name, label, options)
+local function bool (name, label)
+    return {
+        flow = 'x',
+        {type = 'label', align = 'right', width = 130, text = label},
+        {type = 'check', value = model[name], id = name}
+    }
+end
+
+local function input (name, label)
+    return {
+        flow = 'x',
+        {type = 'label', align = 'right', width = 130, text = label},
+        {type = 'text', text = tostring(model[name]), id = name}
+    }
+end
+
+local function radio (name, label, bools, labelsAsValues)
     local buttons = {flow = 'x'}
-    for _, option in ipairs(options) do
-        buttons[_] = {
+    for index, bool in ipairs(bools) do
+        local label = bool.label or bool
+        local value
+
+        if labelsAsValues then
+            value = label
+        else
+            value = bool.value or (index - 1)
+        end
+
+        buttons[index] = {
             type = 'radio',
-            text = tostring(option),
+            text = label,
+            exact = value,
             group = name,
-            value = option == model[name]
+            value = value == model[name],
+            width = false
         }
     end
 
     return {
         flow = 'x',
-        {type = 'label', text = label},
+        {type = 'label', align = 'right', width = 130, text = label},
         buttons
-    }
-end
-
-local function number (name, label)
-    return {
-        flow = 'x',
-        {type = 'label', text = label},
-        {type = 'text', text = tostring(model[name]), id = name}
-    }
-end
-
-local function option (name, label)
-    return {
-        flow = 'x',
-        {type = 'label', text = label},
-        {type = 'check', value = model[name], id = name}
     }
 end
 
@@ -73,22 +84,22 @@ local layout = Layout({
     id = 'h3mapgen',
     type = 'panel',
     padding = 10,
-    choose('version', 'Version', {'RoE', 'SoD'}),
-    number('seed', 'Seed'),
-    choose('size', 'Map size', {'S', 'M', 'L', 'XL'}),
-    option('underground', 'Two level map'),
+    radio('version', 'Version', {'RoE', 'SoD'}, true),
+    input('seed', 'Seed'),
+    radio('size', 'Map size', {'S', 'M', 'L', 'XL'}, true),
+    bool('underground', 'Two level map'),
     -- TODO: Players component.
-    choose('winning', 'Winning condition', {'Random', 'Defeat all your enemies', 'Capture Town', 'Defeat Monster', 'Acquire Artifact or Defeat All Enemies', 'Build a Grail Structure or Defeat All Enemies'}),
-    choose('water', 'Water', {'Random', 'None', 'Low (lakes, seas)', 'Standard (continents)', 'High (islands)'}),
-    option('grail', 'Map contains Grail.'),
-    choose('towns', 'Towns frequency', {'Random', 'Very rare', 'Rare', 'Normal', 'Common', 'Very common'}),
-    choose('monsters', 'Monster Strength', {'Random', 'Very weak', 'Weak', 'Medium', 'Strong', 'Very strong'}),
-    choose('welfare', 'Welfare', {'Random', 'Very poor', 'Poor', 'Medium', 'Rich', 'Very rich'}),
-    choose('branching', 'Branching', {'Random', 'All zones contain as small number of entrances as possible', 'Most zones contain only minimal number of entrances', 'Some zones contain multiple entrances, some not', 'Most zones contain multiple entrances', 'All zones contain multiple entrances'}),
-    choose('focus', 'Challenge focus', {'Random', 'Strong PvP', 'More PvP', 'Balanced', 'More PvE', 'Strong PvE'}),
-    choose('transitivity', 'transitivity', {'Random', 'Strongly mazelike zones', 'More zones containing mazelike style', 'Zones containing various styles', 'More zones containing open terrain', 'Strongly open terrain zones'}),
-    choose('locations', 'Locations frequency', {'Random', 'Very rare', 'Rare', 'Standard', 'Common', 'Very common'}),
-    choose('zonesize', 'Zone size', {'Random', 'Strongly decreased', 'Decreased', 'Standard', 'Increased', 'Strongly increased'}),
+    radio('winning', 'Winning condition', {'Random', 'Defeat all your enemies', 'Capture Town', 'Defeat Monster', 'Acquire Artifact or Defeat All Enemies', 'Build a Grail Structure or Defeat All Enemies'}),
+    radio('water', 'Water', {'Random', 'None', 'Low (lakes, seas)', 'Standard (continents)', 'High (islands)'}),
+    bool('grail', 'Map contains Grail'),
+    radio('towns', 'Towns frequency', {'Random', 'Very rare', 'Rare', 'Normal', 'Common', 'Very common'}),
+    radio('monsters', 'Monster Strength', {'Random', 'Very weak', 'Weak', 'Medium', 'Strong', 'Very strong'}),
+    radio('welfare', 'Welfare', {'Random', 'Very poor', 'Poor', 'Medium', 'Rich', 'Very rich'}),
+    radio('branching', 'Branching', {'Random', 'All zones contain as small number of entrances as possible', 'Most zones contain only minimal number of entrances', 'Some zones contain multiple entrances, some not', 'Most zones contain multiple entrances', 'All zones contain multiple entrances'}),
+    radio('focus', 'Challenge focus', {'Random', 'Strong PvP', 'More PvP', 'Balanced', 'More PvE', 'Strong PvE'}),
+    radio('transitivity', 'Transitivity', {'Random', 'Strongly mazelike zones', 'More zones containing mazelike style', 'Zones containing various styles', 'More zones containing open terrain', 'Strongly open terrain zones'}),
+    radio('locations', 'Locations frequency', {'Random', 'Very rare', 'Rare', 'Standard', 'Common', 'Very common'}),
+    radio('zonesize', 'Zone size', {'Random', 'Strongly decreased', 'Decreased', 'Standard', 'Increased', 'Strongly increased'}),
     {
         id = 'submit',
         type = 'button',
@@ -109,7 +120,7 @@ local function serialize ()
         end
 
         if input.type == nil then
-            value = input.selected.text
+            value = input.selected.exact
         end
 
         if input.type == 'check' then
