@@ -1,17 +1,19 @@
 
-config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, Serialization_indent_size=2, Serialization_inline_limit=80, }
+config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, }
 
 detailedParams = 
 {
   branching = 3,
+  difficulty = "Hard",
   focus = 3,
   grail = false,
+  height = 36,
   locations = 5,
   monsters = 4,
   players = 
   {
     { castle="Castle", computerOnly=false, id=1, team=1, },
-    { castle="Castle", computerOnly=false, id=2, team=2, },
+    { castle="Inferno", computerOnly=false, id=2, team=2, },
     { computerOnly=false, id=3, team=3, },
     { castle="Rampart", computerOnly=false, id=4, team=4, },
   },
@@ -23,6 +25,7 @@ detailedParams =
   version = "RoE",
   water = 1,
   welfare = 2,
+  width = 36,
   winning = 1,
   zonesize = 2,
 }
@@ -38,10 +41,20 @@ userMapParams =
   monsters = 0,
   players = 
   {
-    { castle="Castle", computerOnly=false, id=1, team=1, },
-    { castle="Castle", computerOnly=false, id=2, team=2, },
-    { computerOnly=false, id=3, team=3, },
-    { castle="Rampart", computerOnly=false, id=4, team=4, },
+    {
+      castle = { "Castle", "Rampart", "Tower", "Stronghold", "Fortress", },
+      computerOnly = false,
+      id = 1,
+      team = 1,
+    },
+    {
+      castle = { "Inferno", "Necropolis", "Dungeon", },
+      computerOnly = false,
+      id = 2,
+      team = 2,
+    },
+    { castle=    { }, computerOnly=false, id=3, team=3, },
+    { castle=    { "Rampart", }, computerOnly=false, id=4, team=4, },
   },
   seed = 1513970601,
   size = "S",
