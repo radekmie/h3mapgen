@@ -10,16 +10,36 @@ There is a special treatment of `players[p].castles` where, if table of length >
 
 After the generation, the values, except `seed`, are overridden by the content of `userDetailedParams` table.
 
+
+
+
+=================
+
+
+
+
+
+
+- width
+- height
+- difficulty
+- zoneSide
+
+### `zonesnum`:table
+
+- `estimAll`:float - xxx
+- `singleLocal`:int - xxx
+- `singleBuffer`:int -  xxx
+
+
+</details>
+
+
 ### _playerTowns_:int
 _Number of towns owned by the player at the beginning of the game._
 
 
 =================
-
-- width
-- height
-- difficulty
-
 
 
 

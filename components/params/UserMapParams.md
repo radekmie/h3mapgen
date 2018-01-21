@@ -110,10 +110,10 @@ _**Branching**: Influences the number of available routes between the map zones.
 
 - `0` - _Random_
 - `1` - _All zones contain as small number of entrances as possible_
-- `2` - _Most zones contain only minimal number of entrances _
+- `2` - _Most zones contain only minimal number of entrances_
 - `3` - _Some zones contain multiple entrances, some not_
-- `4` - _Most zones contain multiple entrances _
-- `5` - _All zones contain multiple entrances _
+- `4` - _Most zones contain multiple entrances_
+- `5` - _All zones contain multiple entrances_
 </details>
   
 ### `focus`:int
