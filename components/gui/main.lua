@@ -3,6 +3,28 @@ package.path = package.path .. ';libs/?.lua;luigi/?.lua'
 
 local Serialization = require('Serialization')
 
+-- Castles
+local castles = {
+    'Castle',
+    'Dungeon',
+    'Fortress',
+    'Inferno',
+    'Necropolis',
+    'Rampart',
+    'Stronghold',
+    'Tower'
+}
+
+local function indexOf (table, element)
+    for index, value in ipairs(table) do
+        if element == value then
+            return index
+        end
+    end
+
+    return 0
+end
+
 -- Defaults
 local model = {
     branching = 0,
@@ -11,14 +33,14 @@ local model = {
     locations = 0,
     monsters = 0,
     players = {
-        {id = 1, enabled = true,  team = 1, computerOnly = false},
-        {id = 2, enabled = true,  team = 2, computerOnly = false},
-        {id = 3, enabled = true,  team = 3, computerOnly = false},
-        {id = 4, enabled = true,  team = 4, computerOnly = false},
-        {id = 5, enabled = false, team = 5, computerOnly = false},
-        {id = 6, enabled = false, team = 6, computerOnly = false},
-        {id = 7, enabled = false, team = 7, computerOnly = false},
-        {id = 8, enabled = false, team = 8, computerOnly = false}
+        {id = 1, enabled = true,  team = 1, computerOnly = false, castle = {castles[1]}},
+        {id = 2, enabled = true,  team = 2, computerOnly = false, castle = {castles[2]}},
+        {id = 3, enabled = true,  team = 3, computerOnly = false, castle = {castles[3]}},
+        {id = 4, enabled = true,  team = 4, computerOnly = false, castle = {castles[4]}},
+        {id = 5, enabled = false, team = 5, computerOnly = false, castle = {castles[5]}},
+        {id = 6, enabled = false, team = 6, computerOnly = false, castle = {castles[6]}},
+        {id = 7, enabled = false, team = 7, computerOnly = false, castle = {castles[7]}},
+        {id = 8, enabled = false, team = 8, computerOnly = false, castle = {castles[8]}}
     },
     seed = 0,
     size = 'S',
@@ -47,6 +69,16 @@ local function input (name, label)
         {type = 'label', align = 'right', width = 130, text = label},
         {type = 'text', text = tostring(model[name]), id = name}
     }
+end
+
+local function playersCastle (castle)
+    local items = {flow = 'x', {type = 'label', align = 'right', width = 130, text = castle}}
+
+    for id = 1, 8 do
+        items[id + 1] = {type = 'check', align = 'center', id = 'players.' .. id .. '.castles.' .. castle, value = indexOf(model.players[id].castle, castle) ~= 0}
+    end
+
+    return items
 end
 
 local function playersComputerOnly ()
@@ -126,17 +158,24 @@ end
 -- Layout
 local Layout = require('luigi.layout')
 local layout = Layout({
-    id = 'h3mapgen',
     type = 'panel',
-    padding = 10,
+    padding = 0,
     radio('version', 'Version', {'RoE', 'SoD'}, true),
     input('seed', 'Seed'),
     radio('size', 'Map size', {'S', 'M', 'L', 'XL'}, true),
     bool('underground', 'Two level map'),
     playersLabels(),
     playersEnabled(),
-    playersTeam(),
     playersComputerOnly(),
+    playersTeam(),
+    playersCastle(castles[1]),
+    playersCastle(castles[2]),
+    playersCastle(castles[3]),
+    playersCastle(castles[4]),
+    playersCastle(castles[5]),
+    playersCastle(castles[6]),
+    playersCastle(castles[7]),
+    playersCastle(castles[8]),
     radio('winning', 'Winning condition', {'Random', 'Defeat all your enemies', 'Capture Town', 'Defeat Monster', 'Acquire Artifact or Defeat All Enemies', 'Build a Grail Structure or Defeat All Enemies'}),
     radio('water', 'Water', {'Random', 'None', 'Low (lakes, seas)', 'Standard (continents)', 'High (islands)'}),
     bool('grail', 'Map contains Grail'),
@@ -166,12 +205,22 @@ local function serialize ()
             value = {}
 
             for id = 1, 8 do
-                value[#value + 1] = {
-                    id = id,
-                    computerOnly = layout['players.' .. id .. '.computerOnly'].value,
-                    enabled = layout['players.' .. id .. '.enabled'].value,
-                    team = layout['players.' .. id .. '.team'].value
-                }
+                if layout['players.' .. id .. '.enabled'].value then
+                    local player = {
+                        castle = {},
+                        computerOnly = layout['players.' .. id .. '.computerOnly'].value,
+                        id = id,
+                        team = layout['players.' .. id .. '.team'].value
+                    }
+
+                    for _, castle in ipairs(castles) do
+                        if layout['players.' .. id .. '.castles.' .. castle].value then
+                            player.castle[#player.castle + 1] = castle
+                        end
+                    end
+
+                    value[#value + 1] = player
+                end
             end
         elseif input.type == nil then
             value = input.selected.exact
@@ -201,6 +250,9 @@ layout:show()
 for id = 1, 8 do
     local stepper = layout['players.' .. id .. '.team']
 
+    stepper.index = model.players[id].team
+    stepper.value = model.players[id].team
     stepper[2][1] = nil
     stepper[2]:addChild(stepper.items[model.players[id].team])
+    stepper[2]:reshape()
 end
