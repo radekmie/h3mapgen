@@ -81,14 +81,13 @@ end
 -- SetBasicInformation
 
 
---- todo  - zonesnum
+--- Set number of local/buffer zones for LML (MLML)
 -- @param state H3pgm state (modifying state.detailedParams)
 local function SetNumberOfZones(state)
   local dp = state.detailedParams
   
   -- focus (strong PvP) 1:0-20; 2:20-40; 3:40-60; 4:60-80; 5:80-100 (Strong PvE)
   local localzonesprop = 0.01 * ((dp.focus-1)*20+rand(0,20))
-  --print (dp.focus, localzonesprop)
   
   local multiallest = (dp.width*dp.height)/(dp.zoneSide*dp.zoneSide) -- basic estimation
   local rlimit = 2 ^ (MapSizeOrder[dp.size] - 1)
@@ -97,31 +96,24 @@ local function SetNumberOfZones(state)
     rlimit = rlimit * 1.5
   end 
   rlimit = math.tointeger(rlimit)
-  
-  print (multiallest, rlimit)
-  
   multiallest = multiallest + rand(-rlimit, rlimit)
-  print (multiallest)
-  
   if multiallest < #dp.players then multiallest = #dp.players end -- low-number edgecase safeguard
-  
   multiallest = RandomRound(multiallest) -- we need integer from now on
   
   -- Returns estimation on number of singleplayer buffers maching known global estimation and given # of single local zones
   local function EstimateSingleBuffers(slocal) 
     local gbuf = multiallest - #dp.players * slocal
-    return gbuf -- I've tried some functions to compute local buffer estimation and found this one good enough ;]
+    return gbuf -- I've tried some functions to compute local buffer estimation but the fancy one actually reduced to this ;-)
   end
   
   local proportions = {} -- table with proportions for each possible number of local buffers
-  for sloc=1, multiallest+1 do
+  for sloc=1, multiallest do
     local sbuf = EstimateSingleBuffers(sloc) 
     if sbuf < 0 then
       table.insert(proportions, -math.huge)
     else
       table.insert(proportions, sloc / (sloc+sbuf))
     end
-    --print (sloc, '->', proportions[#proportions])
   end
   
   -- we have to find the setting with proportion closest to the desired
@@ -135,15 +127,9 @@ local function SetNumberOfZones(state)
     end
   end
   
-  --print (bestsloc, EstimateSingleBuffers(bestsloc)  , bestdiff, localzonesprop)
-  
-
-  
-  dp.zonesnum = {multiallEstimation=multiallest, singlelocal=bestsloc, singlebuffer=EstimateSingleBuffers(bestsloc),
-                 singleall=bestsloc+EstimateSingleBuffers(bestsloc)}
-  
-  print (string.format('[INFO-DP] Zones: multi_estim=%i, sLocal=%i, sBuffer=%i  (%s, %i players);  targetProp=%.3f, foundProp=%.3f', 
-      multiallest, bestsloc, dp.zonesnum.singlebuffer, dp.size, #dp.players, localzonesprop, proportions[bestsloc]))
+  dp.zonesnum = {estimAll=multiallest, singleLocal=bestsloc, singleBuffer=EstimateSingleBuffers(bestsloc)}
+  print (string.format('[INFO] <DetailedParams> Zones: multi_estim=%i, sLocal=%i, sBuffer=%i  (%s, %i players);  targetProp=%.3f, foundProp=%.3f', 
+      multiallest, bestsloc, EstimateSingleBuffers(bestsloc), dp.size, #dp.players, localzonesprop, proportions[bestsloc]))
   
 end
 -- SetNumberOfZones
@@ -173,11 +159,10 @@ function DetailedParams.Generate(state)
   SetNumberOfZones(state)
   
   -- todo
-  -- potem mamy zbiór podfunkcji nadpisujący rózne konkretne wartości detailedParams (liczby zon, liczby zamków, itd, itp)
+  -- potem mamy zbiór podfunkcji nadpisujący rózne konkretne wartości detailedParams (liczby zamków, priorytety produkcji, itd, itp)
   
 end
 -- DetailedParams.Generate
 
 
 return DetailedParams
-
