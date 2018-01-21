@@ -11,14 +11,14 @@ local model = {
     locations = 0,
     monsters = 0,
     players = {
-        {id = 1, team = 1, computerOnly = false},
-        {id = 2, team = 2, computerOnly = false},
-        {id = 3, team = 3, computerOnly = false},
-        {id = 4, team = 4, computerOnly = false},
-        {id = 5, team = 5, computerOnly = false},
-        {id = 6, team = 6, computerOnly = false},
-        {id = 7, team = 7, computerOnly = false},
-        {id = 8, team = 8, computerOnly = false}
+        {id = 1, enabled = true,  team = 1, computerOnly = false},
+        {id = 2, enabled = true,  team = 2, computerOnly = false},
+        {id = 3, enabled = true,  team = 3, computerOnly = false},
+        {id = 4, enabled = true,  team = 4, computerOnly = false},
+        {id = 5, enabled = false, team = 5, computerOnly = false},
+        {id = 6, enabled = false, team = 6, computerOnly = false},
+        {id = 7, enabled = false, team = 7, computerOnly = false},
+        {id = 8, enabled = false, team = 8, computerOnly = false}
     },
     seed = 0,
     size = 'S',
@@ -47,6 +47,51 @@ local function input (name, label)
         {type = 'label', align = 'right', width = 130, text = label},
         {type = 'text', text = tostring(model[name]), id = name}
     }
+end
+
+local function playersComputerOnly ()
+    local items = {flow = 'x', {type = 'label', align = 'right', width = 130, text = 'Computer only'}}
+
+    for id = 1, 8 do
+        items[id + 1] = {type = 'check', align = 'center', id = 'players.' .. id .. '.computerOnly', value = model.players[id].computerOnly}
+    end
+
+    return items
+end
+
+local function playersEnabled ()
+    local items = {flow = 'x', {type = 'label', align = 'right', width = 130, text = 'Enabled'}}
+
+    for id = 1, 8 do
+        items[id + 1] = {type = 'check', align = 'center', id = 'players.' .. id .. '.enabled', value = model.players[id].enabled}
+    end
+
+    return items
+end
+
+local function playersLabels ()
+    local items = {flow = 'x', {type = 'label', align = 'right', width = 130, text = 'Players'}}
+
+    for id = 1, 8 do
+        items[id + 1] = {type = 'label', align = 'center', text = tostring(id)}
+    end
+
+    return items
+end
+
+local function playersTeam ()
+    local items = {flow = 'x', {type = 'label', align = 'right', width = 130, text = 'Team'}}
+
+    for id = 1, 8 do
+        -- TODO: Stepper resets its value.
+        items[id + 1] = {type = 'stepper', align = 'center', id = 'players.' .. id .. '.team', index = model.players[id].team}
+
+        for team = 1, 8 do
+            items[id + 1][team] = {value = team, text = tostring(team)}
+        end
+    end
+
+    return items
 end
 
 local function radio (name, label, bools, labelsAsValues)
@@ -88,7 +133,10 @@ local layout = Layout({
     input('seed', 'Seed'),
     radio('size', 'Map size', {'S', 'M', 'L', 'XL'}, true),
     bool('underground', 'Two level map'),
-    -- TODO: Players component.
+    playersLabels(),
+    playersEnabled(),
+    playersTeam(),
+    playersComputerOnly(),
     radio('winning', 'Winning condition', {'Random', 'Defeat all your enemies', 'Capture Town', 'Defeat Monster', 'Acquire Artifact or Defeat All Enemies', 'Build a Grail Structure or Defeat All Enemies'}),
     radio('water', 'Water', {'Random', 'None', 'Low (lakes, seas)', 'Standard (continents)', 'High (islands)'}),
     bool('grail', 'Map contains Grail'),
@@ -114,21 +162,25 @@ local function serialize ()
         local input = layout[key]
         local value
 
-        -- TODO: Players component.
         if key == 'players' then
-            input = {type = 'text', value = model[key]}
-        end
+            value = {}
 
-        if input.type == nil then
+            for id = 1, 8 do
+                value[#value + 1] = {
+                    id = id,
+                    computerOnly = layout['players.' .. id .. '.computerOnly'].value,
+                    enabled = layout['players.' .. id .. '.enabled'].value,
+                    team = layout['players.' .. id .. '.team'].value
+                }
+            end
+        elseif input.type == nil then
             value = input.selected.exact
-        end
-
-        if input.type == 'check' then
+        elseif input.type == 'check' then
             value = input.value
-        end
-
-        if input.type == 'text' then
+        elseif input.type == 'text' then
             value = input.value
+        else
+            error('Unhandled field: ' .. key)
         end
 
         result[key] = value
@@ -144,3 +196,11 @@ end)
 -- Start
 layout:setTheme(require('luigi.theme.light'))
 layout:show()
+
+-- TODO: Stepper resets its value.
+for id = 1, 8 do
+    local stepper = layout['players.' .. id .. '.team']
+
+    stepper[2][1] = nil
+    stepper[2]:addChild(stepper.items[model.players[id].team])
+end
