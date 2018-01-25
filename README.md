@@ -79,7 +79,7 @@ Example: `lua generate.lua 4 72 4` or `lua generate.lua 8 144 36`.
 There's no single executable file yet, but you can run it with [love2d](https://love2d.org/):
 
 ```sh
-love components/gui
+love h3mapgen.love
 ```
 
 ## Random notes of Kuba S.:

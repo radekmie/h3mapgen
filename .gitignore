@@ -4,6 +4,7 @@
 /bin/_test/*.png
 /components/ca/ca
 /components/voronoi/voronoi
+/h3mapgen.love
 /output
 /tests/params/*output.h3pgm
 

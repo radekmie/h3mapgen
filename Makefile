@@ -1,11 +1,11 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn-type -pedantic-errors -Wundef
 LDLIBS =
-TARGETS = components/ca/ca components/voronoi/voronoi
+TARGETS = components/ca/ca components/voronoi/voronoi h3mapgen.love
 
 .PHONY: homm3lua
 
-all: $(TARGETS) | homm3lua
+all: homm3lua $(TARGETS)
 
 components/ca/ca: Makefile components/ca/board.o components/ca/cellular_terrain.o components/ca/main.cpp
 	 $(CXX) $(CXXFLAGS) -o components/ca/ca components/ca/*.o components/ca/main.cpp
@@ -23,3 +23,14 @@ distclean: clean
 
 homm3lua:
 	$(MAKE) -C libs/homm3lua
+
+h3mapgen.love: components/gui/*.lua libs/*.lua libs/luigi/luigi/*
+	rm -f $@
+	cp components/gui/conf.lua conf.lua
+	cp components/gui/main.lua main.lua
+	zip -9 -q -r $@ $(subst components/gui/,,$^) \
+		-x "*.git*" \
+		-x "*libs/luigi/luigi/backend/ffisdl*" \
+		-x "*libs/luigi/luigi/theme/dark*"
+	rm conf.lua
+	rm main.lua

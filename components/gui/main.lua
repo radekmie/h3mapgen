@@ -1,5 +1,5 @@
 -- Instead of LUA_PATH
-package.path = package.path .. ';libs/?.lua;luigi/?.lua'
+package.path = package.path .. ';libs/?.lua'
 
 local Serialization = require('Serialization')
 
@@ -156,7 +156,7 @@ local function radio (name, label, bools, labelsAsValues)
 end
 
 -- Layout
-local Layout = require('luigi.layout')
+local Layout = require('libs.luigi.luigi.layout')
 local layout = Layout({
     type = 'panel',
     padding = 0,
@@ -188,9 +188,10 @@ local layout = Layout({
     radio('locations', 'Locations frequency', {'Random', 'Very rare', 'Rare', 'Standard', 'Common', 'Very common'}),
     radio('zonesize', 'Zone size', {'Random', 'Strongly decreased', 'Decreased', 'Standard', 'Increased', 'Strongly increased'}),
     {
-        id = 'submit',
-        type = 'button',
-        text = 'Generate'
+        flow = 'x',
+        {id = 'load', type = 'button', text = 'Load'},
+        {id = 'save', type = 'button', text = 'Save'},
+        {id = 'generate', type = 'button', text = 'Generate'}
     }
 })
 
@@ -238,12 +239,20 @@ local function serialize ()
     return result
 end
 
-layout.submit:onPress(function ()
+layout.load:onPress(function ()
+    print('Not implemented: load...')
+end)
+
+layout.save:onPress(function ()
+    print('Not implemented: save...')
+end)
+
+layout.generate:onPress(function ()
     print((Serialization.Table(serialize())))
 end)
 
 -- Start
-layout:setTheme(require('luigi.theme.light'))
+layout:setTheme(require('libs.luigi.luigi.theme.light'))
 layout:show()
 
 -- TODO: Stepper resets its value.
