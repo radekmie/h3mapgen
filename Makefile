@@ -24,7 +24,7 @@ distclean: clean
 homm3lua:
 	$(MAKE) -C libs/homm3lua
 
-h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi/**/*)
+h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi)
 	rm -f $@
 	cp components/gui/conf.lua conf.lua
 	cp components/gui/main.lua main.lua
