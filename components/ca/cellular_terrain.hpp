@@ -7,6 +7,8 @@
 const unsigned int neighbourhood_radius = 2;
 const unsigned int neighbourhood_size = 2*neighbourhood_radius + 1;
 
+int seed = 0;
+
 // Structure encapsulating all the parameters of terrain generation process
 struct TerrainParams {
         // neighbourhood contains weights for cells' neighbourhood
