@@ -53,7 +53,7 @@ void random_fill(const Board& board, Board& result, const TerrainParams& paramet
         unsigned int cols = board[0].size();
         board_set_size(result, rows, cols);
         
-	auto seed = chrono::system_clock::now().time_since_epoch().count();
+	seed = chrono::system_clock::now().time_since_epoch().count();
 	default_random_engine gen(seed);
         bernoulli_distribution dist(parameters.probability);
 
