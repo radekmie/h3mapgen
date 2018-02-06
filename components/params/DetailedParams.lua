@@ -1,18 +1,9 @@
+local RNG = require'Random'
+
 local DetailedParams = {}
-local DetailedParams_mt = { __index = DetailedParams, __metatable = "Access resticted." }
 
-local rand = math.random
+local rand = RNG.Random
 local MapSizeOrder = {S=1, M=2, L=3, XL=4}
-
---- Rounds given number up or down with the probability dependent on its fractional part
--- @param Number to round
--- @return Rounded integer
-local function RandomRound(x)
-  local i, f = math.modf (x)
-  if rand() > f then i = i + 1 end
-  return i
-end
--- RandomRound
 
 
 --- Function randomizes values for which user choose 0 and player castles.
@@ -98,7 +89,7 @@ local function SetNumberOfZones(state)
   rlimit = math.tointeger(rlimit)
   multiallest = multiallest + rand(-rlimit, rlimit)
   if multiallest < #dp.players then multiallest = #dp.players end -- low-number edgecase safeguard
-  multiallest = RandomRound(multiallest) -- we need integer from now on
+  multiallest = RNG.RandomRound(multiallest) -- we need integer from now on
   
   -- Returns estimation on number of singleplayer buffers maching known global estimation and given # of single local zones
   local function EstimateSingleBuffers(slocal) 
@@ -126,10 +117,18 @@ local function SetNumberOfZones(state)
       bestsloc = i
     end
   end
+  local bestbuf = EstimateSingleBuffers(bestsloc)
   
-  dp.zonesnum = {estimAll=multiallest, singleLocal=bestsloc, singleBuffer=EstimateSingleBuffers(bestsloc)}
+  -- There has to be at least one buffer zone for some winning conditions (capture town, monster, artifact)
+  -- Let's hardput this zone without making any other changes
+  local bufferReq = dp.winning==2 or dp.winning==3 or dp.winning==4
+  if bufferReq and bestbuf==0 then
+    bestbuf = 1
+  end
+  
+  dp.zonesnum = {estimAll=multiallest, singleLocal=bestsloc, singleBuffer=bestbuf}
   print (string.format('[INFO] <DetailedParams> Zones: multi_estim=%i, sLocal=%i, sBuffer=%i  (%s, %i players);  targetProp=%.3f, foundProp=%.3f', 
-      multiallest, bestsloc, EstimateSingleBuffers(bestsloc), dp.size, #dp.players, localzonesprop, proportions[bestsloc]))
+      multiallest, bestsloc, bestbuf, dp.size, #dp.players, localzonesprop, proportions[bestsloc]))
   
 end
 -- SetNumberOfZones

@@ -1,7 +1,7 @@
 local DetailedParams = require'DetailedParams'
+local LMLInitializer = require'LMLInitializer'
 
 local Params = {}
-local Params_mt = { __index = Params, __metatable = "Access resticted." }
 
 
 --- Overrides generated detailedDarams with the ones given by the user. The 'seed' key is never overridden.
@@ -20,7 +20,7 @@ end
 -- @param state H3pgm state containing 'userMapParams', 'config' and optionally 'userDetailedParams' keys, which is extended by 'detailedParams'
 function Params.GenerateDetailedParams(state)
   if not state.userMapParams then
-    error('Given h3pgm state do not contain userMapParams (required by Params.GenerateDetailedParams).', 2)
+    error('[ERROR] <Params> : Given h3pgm state do not contain userMapParams (required by Params.GenerateDetailedParams).', 2)
   end
   DetailedParams.Generate(state)
   if state.userDetailedParams then
@@ -28,13 +28,14 @@ function Params.GenerateDetailedParams(state)
   end
 end
 
---- TODO
--- todo
+
+--- Function generates 'LML_InitNode' field containing initial node for LML stage
+-- @param state H3pgm state after GenerateDetailedParams function applied
 function Params.GenerateInitLMLNode(state)
   if not state.detailedParams then
-    error('Given h3pgm state do not contain detailedParams (required by Params.GenerateInitLMLNode).', 2)
+    error('[ERROR] <Params> : Given h3pgm state do not contain detailedParams (required by Params.GenerateInitLMLNode).', 2)
   end
-  print('Params.GenerateInitLMLNode : status=TODO')
+  LMLInitializer.Generate(state)
 end
 
 

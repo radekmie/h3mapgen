@@ -45,9 +45,9 @@ _Pytanie: Nie jest tych kategorii trochę za dużo...?_
 ##### For `"MINE"` (string):
 
 - `"BASE"` - In this zone **both** mines should be placed: Sawmill and Ore Pit.
-- `"PRIMARY"` - In this zone **two** mines, should be placed. Mapping from race to mine type is defined in [config.cfg](../../config.cfg). If the zone contains a castle, primary mines for this castle should be taken. Otherwise, if the zone is LOCAL, player's primary mines should be taken. Otherwise there should be warning(?) and it should work as `"RANDOM"` option.
+- `"PRIMARY"` - In this zone **two** mines, should be placed. Mapping from race to mine type is defined in [config.cfg](../../../config.cfg). If the zone contains a castle, primary mines for this castle should be taken. Otherwise, if the zone is LOCAL, player's primary mines should be taken. Otherwise there should be warning(?) and it should work as `"RANDOM"` option.
 - `"GOLD"` - Places a single Gold Mine.
-- `"RANDOM"` - Places a single, random mine, depending on zone's level and type (and also player race if local? _to trochę dużo opcji by było..._). Settings are taken from [config.cfg](../../config.cfg) file
+- `"RANDOM"` - Places a single, random mine, depending on zone's level and type (and also player race if local? _to trochę dużo opcji by było..._). Settings are taken from [config.cfg](../../../config.cfg) file
 
 _Pytanie: jak późno możemy ustawić konkretne kopalnie? Pomimo, że są jako obiekty podobne to niestety nieznacznie się różnią, zwłaszcza drewno, a fajnie byłoby móc to sobie przelosować na końcowym etapie tworzenia mapy._
 

@@ -50,7 +50,7 @@ end
 
 --- Draws graph into an image
 -- @param filepath Name of the output file (without extension, will be png)
-function GraphvizDrawer:Draw(filepath) 
+function GraphvizDrawer:Draw(filepath)--, config) 
   local src = 'digraph G \n{\n'..'  edge [arrowhead="none"];\n\n'
   src = src..'  '..table.concat(self.nodes, '\n  ')..'\n\n'
   src = src..'  '..table.concat(self.edges, '\n  ')..'\n'
@@ -66,9 +66,9 @@ function GraphvizDrawer:Draw(filepath)
 	local cmd = io.popen(cmd_str, "r")
   cmd:read('*a')
   cmd:close()
-  if not CONFIG.Graphviz_keep_dotsource then
-    os.remove(filepath..'.dot')
-  end
+  --if not CONFIG.Graphviz_keep_dotsource then
+  --  os.remove(filepath..'.dot')
+  --end
 end
 
 
