@@ -46,7 +46,7 @@ static int Lua_terrain(lua_State *L)
 	int iterations = lua_tointeger(L,ind);
 	ind++;
 	if(lua_isinteger(L,ind) == 1)
-		seed = lua_isinteger(L,ind);
+		seed = lua_tointeger(L,ind);
 	Board result;
 	load_board(table);
 	if(name == "moore")
