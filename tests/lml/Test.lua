@@ -26,6 +26,15 @@ local function Test(name)
   --ConfigHandler.Write('tests/params/'..name..'.h3pgm', state)
 end
 
+--[[
+local Class = require'graph/Class'
+local c1 = Class.New('BUFFER', 666)
+local c2 = Class.New{type='BUFFER', level=666} -- TODO ERR
+print (c1==c2)
+local x = {[c1]=true}
+print (x[c1])
+print (x[c2])
+--]]
 
 Test('A')
 --print('00: OK')

@@ -1,13 +1,34 @@
 # `LML Graph` specification
 
 
-## `graph`
+## `graph`:object
 
-*TODO*
+Encodes LML graph, i.e. its nodes are zones, and (undirected) edges means connections between the zones. 
+
+Zones are stored as [`zone`](#zoneobject) objects treating the graph as normal table. Zone's id is its position in the table.
+
+
+### `edges`:table
+
+Connections between zones stored as two-dimension adjacency table with zones' ids as keys. 
+
+
+
 
 ## `zone`:object
 
-*TODO*
+Zone contains information about some logical region of the map. Eventaully, this should be zone's class and a set of features consistent with this class. 
+
+During the computation the graph node representing zone may contain multiple classes and various features. However, it always has to be _consistent_, i.e. it cannot contain feature for class not belonging to the zone. We say the zone is _final_ when it is consistent and contain exactly one class.
+
+
+### `classes`:table
+
+List of all classes assigned to the zone. Final zones contain only one class.
+
+### `features`:table
+
+List of all features within the zone. The features in the list have to be consistent with zones classes.
 
 
 
@@ -16,11 +37,16 @@
 Describes heavy feature on map: town or mine; or connection with the other player.
 Feature is always paired with some [class](#classobject), meaning it can be placed only within a zone of this class.
 
+### `class`:table
+
+Class of zone the feature should be within.
+
+
 ### `type`:string
 
 Defines type of the feature. It can be one of the following:
 
-- `"OUTER"` - *TODO*
+- `"OUTER"` - Edge that connect the zone to other player's (single) graph. If one zone contains multiple outers they should all point out different players' graphs.
 - `"TOWN"` - Puts town in the zone.
 - `"MINE"` - Puts mine in the zone.
 
@@ -52,183 +78,37 @@ _Pytanie: Nie jest tych kategorii trochę za dużo...?_
 _Pytanie: jak późno możemy ustawić konkretne kopalnie? Pomimo, że są jako obiekty podobne to niestety nieznacznie się różnią, zwłaszcza drewno, a fajnie byłoby móc to sobie przelosować na końcowym etapie tworzenia mapy._
 
 
-### `class`:table
-
-Class of zone the feature should be within.
 
 
 
 
 ## `class`:object
 
+Encodes purpose and difficulty lever for each zone/feature. Thus it points what kinds of objects should be placed within such zone. 
 
-*TODO*
+Classes are equal if their `type` and `level` are equal.
+
+### `type`:string
+
+Defines purpose of the zone from the strategic point of view.
+
+- `"LOCAL"` - The zone should 'belong to the player' in the sense that it has lower difficulty passage to it than his opponents.
+- `"BUFFER"` - The zone with equally difficult path to get to by more than one player.
+- `"GOAL"` - Special zone for some types of [winning conditions](../../params/UserMapParams.md#winningint). There has to be at most one on the map.
+- `"TELEPORT"` - A zero-space zone, teleport is in fact a multiedge than can connect both local and buffer zones together.
+- `"WATER"` - Special type of BUFFER zone. **Not implemented**
+
+All zones except `"LOCAL"` are treated as non-LOCAL. 
+The ordering on zones goes as follows: `LOCAL < TELEPORT < BUFFER = WATER < GOAL`
+
+### `level`:int
+
+The higher level of zone the more difficult monsters should be inside (and more rewarding buildings/resources).
+
+Minimal zone level is 1, maximal level is set in `MaxZoneLevel` field in [config.cfg](../../../config.cfg).
+
+Levels should have predefined semantics (as 1: level 1-2 creatures, 2 - level 3-3 creatures, ..., level 10 - hundreds of level 4 creatures), but we should also try to make it dynamic, so one could set higher or lower max level.
+
+_OK, nie wiem jak to będzie w praktyce, na razie przyjmujemy 10 max_
 
 
-=================================================
-
-
-
-### `version`:string
-_**Map version**: Game version to generate map for._
-<details>
-  
-- `"RoE"` - _Restoration of Erathia_
-- `"SoD"` - _Shadow of Death_
-</details>
-
-### `seed`:int
-_**Generation seed**: Value "0" generates random map, provide other value if you want to reproduce a concrete output._
-
-### `size`:string
-_**Map size**: Size of the map._
-<details>
-  
-- `"S"` - _Small (36x36)_
-- `"M"` - _Medium (72x72)_
-- `"L"` - _Large (108x108)_
-- `"XL"` - _Extra Large (144x144)_
-
-(future feature: in theory we can allow any rectangular map size `WxH` smaller then 144x144)
-</details>
-
-### `underground`:bool
-_**Two level map**: If checked the map will contain an underground level._
-
-### `players`:table
-_**Players**: Set the number and specifics of the players._
-<details>
-  
-- _**Castle**: Choose castles available (randomized) for this player, check "random" to set town choosable at the beginning of a game_
-- _**Team**: Choose a team number for the player_
-- _**Computer only**: Set if the player should be AI only_
-
-`Player = {id:int=1..8, team:int=1..8, computerOnly:bool, castle:table={"Castle", "Tower",...}/{} if in-game random}`
-</details>
-  
-### `winning`:int
-_**Winning condition**: The goal of the players._
-<details>
-  
-- `0` - _Random_
-- `1` - _Defeat all your enemies_
-- `2` - _Capture Town_
-- `3` - _Defeat Monster_
-- `4` - _Acquire Artifact or Defeat All Enemies_
-- `5` - _Build a Grail Structure or Defeat All Enemies_
-
-(możemy się ograniczyć tylko do `1`, ale kurde, dotychczas żaden generator nie pozwalał na pozostałe, a chyba jesteśmy w stanie to zrobić) 
-(z kolei z warunkami przegranej proponowałbym nie kombinować)
-</details>
-  
-### `water`:int
-_**Water level**: Influences proportion of map covered by the water._
-<details>
-  
-- `0` - _Random_
-- `1` - _None_
-- `2` - _Low (lakes, seas)_
-- `3` - _Standard (continents)_
-- `4` - _High (islands)_
-</details>
-  
-### `grail`:bool
-_**Grail**: If checked the map will contain Grail._
-
-### `towns`:int
-_**Towns frequency**: Influences the number of towns placed on the map._
-<details>
-  
-- `0` - _Random_
-- `1` - _Very rare_
-- `2` - _Rare_
-- `3` - _Normal_
-- `4` - _Common_
-- `5` - _Very common_
-</details>
-
-### `monsters`:int
-_**Monster Strength**: Influences the strength of monsters._
-<details>
-  
-- `0` - _Random_
-- `1` - _Very weak_
-- `2` - _Weak_
-- `3` - _Medium_
-- `4` - _Strong_
-- `5` - _Very strong_
-</details>
-
-### `welfare`:int
-_**Welfare**: Influences the number of available resources, artifacts, etc._
-<details>
-  
-- `0` - _Random_
-- `1` - _Very poor_
-- `2` - _Poor_
-- `3` - _Medium_
-- `4` - _Rich_
-- `5` - _Very rich_
-</details>
-
-### `branching`:int
-_**Branching**: Influences the number of available routes between the map zones._
-<details>
-
-- `0` - _Random_
-- `1` - _All zones contain as small number of entrances as possible_
-- `2` - _Most zones contain only minimal number of entrances_
-- `3` - _Some zones contain multiple entrances, some not_
-- `4` - _Most zones contain multiple entrances_
-- `5` - _All zones contain multiple entrances_
-</details>
-  
-### `focus`:int
-_**Challenge focus**: Influences the balance between fighting against environment (PvE) and fighting against other players (PvP)._
-<details>
-  
-- `0` - _Random_
-- `1` - _Strong PvP_
-- `2` - _More PvP_
-- `3` - _Balanced_
-- `4` - _More PvE_
-- `5` - _Strong PvE_
-</details>
-  
-### `transitivity`:int
-_**Transitivity**: Influences the number of obstacles and shapes of available paths within the zones._
-<details>
-  
-- `0` - _Random_
-- `1` - _Strongly mazelike zones_
-- `2` - _More zones containing mazelike style_
-- `3` - _Zones containing various styles_
-- `4` - _More zones containing open terrain_
-- `5` - _Strongly open terrain zones_
-</details>
-  
-### `locations`:int
-_**Locations frequency**: Influences the frequency of interactive adventure map locations (universities, arenas, creature banks, swan ponds, etc.)._
-<details>
-  
-- `0` - _Random_
-- `1` - _Very rare_
-- `2` - _Rare_
-- `3` - _Standard_
-- `4` - _Common_
-- `5` - _Very common_
-</details>
-
-### `zonesize`:int
-_**Zone size**: Influences the size of an average zone._
-<details>
-  
-- `0` - _Random_
-- `1` - _Strongly decreased_
-- `2` - _Decreased_
-- `3` - _Standard_
-- `4` - _Increased_
-- `5` - _Strongly increased_
-</details>
-  
-  

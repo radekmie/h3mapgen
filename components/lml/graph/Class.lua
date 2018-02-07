@@ -26,10 +26,16 @@ end
 --- Creates new empty Class object
 -- @param type Zone table with full data or class type: 'LOCAL', 'BUFFER', 'GOAL', 'TELEPORT', 'WATER'
 -- @param level Zone class level: int
--- @return New Class with given type and level
+-- @return New Class with given type and level [optional]
 function Class.New(typeorobj, level)
-  local obj = type(typeorobj)=='table' and typeorobj or {type=typeorobj, level=level}
+  local obj
+  if level == nil then
+    obj = typeorobj
+  else 
+    obj = {type=typeorobj, level=level}
+  end
   return setmetatable(obj, Class_mt)
+
 end
 
 

@@ -37,7 +37,7 @@ LML_graph =
 
 LML_init = 
 {
-  class = 
+  classes = 
   {
     { level=0, type="LOCAL", },
     { level=1, type="LOCAL", },
