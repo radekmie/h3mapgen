@@ -16,16 +16,16 @@ static int Lua_terrain(lua_State *L)
       iterations is an integer, /required
       seed is an integer. /optional
 
-	  If seed is not provided or left at 0, a random seed will be picked.
-      The result of CA(...) should be a new board and the seed used.
+	If seed is not provided or left at 0, a random seed will be picked.
+     The result of CA(...) should be a new board and the seed used.
     */
-    Board table;
+	Board table;
 	table.resize(256);
 	for(int i = 0; i != 256; i++)
 		table[i].resize(256,white);
-    lua_pushnil(L);              // put a nil key on stack
-    while (lua_next(L,1) != 0) { // key(-1) is replaced by the next key(-1) in table(1)
-        int pos = lua_tointeger(L,-2);  // Get position (x,y,z)
+	lua_pushnil(L);              // put a nil key on stack
+	while (lua_next(L,1) != 0) { // key(-1) is replaced by the next key(-1) in table(1)
+        	int pos = lua_tointeger(L,-2);  // Get position (x,y,z)
 		int state = lua_toboolean(L,-1);  // Get state (true/false)
 		int x = pos%256;
 		int y = (pos/256)%256;
@@ -33,9 +33,9 @@ static int Lua_terrain(lua_State *L)
 			table[x][y] = black;
 		else
 			table[x][y] = white;
-        lua_pop(L,1);             // remove value(-1), now key on top at(-1)
-    }
-    lua_pop(L,1);                 // remove last key
+        	lua_pop(L,1);             // remove value(-1), now key on top at(-1)
+    	}
+    	lua_pop(L,1);                 // remove last key
 	int ind = 2;
 	string name = lua_tostring(L,ind);
 	ind++;
@@ -48,7 +48,6 @@ static int Lua_terrain(lua_State *L)
 	if(lua_isinteger(L,ind) == 1)
 		seed = lua_tointeger(L,ind);
 	Board result;
-	load_board(table);
 	if(name == "moore")
 		terrain(table, result, moore_neighbourhood(probability, weight), iterations);
 	else
@@ -69,18 +68,18 @@ static int Lua_terrain(lua_State *L)
 		}
 	}
 	lua_pushinteger(L,seed);
-	return 1;
+	return 2;
 }
 
 static const struct luaL_Reg mylib [] =
  {
-  {"CA",Lua_terrain},
-  {NULL, NULL}  // sentinel
+	{"CA",Lua_terrain},
+	{NULL, NULL}  // sentinel
 };
 
 extern "C" int luaopen_terrain(lua_State *L)  // wystawienie na zewnatrz (z extern C)
 {
-  luaL_newlib(L, mylib);
-  return 1;
+	luaL_newlib(L, mylib);
+	return 1;
 }
 
