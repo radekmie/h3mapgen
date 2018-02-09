@@ -1,7 +1,7 @@
 
-pq = require "loop.collection.PriorityQueue"
+local pq = require "loop.collection.PriorityQueue"
 
-pathfinding = {} 
+local pathfinding = {} 
 
 local function heuristic(sx,sy,tx,ty)
   return math.max(math.abs(tx-sx),math.abs(ty-sy))
@@ -14,6 +14,9 @@ local function check(x,y)
     return true
   end
 end
+
+local diagonal_cost = 1 --can be modified
+local normal_cost = 1
 
 function pathfinding.search_path(world_grid,start,destination) --A* algorithm
   local map = {}
@@ -61,13 +64,19 @@ function pathfinding.search_path(world_grid,start,destination) --A* algorithm
         x,y = camefrom[x][y][1],camefrom[x][y][2]
         len = len+1
       end
-      return path,len
+      return len,path
     end
     evaluated[x][y] = true
     for i = -1,1 do
       for j = -1,1 do
         if check(x+i,y+j) and map[x+i][y+j] ~= true and evaluated[x+i][y+j] == false then
-          local new_score = gmap[x][y] + 1
+          local new_score = gmap[x][y]
+          if math.abs(i) + math.abs(j) == 2 then --diagonal move
+            new_score = new_score + diagonal_cost
+          end
+          if math.abs(i) + math.abs(j) == 1 then
+            new_score = new_score + normal_cost
+          end
           if new_score < gmap[x+i][y+j] then
             gmap[x+i][y+j] = new_score
             camefrom[x+i][y+j] = {x,y}
