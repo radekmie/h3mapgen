@@ -7,8 +7,8 @@ local rand = RNG.Random
 
 
 
---- Function generates 'LML_InitNodefield containing initial node for LML stage.
--- @param state H3pgm state after GenerateDetailedParams function applied (requires 'detailedParams')
+--- Function generates 'lmlInitialNode' containing initial node for LML stage.
+-- @param state H3pgm state after GenerateDetailedParams function applied (requires 'paramsDetailed')
 function LMLInitializer.Generate(state)  
   
   

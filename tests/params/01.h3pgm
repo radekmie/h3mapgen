@@ -1,7 +1,7 @@
 
-config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, StandardZoneSize=18, ZoneSizeStep=3, }
+config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, MaxZoneLevel=10, StandardZoneSize=18, ZoneSizeStep=3, }
 
-detailedParams = 
+paramsDetailed = 
 {
   branching = 3,
   difficulty = "Hard",
@@ -29,12 +29,12 @@ detailedParams =
   winning = 1,
   zoneSide = 18,
   zonesize = 3,
-  zonesnum = { multiallEstimation=5, singlebuffer=1, singlelocal=1, },
+  zonesnum = { estimAll=5, singleBuffer=1, singleLocal=1, },
 }
 
-userDetailedParams = { seed=666, welfare=2, }
+paramsDetailedUser = { seed=666, welfare=2, }
 
-userMapParams = 
+paramsGeneral = 
 {
   branching = 3,
   focus = 3,

@@ -60,20 +60,19 @@ Level of the outer edge. Semantics of the level is the same as for [class.level]
 
 ##### For `"TOWN"` (string):
 
-- `"MAIN"` - Main tow for the player, only one such town should exist in the graph.
+- `"MAIN"` - Main town for the player, only one such town should exist in the graph.
 - `"PLAYER"` - Belongs to the player from the beginning, same type as player's race.
 - `"RACE"` - If in local zone, town of the player's race. If in buffer, random *not* adjacent player's races (if not possible - then like `NEUTRAL`).
 - `"NEUTRAL"` - Random town (but defined in generator phase).
 - `"RANDOM"` - In-game random town.
 
-_Pytanie: Nie jest tych kategorii trochę za dużo...?_
 
 ##### For `"MINE"` (string):
 
 - `"BASE"` - In this zone **both** mines should be placed: Sawmill and Ore Pit.
-- `"PRIMARY"` - In this zone **two** mines, should be placed. Mapping from race to mine type is defined in [config.cfg](../../../config.cfg). If the zone contains a castle, primary mines for this castle should be taken. Otherwise, if the zone is LOCAL, player's primary mines should be taken. Otherwise there should be warning(?) and it should work as `"RANDOM"` option.
+- `"PRIMARY"` - In this zone **two** mines, should be placed. Mapping from race to mine type is defined in [config.cfg](../../../config.cfg). If the zone contains a castle, primary mines for this castle should be taken. Otherwise, if the zone is LOCAL, player's primary mines should be taken. Otherwise there should be warning/error(?) and it should work as `"RANDOM"` option.
 - `"GOLD"` - Places a single Gold Mine.
-- `"RANDOM"` - Places a single, random mine, depending on zone's level and type (and also player race if local? _to trochę dużo opcji by było..._). Settings are taken from [config.cfg](../../../config.cfg) file
+- `"RANDOM"` - Places a single, random mine, depending on zone's level and type (and also player race if local? _to trochę dużo opcji by było..._). Settings are taken from [config.cfg](../../../config.cfg) file. **Todo nazwy - dodać do cfg**
 
 _Pytanie: jak późno możemy ustawić konkretne kopalnie? Pomimo, że są jako obiekty podobne to niestety nieznacznie się różnią, zwłaszcza drewno, a fajnie byłoby móc to sobie przelosować na końcowym etapie tworzenia mapy._
 

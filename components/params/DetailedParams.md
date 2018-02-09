@@ -1,14 +1,14 @@
-# `detailedParams` specification
+# `paramsDetailed` specification
 
-Apart from concretization of `userParameters`, `detailedParams` should contain values directly influencing process of initializing LML (including priorities of some specialized productions!) and other processes in later steps of the generator. However, specifying them directly here allow users to manipulate them easier. Sketch of the influence mapping from `userMapParams` to some of the more detailed map features [here](../../docs/17.02.01-MapParams-2.jpg).
+Apart from concretization of `paramsGeneral`, `paramsDetailed` should contain values directly influencing process of initializing LML (including priorities of some specialized productions!) and other processes in later steps of the generator. However, specifying them directly here allow users to manipulate them easier. Sketch of the influence mapping from `paramsGeneral` to some of the more detailed map features [here](../../docs/17.02.01-MapParams-2.jpg).
 
 ### _param ∈ userMapParams_
 
-All keys given in [`userMapParams`](UserMapParams.md) are available in `detailedParams`. If user's choice was not _Random_ option, the parameter value is copied. If it was _Random_, its value is randomized over the valid values for this parameter.
+All keys given in [`paramsGeneral`](GeneralParams.md) are available in `paramsDetailed`. If user's choice was not _Random_ option, the parameter value is copied. If it was _Random_, its value is randomized over the valid values for this parameter.
 
-There is a special treatment of `players[p].castles` where, if table of length > 1 is provided, the value become string (randomized over the proposed castles). If table length is 0 (in-game random castle), its value in `detailedParams` is `nil`.
+There is a special treatment of `players[p].castles` where, if table of length > 1 is provided, the value become string (randomized over the proposed castles). If table length is 0 (in-game random castle), its value in `paramsDetailed` is `nil`.
 
-After the generation, the values, except `seed`, are overridden by the content of `userDetailedParams` table.
+After the generation, the values, except `seed`, are overridden by the content of `paramsDetailedUser` table.
 
 
 ### `width`:int
