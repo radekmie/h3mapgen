@@ -28,10 +28,10 @@ function pathfinding.search_path(world_grid,start,destination) --A* algorithm
       map[i][j] = world_grid[i+j*256]
     end
   end
-  local start_x = start%256
-  local start_y = math.floor(start/256)%256
-  local des_x = destination%256
-  local des_y = math.floor(destination/256)%256
+  local start_x = start[1]
+  local start_y = start[2]
+  local des_x = destination[1]
+  local des_y = destination[2]
   
   local queue = {}
   pq.enqueue(queue,start_x + start_y*256,heuristic(start_x,start_y,des_x,des_y))
@@ -58,11 +58,10 @@ function pathfinding.search_path(world_grid,start,destination) --A* algorithm
     local x,y = current%256, math.floor(current/256)%256
     if x == des_x and y == des_y then
       local path = {}
-      local len = 0
+      local len = gmap[x][y]
       while x ~= start_x or y ~= start_y do
         table.insert(path,1,x+y*256)
         x,y = camefrom[x][y][1],camefrom[x][y][2]
-        len = len+1
       end
       return len,path
     end
