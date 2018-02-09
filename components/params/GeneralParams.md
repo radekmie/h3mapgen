@@ -1,4 +1,4 @@
-# `userMapParams` specification
+# `paramsGeneral` specification
 
 Partially based on arrangements pictured [here](../../docs/17.02.01-MapParams-1.jpg).
 

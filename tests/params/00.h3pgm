@@ -1,37 +1,37 @@
 
-config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, StandardZoneSize=18, ZoneSizeStep=3, }
+config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, MaxZoneLevel=10, StandardZoneSize=18, ZoneSizeStep=3, }
 
-detailedParams = 
+paramsDetailed = 
 {
-  branching = 3,
-  difficulty = "Normal",
+  branching = 1,
+  difficulty = "Hard",
   focus = 5,
   grail = false,
   height = 72,
-  locations = 2,
-  monsters = 3,
+  locations = 1,
+  monsters = 5,
   players = 
   {
-    { castle="Tower", computerOnly=false, id=1, team=1, },
-    { castle="Necropolis", computerOnly=false, id=2, team=2, },
+    { castle="Stronghold", computerOnly=false, id=1, team=1, },
+    { castle="Dungeon", computerOnly=false, id=2, team=2, },
     { computerOnly=false, id=3, team=3, },
   },
-  seed = 1516530315,
+  seed = 1518135085,
   size = "M",
-  towns = 2,
-  transitivity = 4,
+  towns = 3,
+  transitivity = 1,
   underground = true,
   version = "RoE",
-  water = 4,
+  water = 3,
   welfare = 4,
   width = 72,
   winning = 2,
   zoneSide = 21,
   zonesize = 3,
-  zonesnum = { multiallEstimation=18, singlebuffer=0, singlelocal=6, },
+  zonesnum = { estimAll=17, singleBuffer=2, singleLocal=5, },
 }
 
-userMapParams = 
+paramsGeneral = 
 {
   branching = 0,
   focus = 5,
@@ -62,7 +62,7 @@ userMapParams =
   version = "RoE",
   water = 0,
   welfare = 0,
-  winning = 0,
+  winning = 2,
   zonesize = 3,
 }
 
