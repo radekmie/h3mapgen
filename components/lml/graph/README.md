@@ -47,6 +47,7 @@ Class of zone the feature should be within.
 Defines type of the feature. It can be one of the following:
 
 - `"OUTER"` - Edge that connect the zone to other player's (single) graph. If one zone contains multiple outers they should all point out different players' graphs.
+- `"TELEPORT"` - Multiedge that connect all instances of this zone (i.e. their equivalents in other player's graphs) with also other occurrences of this teleport in same player's graph.
 - `"TOWN"` - Puts town in the zone.
 - `"MINE"` - Puts mine in the zone.
 
@@ -57,6 +58,11 @@ Value of the feature, depending on its type.
 ##### For `"OUTER"` (int):
 
 Level of the outer edge. Semantics of the level is the same as for [class.level](#levelint). The final edge level, after creating MultiLML, is the maximum of outer feature level and both connected zones.
+
+##### For `"TELEPORT"` ({level:int, id:int}):
+
+- `level` - is the level of teleport edge that works the same as for `"OUTER"`.
+- `id` - teleports with the same id will be the same two-way monolith on the map.
 
 ##### For `"TOWN"` (string):
 
@@ -94,12 +100,12 @@ Defines purpose of the zone from the strategic point of view.
 - `"LOCAL"` - The zone should 'belong to the player' in the sense that it has lower difficulty passage to it than his opponents.
 - `"BUFFER"` - The zone with equally difficult path to get to by more than one player.
 - `"GOAL"` - Special zone for some types of [winning conditions](../../params/UserMapParams.md#winningint). There has to be at most one on the map.
-- `"TELEPORT"` - A zero-space zone, teleport is in fact a multiedge than can connect both local and buffer zones together.
+- ~~`"TELEPORT"` - A zero-space zone, teleport is in fact a multiedge than can connect both local and buffer zones together.~~
 - `"WATER"` - Special type of BUFFER zone. **Not implemented**
 - `"WHIRLPOOL"` - Special type of TELEPORT zone. **Even more not implemented**
 
 All zones except `"LOCAL"` are treated as non-LOCAL. 
-The ordering on zones goes as follows: `LOCAL < TELEPORT < BUFFER = WATER < WHIRLPOOL < GOAL`
+The ordering on zones goes as follows: `LOCAL < BUFFER = WATER < WHIRLPOOL < GOAL`
 
 ### `level`:int
 

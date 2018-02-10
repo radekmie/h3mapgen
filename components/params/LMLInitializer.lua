@@ -9,7 +9,7 @@ local rand = RNG.Random
 
 --- Computes types and levels of zones for the LML.
 -- @param state H3pgm state
--- @return List of all zones info within the map (as Class objects)
+-- @return List of all zones info within the map (as Class objects), and info containing levels of each type's levels in handy format
 local function ComputeZoneLevels(state)
   local dp = state.paramsDetailed
   local cfg = state.config
@@ -102,7 +102,7 @@ local function ComputeZoneLevels(state)
   table.sort(_bufs)
   print (string.format('[INFO] <lmlInitializer> Zones: LOCAL=%s;BUFFER=%s,GOAL=%s', table.concat(_locs,','), table.concat(_bufs,','), table.concat(_goals,',')))
   
-  return classes
+  return classes, {locals=_locs, buffers=_bufs, goals=_goals, pvpBorder=pvpBorder}
 end
 -- ComputeZoneLevels
 
@@ -113,12 +113,13 @@ function LMLInitializer.Generate(state)
   
   
 
-  local classes = ComputeZoneLevels(state)
+  local classes, zonelevels = ComputeZoneLevels(state)
   
   local features = {}
   -- todo towns
   -- todo mines
   -- todo outers
+  -- todo teleports
   -- todo water+whirlpool
   
   
