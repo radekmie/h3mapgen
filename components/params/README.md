@@ -21,8 +21,8 @@ Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies i
 ### input 
 
 - `config` - content of user's [config.cfg](../../config.cfg) file
-- `paramsGeneral` - parameters specifying map provided by the user: [detailed specification](paramsGeneral.md)
-- `paramsDetailedUser` - user-provided values overriding (maybe partially) `detailedParams` (but `detailedParams` are always computed to ensure the system is deterministic). Additionally, [`seed`](paramsGeneral.md#seedint) value cannot be override this way.
+- `paramsGeneral` - parameters specifying map provided by the user: [detailed specification](GeneralParams.md)
+- `paramsDetailedUser` - user-provided values overriding (maybe partially) `detailedParams` (but `detailedParams` are always computed to ensure the system is deterministic). Additionally, [`seed`](GeneralParams.md#seedint) value cannot be override this way.
 
 ### output
 

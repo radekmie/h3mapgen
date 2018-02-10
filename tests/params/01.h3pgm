@@ -1,35 +1,57 @@
 
-config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, MaxZoneLevel=10, StandardZoneSize=18, ZoneSizeStep=3, }
+config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, MaxZoneLevel=10, StandardZoneSize=18, TeleportRollLimit=12, TeleportZonesPerBatch=10, ZoneSizeStep=3, }
+
+lmlInitialNode = 
+{
+  classes = 
+  {
+    { level=7, type="BUFFER", },
+    { level=3, type="BUFFER", },
+    { level=4, type="BUFFER", },
+    { level=5, type="BUFFER", },
+    { level=6, type="BUFFER", },
+    { level=5, type="BUFFER", },
+    { level=5, type="BUFFER", },
+    { level=7, type="BUFFER", },
+    { level=3, type="BUFFER", },
+    { level=4, type="BUFFER", },
+    { level=6, type="BUFFER", },
+    { level=2, type="LOCAL", },
+    { level=3, type="LOCAL", },
+    { level=3, type="LOCAL", },
+  },
+  features = { },
+}
 
 paramsDetailed = 
 {
   branching = 3,
-  difficulty = "Hard",
-  focus = 3,
+  difficulty = { ord=5, str="Impossible", },
+  focus = 1,
   grail = false,
-  height = 36,
-  locations = 5,
-  monsters = 4,
+  height = 108,
+  locations = 1,
+  monsters = 5,
   players = 
   {
-    { castle="Castle", computerOnly=false, id=1, team=1, },
+    { castle="Tower", computerOnly=false, id=1, team=1, },
     { castle="Inferno", computerOnly=false, id=2, team=2, },
     { computerOnly=false, id=3, team=3, },
     { castle="Rampart", computerOnly=false, id=4, team=4, },
   },
-  seed = 1513970601,
-  size = "S",
+  seed = 1518289114,
+  size = { ord=3, str="L", },
   towns = 4,
   transitivity = 3,
   underground = false,
   version = "RoE",
   water = 1,
   welfare = 2,
-  width = 36,
+  width = 108,
   winning = 1,
-  zoneSide = 18,
+  zoneSide = 24,
   zonesize = 3,
-  zonesnum = { estimAll=5, singleBuffer=1, singleLocal=1, },
+  zonesnum = { estimAll=23, singleBuffer=11, singleLocal=3, },
 }
 
 paramsDetailedUser = { seed=666, welfare=2, }
@@ -37,10 +59,10 @@ paramsDetailedUser = { seed=666, welfare=2, }
 paramsGeneral = 
 {
   branching = 3,
-  focus = 3,
+  focus = 1,
   grail = false,
-  locations = 0,
-  monsters = 0,
+  locations = 1,
+  monsters = 5,
   players = 
   {
     {
@@ -58,14 +80,14 @@ paramsGeneral =
     { castle=    { }, computerOnly=false, id=3, team=3, },
     { castle=    { "Rampart", }, computerOnly=false, id=4, team=4, },
   },
-  seed = 1513970601,
-  size = "S",
+  seed = 0,
+  size = "L",
   towns = 4,
   transitivity = 3,
   underground = false,
   version = "RoE",
   water = 1,
-  welfare = 3,
+  welfare = 1,
   winning = 1,
   zonesize = 3,
 }

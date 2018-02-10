@@ -96,9 +96,10 @@ Defines purpose of the zone from the strategic point of view.
 - `"GOAL"` - Special zone for some types of [winning conditions](../../params/UserMapParams.md#winningint). There has to be at most one on the map.
 - `"TELEPORT"` - A zero-space zone, teleport is in fact a multiedge than can connect both local and buffer zones together.
 - `"WATER"` - Special type of BUFFER zone. **Not implemented**
+- `"WHIRLPOOL"` - Special type of TELEPORT zone. **Even more not implemented**
 
 All zones except `"LOCAL"` are treated as non-LOCAL. 
-The ordering on zones goes as follows: `LOCAL < TELEPORT < BUFFER = WATER < GOAL`
+The ordering on zones goes as follows: `LOCAL < TELEPORT < BUFFER = WATER < WHIRLPOOL < GOAL`
 
 ### `level`:int
 

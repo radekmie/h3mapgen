@@ -2,7 +2,7 @@
 local Class = {}
 local Class_mt = { __index = Class, __metatable = "Access resticted." }
 
-local TypeOrder = {LOCAL=1, TELEPORT=2, BUFFER=3, WATER=3, GOAL=5}
+local TypeOrder = {LOCAL=1, TELEPORT=2, BUFFER=3, WATER=3, WHIRLPOOL=4, GOAL=5}
 
 function Class_mt.__eq(a, b)
   return a.type==b.type and a.level==b.level
