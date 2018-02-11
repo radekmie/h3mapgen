@@ -83,14 +83,6 @@ local function ComputeZoneLevels(state)
       table.insert(classes, Class.New('LOCAL', RNG.UniformNeighbour(minLocal+i*step)))
     end
   end
-
-  -- DEPRECATED
-  -- Teleports (i.e. two-way monoliths) - one roll for each ZonesBatchPerTeleport zones in single+buffer; level should be close to pvpBorder
-  --for i=1, math.min(4, math.max(1, math.ceil((znum.singleBuffer+znum.singleLocal)/cfg.TeleportZonesPerBatch))) do
-  --  if RNG.ThresholdPass(dp.branching, cfg.TeleportRollLimit) then
-  --    table.insert(classes, Class.New('TELEPORT', RNG.UniformNeighbour(pvpBorder)))
-  --  end
-  --end
   
   local _locs, _bufs, _goals = {}, {}, {}
   for _, c in ipairs(classes) do
@@ -165,14 +157,69 @@ local function ComputeTownFeatures(state, zonelevels)
   
   return towns
 end
--- ComputeTowns
+-- ComputeTownFeatures
+
+
+--- Computes teleport features for given set of zones
+-- @param state H3pgm state
+-- @param zonelevels Information about available zones: their types and levels
+-- @return List of all Teleports (Feature objects) within the map
+local function ComputeTeleportFeatures(state, zonelevels)
+  local dp = state.paramsDetailed
+  local cfg = state.config
+  local znum = dp.zonesnum
+  
+  local teleports = {}
+  
+  -- range for teleport levels
+  local minLvl = math.ceil(zonelevels.pvpBorder)
+  local maxLvl = minLvl
+  if #zonelevels.buffers > 0 then
+    maxLvl = zonelevels.buffers[#zonelevels.buffers//2+1]
+    if maxLvl < minLvl then minLvl = maxLvl end
+  end
+  --print(minLvl, maxLvl)
+  
+  local classes = {}
+  local safeguard = 0 -- we limit 'closeness' of teleport to starting zones
+  if     dp.focus == 3 then safeguard = 1
+  elseif dp.focus == 4 then safeguard = 2
+  elseif dp.focus == 5 then safeguard = cfg.MaxZoneLevel -- no teleports in local zones
+  end
+  for _, lvl in ipairs(zonelevels.locals) do -- locals higher than the lowest
+    if lvl > zonelevels.locals[1] + safeguard then table.insert(classes, {type='LOCAL', level=lvl}) end
+  end
+  for _, lvl in ipairs(zonelevels.buffers) do -- buffers lower than the highest
+    if lvl < zonelevels.buffers[#zonelevels.buffers] then table.insert(classes, {type='BUFFER', level=lvl}) end
+  end
+  
+  local info = {{}, {}, {}, {}}
+  -- Teleports (i.e. two-way monoliths) - one roll for each ZonesBatchPerTeleport zones in single+buffer; level should be close to pvpBorder
+  for id=1, math.min(4, math.max(1, math.ceil((znum.singleBuffer+znum.singleLocal)/cfg.TeleportZonesPerBatch))) do
+    for i=1,math.min(#classes, cfg.TeleportSingleMax) do
+      if #teleports == #classes then break end -- OK, not too many, that's enough
+      if RNG.ThresholdPass(6-dp.branching, cfg.TeleportRollLimit) then
+        table.insert(teleports, Feature.New('TELEPORT', {id=id, level=rand(minLvl, maxLvl)}, Class.New(RNG.Choice(classes))) )
+        table.insert(info[id], teleports[#teleports].class:shortstr())
+      end  
+    end
+  end
+  
+  local tnum=0
+  for i=1,#info do
+    if #info[i]>0 then tnum = tnum+1 end
+    info[i] = table.concat(info[i], ',')
+  end
+  print (string.format('[INFO] <lmlInitializer> Teleports: %d - %s', tnum, table.concat(info, '; ')))
+  
+  return teleports
+end
+-- ComputeTeleportFeatures
 
 
 --- Function generates 'lmlInitialNode' containing initial node for LML stage.
 -- @param state H3pgm state after GenerateDetailedParams function applied (requires 'paramsDetailed')
 function LMLInitializer.Generate(state)  
-  
-  
 
   local classes, zonelevels = ComputeZoneLevels(state)
   
@@ -183,8 +230,9 @@ function LMLInitializer.Generate(state)
 
   -- todo mines
   -- todo outers
-  -- todo teleports
-  -- todo water+whirlpool
+  
+  local teleports = ComputeTeleportFeatures(state, zonelevels)
+  for _, teleport in ipairs(teleports) do table.insert(features, teleport) end
   
   
   

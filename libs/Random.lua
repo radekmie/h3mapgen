@@ -57,4 +57,14 @@ end
 -- Random.RouletteWheel
 
 
+--- Return a random element from the non-empty sequence
+-- @param seq Sequence of elements
+-- @return Random element or nil if the sequence is empty
+function Random.Choice(seq)
+  if #seq==0 then return nil end
+  return seq[math.random(#seq)]
+end
+-- Random.Choice
+
+
 return Random
