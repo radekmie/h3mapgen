@@ -1,5 +1,5 @@
 local Class = require'graph/Class'
---local Feature = require'graph/Feature'
+local Feature = require'graph/Feature'
 local RNG = require'Random'
 
 local LMLInitializer = {}
@@ -100,11 +100,72 @@ local function ComputeZoneLevels(state)
   end
   table.sort(_locs)
   table.sort(_bufs)
-  print (string.format('[INFO] <lmlInitializer> Zones: LOCAL=%s;BUFFER=%s,GOAL=%s', table.concat(_locs,','), table.concat(_bufs,','), table.concat(_goals,',')))
+  print (string.format('[INFO] <lmlInitializer> Zones: LOCAL=%s; BUFFER=%s; GOAL=%s', table.concat(_locs,','), table.concat(_bufs,','), table.concat(_goals,',')))
   
   return classes, {locals=_locs, buffers=_bufs, goals=_goals, pvpBorder=pvpBorder}
 end
 -- ComputeZoneLevels
+
+
+--- Computes town features for given set of zones
+-- @param state H3pgm state
+-- @param zonelevels Information about available zones: their types and levels
+-- @return List of all Towns (Feature objects) within the map
+local function ComputeTownFeatures(state, zonelevels)
+  local dp = state.paramsDetailed
+  local cfg = state.config
+  local znum = dp.zonesnum
+  
+  local towns = {}
+  
+  local startChance = cfg.StartTownChance[dp.towns]
+  local locChance = cfg.LocalTownChance[dp.towns]
+  local bufChance = cfg.BufferTownChance[dp.towns]
+  --print (startChance, locChance, bufChance)
+
+  local startTowns = 1
+  table.insert(towns, Feature.New('TOWN', 'START', Class.New('LOCAL', zonelevels.locals[1])) )
+  
+  local locTowns = 0
+  for i=2,math.min(3,#zonelevels.locals) do -- special treatment for the next two zones
+    if #zonelevels.locals > 2*i and rand() < startChance then
+      table.insert(towns, Feature.New('TOWN', 'START', Class.New('LOCAL', zonelevels.locals[i])) )
+      startTowns = startTowns + 1
+    elseif rand() < locChance then
+      table.insert(towns, Feature.New('TOWN', RNG.RouletteWheel(cfg.LocalTownType), Class.New('LOCAL', zonelevels.locals[i])) )
+      locTowns = locTowns + 1
+    end
+  end
+  
+  for i=4,#zonelevels.locals do 
+    if rand() < locChance then
+      table.insert(towns, Feature.New('TOWN', RNG.RouletteWheel(cfg.LocalTownType), Class.New('LOCAL', zonelevels.locals[i])) )
+      locTowns = locTowns + 1
+    end
+  end
+  
+  local bufTowns = 0
+  for _, lvl in ipairs(zonelevels.buffers) do
+    if rand() < bufChance then
+      table.insert(towns, Feature.New('TOWN', RNG.RouletteWheel(cfg.BufferTownType), Class.New('BUFFER', lvl)) )
+      bufTowns = bufTowns + 1
+    end
+  end
+  
+  local goalTowns = 0
+  for _, lvl in ipairs(zonelevels.goals) do
+    if dp.winning==2 or rand() < bufChance then -- must be when town-capture, otherwise like normal buffer
+      table.insert(towns, Feature.New('TOWN', RNG.RouletteWheel(cfg.BufferTownType), Class.New('GOAL', lvl)) )
+      goalTowns = goalTowns + 1
+    end
+  end
+  
+    print (string.format('[INFO] <lmlInitializer> Towns: START=%d (%.1f%%); LOCAL=%d (%.1f%%); BUFFER=%d (%.1f%%); GOAL=%d', 
+        startTowns, 100*startTowns/#zonelevels.locals, locTowns, 100*locTowns/#zonelevels.locals, bufTowns, 100*bufTowns/#zonelevels.buffers, goalTowns))
+  
+  return towns
+end
+-- ComputeTowns
 
 
 --- Function generates 'lmlInitialNode' containing initial node for LML stage.
@@ -116,7 +177,10 @@ function LMLInitializer.Generate(state)
   local classes, zonelevels = ComputeZoneLevels(state)
   
   local features = {}
-  -- todo towns
+  local towns = ComputeTownFeatures(state, zonelevels)
+  for _, town in ipairs(towns) do table.insert(features, town) end
+  
+
   -- todo mines
   -- todo outers
   -- todo teleports

@@ -37,10 +37,24 @@ end
 -- Random.ThresholdPass
 
 
-
--- todo - choice
-
--- todo WeightedChoice
+--- Function for choosing  map key using the roulette wheel selection.
+-- @param map Maps keys to (nonnegative, float) weights 
+-- @return Key of the chosen entry or nil if map is empty
+function Random.RouletteWheel(map)
+  local sum = 0
+  for id, weight in pairs(map) do sum = sum + weight end
+  if sum == 0 then return nil end
+  local shot = math.random()*sum
+  for key, weight in pairs(map) do 
+    if shot <= weight then
+        return key
+      else
+        shot = shot - weight
+      end
+  end
+  error('[ERROR] <Random.RouletteWheel> : No valid results.', 2)
+end
+-- Random.RouletteWheel
 
 
 return Random
