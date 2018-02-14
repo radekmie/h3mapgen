@@ -160,6 +160,96 @@ end
 -- ComputeTownFeatures
 
 
+--- Computes mine features for given set of zones
+-- @param state H3pgm state
+-- @param zonelevels Information about available zones: their types and levels
+-- @return List of all Mines (Feature objects) within the map
+local function ComputeMineFeatures(state, zonelevels)
+  local dp = state.paramsDetailed
+  local cfg = state.config
+  local znum = dp.zonesnum
+  
+  local mines = {}
+  
+  --print (string.format('[INFO] <lmlInitializer> Teleports: %d - %s', tnum, table.concat(info, '; ')))
+  
+  return mines
+end
+-- ComputeMineFeatures
+
+
+--- Computes outer features for given set of zones
+-- @param state H3pgm state
+-- @param zonelevels Information about available zones: their types and levels
+-- @return List of all Outers (Feature objects) within the map
+local function ComputeOuterFeatures(state, zonelevels)
+  local dp = state.paramsDetailed
+  local cfg = state.config
+  local znum = dp.zonesnum
+  
+  local outers = {}
+  
+  local bufouters = {}
+  local cutpoint = math.ceil(#zonelevels.buffers*cfg.OuterBufferFixed)
+  for i, lvl in ipairs(zonelevels.buffers) do -- first outer
+    if i <= cutpoint or lvl == zonelevels.buffers[1] then
+      table.insert(bufouters, lvl)
+    elseif rand() < cfg.OuterBufferRemainingChance then
+      table.insert(bufouters, lvl)
+    end
+  end
+  for i=1, math.min(cfg.OuterBufferExtraMax[dp.branching], #dp.players-1) do -- remaining outers
+    for _, lvl in ipairs(zonelevels.buffers) do
+      if rand() < cfg.OuterBufferExtraChance[dp.branching] then
+        table.insert(bufouters, lvl)
+      end
+    end
+  end
+  for _, lvl in ipairs(bufouters) do
+    local outerlvl = math.min(lvl+RNG.RouletteWheel(cfg.OuterBufferDifficulty), cfg.MaxZoneLevel)
+    table.insert(outers, Feature.New('OUTER', outerlvl, Class.New('BUFFER', lvl)) )
+  end
+  
+  local allowedlocals = {}
+  local locouters = {}
+  for _, lvl in ipairs(zonelevels.locals) do -- filtering should-be-safe safe levels
+    if lvl >= cfg.OuterLocalSafetyLevel[dp.focus] then
+      table.insert(allowedlocals, lvl)
+    end
+  end
+  for i=1, math.min(cfg.OuterLocalMax[dp.branching], #dp.players-1) do -- randomizing locals
+    for _, lvl in ipairs(zonelevels.locals) do
+      if rand() < cfg.OuterLocalChance[dp.branching] then
+        table.insert(locouters, lvl)
+      end
+    end
+  end
+  for _, lvl in ipairs(bufouters) do
+    local outerlvl = math.min(RNG.RandomRound(zonelevels.pvpBorder + (zonelevels.pvpBorder - lvl) + cfg.OuterLocalLevelBonus[dp.focus]), cfg.MaxZoneLevel)
+    table.insert(outers, Feature.New('OUTER', outerlvl, Class.New('LOCAL', lvl)) )
+  end
+  
+  -- Safeguard outer addition when there is odd number of out-connections in MLML or there are no outers at all
+  while #outers==0 or (#outers*#dp.players) % 2 == 1 do
+    if #zonelevels.buffers > 0 then
+      local lvl = zonelevels.buffers[rand(#zonelevels.buffers)]
+      local outerlvl = math.min(lvl+RNG.RouletteWheel(cfg.OuterBufferDifficulty), cfg.MaxZoneLevel)
+      table.insert(outers, Feature.New('OUTER', outerlvl, Class.New('BUFFER', lvl)) )
+    else
+      local lvl = zonelevels.locals[rand(#zonelevels.locals)]
+      local outerlvl = math.min(RNG.RandomRound(zonelevels.pvpBorder + (zonelevels.pvpBorder - lvl) + cfg.OuterLocalLevelBonus[dp.focus]), cfg.MaxZoneLevel)
+      table.insert(outers, Feature.New('OUTER', outerlvl, Class.New('LOCAL', lvl)) )
+    end
+  end
+  
+  print (string.format('[INFO] <lmlInitializer> Outers: LOCAL=%d (%.1f%%); BUFFER=%d (%.1f%%)',
+        #locouters, 100*#locouters/#zonelevels.locals, #bufouters, 100*#bufouters/#zonelevels.locals))
+  
+  return outers
+end
+-- ComputeOuterFeatures
+
+
 --- Computes teleport features for given set of zones
 -- @param state H3pgm state
 -- @param zonelevels Information about available zones: their types and levels
@@ -210,7 +300,7 @@ local function ComputeTeleportFeatures(state, zonelevels)
     if #info[i]>0 then tnum = tnum+1 end
     info[i] = table.concat(info[i], ',')
   end
-  print (string.format('[INFO] <lmlInitializer> Teleports: %d - %s', tnum, table.concat(info, '; ')))
+  print (string.format('[INFO] <lmlInitializer> Teleports: %d=%s', tnum, table.concat(info, '; ')))
   
   return teleports
 end
@@ -224,17 +314,18 @@ function LMLInitializer.Generate(state)
   local classes, zonelevels = ComputeZoneLevels(state)
   
   local features = {}
+  
   local towns = ComputeTownFeatures(state, zonelevels)
   for _, town in ipairs(towns) do table.insert(features, town) end
   
-
-  -- todo mines
-  -- todo outers
+  local mines = ComputeMineFeatures(state, zonelevels)
+  for _, mine in ipairs(mines) do table.insert(features, mine) end
+  
+  local outers = ComputeOuterFeatures(state, zonelevels)
+  for _, outer in ipairs(outers) do table.insert(features, outer) end
   
   local teleports = ComputeTeleportFeatures(state, zonelevels)
   for _, teleport in ipairs(teleports) do table.insert(features, teleport) end
-  
-  
   
   state.lmlInitialNode = {classes=classes, features=features}
 end
