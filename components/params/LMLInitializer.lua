@@ -121,7 +121,7 @@ local function ComputeTownFeatures(state, zonelevels)
   local locTowns = 0
   for i=2,math.min(3,#zonelevels.locals) do -- special treatment for the next two zones
     if #zonelevels.locals > 2*i and rand() < startChance then
-      table.insert(towns, Feature.New('TOWN', 'START', Class.New('LOCAL', zonelevels.locals[i])) )
+      table.insert(towns, Feature.New('TOWN', 'PLAYER', Class.New('LOCAL', zonelevels.locals[i])) )
       startTowns = startTowns + 1
     elseif rand() < locChance then
       table.insert(towns, Feature.New('TOWN', RNG.RouletteWheel(cfg.LocalTownType), Class.New('LOCAL', zonelevels.locals[i])) )
@@ -162,16 +162,89 @@ end
 
 --- Computes mine features for given set of zones
 -- @param state H3pgm state
--- @param zonelevels Information about available zones: their types and levels
+-- @param classes List of all zones info within the map (as Class objects)
+-- @param towns List of all Towns (Feature objects) within the map
 -- @return List of all Mines (Feature objects) within the map
-local function ComputeMineFeatures(state, zonelevels)
+local function ComputeMineFeatures(state, classes, towns)
   local dp = state.paramsDetailed
   local cfg = state.config
   local znum = dp.zonesnum
   
   local mines = {}
   
-  --print (string.format('[INFO] <lmlInitializer> Teleports: %d - %s', tnum, table.concat(info, '; ')))
+  local playertowns, othertowns, notowns = {}, {}, {}
+  for _, c in ipairs(classes) do
+    table.insert(notowns, c)
+  end
+  for _, town in ipairs(towns) do
+    if town.value == 'START' or town.value=='PLAYER' then
+      table.insert(playertowns, town.class)
+    else
+      table.insert(othertowns, town.class)
+    end
+    for i, class in ipairs(notowns) do
+      if class==town.class then
+        table.remove(notowns, i)
+        break
+      end
+    end
+  end
+  
+  local playerbase, playerprime, playergold = 0, 0, 0
+  for _, class in ipairs(playertowns) do
+    if rand() < cfg.MineBasePlayerTownChance[dp.welfare] then
+      table.insert(mines, Feature.New('MINE', 'BASE', class) )
+      playerbase = playerbase + 1
+    end
+    if rand() < cfg.MinePrimaryPlayerTownChance[dp.welfare] then
+      table.insert(mines, Feature.New('MINE', 'PRIMARY', class) )
+      playerprime = playerprime + 1
+    end 
+    if rand() < cfg.MineGoldPlayerTownChance[dp.welfare] then
+      table.insert(mines, Feature.New('MINE', 'GOLD', class) )
+      playergold = playergold + 1
+    end
+  end
+  
+  local otherbase, otherprime, othergold = 0, 0, 0
+  for _, class in ipairs(playertowns) do
+    if rand() < cfg.MineBaseOtherTownChance[dp.welfare] then
+      table.insert(mines, Feature.New('MINE', 'BASE', class) )
+      otherbase = otherbase + 1
+    end
+    if rand() < cfg.MinePrimaryOtherTownChance[dp.welfare] then
+      table.insert(mines, Feature.New('MINE', 'PRIMARY', class) )
+      otherprime = otherprime + 1
+    end 
+    if rand() < cfg.MineGoldOtherTownChance[dp.welfare] then
+      table.insert(mines, Feature.New('MINE', 'GOLD', class) )
+      othergold = othergold + 1
+    end
+  end
+  
+  local locrandom, loczones, bufrandom, bufzones = 0, 0, 0, 0
+  for _, class in ipairs(notowns) do
+    if class.type=='LOCAL' then
+      loczones = loczones + 1
+      for i=1, cfg.MineRandomLocalMax[dp.welfare] do 
+        if rand() < cfg.MineRandomLocalChance[dp.welfare] then
+          table.insert(mines, Feature.New('MINE', 'RANDOM', class) )
+          locrandom = locrandom + 1
+        end
+      end
+    elseif class.type=='BUFFER' or class.type=='GOAL' then
+      bufzones = bufzones + 1
+      for i=1, cfg.MineRandomBufferMax[dp.welfare] do 
+        if rand() < cfg.MineRandomBufferChance[dp.welfare] then
+          table.insert(mines, Feature.New('MINE', 'RANDOM', class) )
+          bufrandom = bufrandom + 1
+        end
+      end
+    end
+  end
+  
+  print (string.format('[INFO] <lmlInitializer> Mines: Player(base,primary,gold)=%d,%d,%d/%d;  Other(base,primary,gold)=%d,%d,%d/%d; RANDOM local=%d/%d, buffer=%d/%d', 
+      playerbase, playerprime, playergold, #playertowns, otherbase, otherprime, othergold, #othertowns, locrandom, loczones, bufrandom, bufzones))
   
   return mines
 end
@@ -318,7 +391,7 @@ function LMLInitializer.Generate(state)
   local towns = ComputeTownFeatures(state, zonelevels)
   for _, town in ipairs(towns) do table.insert(features, town) end
   
-  local mines = ComputeMineFeatures(state, zonelevels)
+  local mines = ComputeMineFeatures(state, classes, towns)
   for _, mine in ipairs(mines) do table.insert(features, mine) end
   
   local outers = ComputeOuterFeatures(state, zonelevels)
