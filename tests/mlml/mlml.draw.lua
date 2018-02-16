@@ -1,5 +1,5 @@
 
-package.path = ";tests/lml/?.lua" .. package.path
+package.path = ";tests/mlml/?.lua" .. package.path
 package.path = ";libs/?.lua" .. package.path
 
 local GD = require'GraphvizDrawer'
@@ -40,20 +40,21 @@ local function MetaMLMLImage(metaMLML, metaLML)
   return gd
 end
 
+
 local mlml = require "mlml"
 
 local function Test(name, metalml, players) 
-  MetaLMLImage(metalml):Draw(string.format('tests/lml/%s-%d-LML', name, players), false)
+  MetaLMLImage(metalml):Draw(string.format('tests/mlml/%s-%d-LML', name, players), false)
   local result = mlml.MultiplyLML(metalml, players)
   if not result then
     print ('ERROR: No result for test "'..name..'" ('..players..' players).')
     return
   end
-  MetaMLMLImage(result, metalml):Draw(string.format('tests/lml/%s-%d-MultiLML', name, players), false)
+  MetaMLMLImage(result, metalml):Draw(string.format('tests/mlml/%s-%d-MultiLML', name, players), false)
   print ('OK: Test "'..name..'" ('..players..' players) done.')
 end
   
-  
+
 Test('t1', 
      {{1, 'LOCAL', 2},{2, 'LOCAL', 3},{3, 'LOCAL', 5}}, 
      3)
@@ -63,13 +64,13 @@ Test('t2',
      3)
    
 Test('t3', 
-     { {1, 'LOCAL', 5}, {3,'BUFFER',5}, {3,'BUFFER',3},{5,'LOCAL',2}},  -- same id's
+     { {1, 'LOCAL', 5}, {3,'BUFFER',5}, {3,'BUFFER',3},{5,'LOCAL',2},{9,'BUFFER',8}},  -- same id's
      4)
    
 Test('t4', 
      { {1, 'LOCAL', 2}, {2, 'LOCAL', 3} },
      5)
-   
+
 Test('tX', 
-     { {1, 'LOCAL', 5}, {3,'BUFFER',5}, {3,'BUFFER',3},{5,'LOCAL',2}}, 
-     2)
+     { {1, 'LOCAL', 5}, {2, 'LOCAL', 6}, {6,'LOCAL',5}},-- {1, 'LOCAL', 5}, {2,'LOCAL',5}, {3,'LOCAL',3},{5,'LOCAL',2}}, 
+     6)

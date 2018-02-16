@@ -1,5 +1,5 @@
 
-package.path = ";tests/lml/?.lua" .. package.path
+package.path = ";tests/mlml/?.lua" .. package.path
 local function write(graph)
   print()
   if graph == nil then
