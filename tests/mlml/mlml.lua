@@ -105,7 +105,7 @@ local function Connect(connections, node, player_count, is_busy, cur_ply, cur_no
   else
     for i = 1, player_count do
       for j = 1, #node do
-        if i ~= cur_ply and is_busy[i][j] == false and ((node[cur_node][2] == 'LOCAL' and node[j][2] == 'LOCAL') or (node[cur_node][2] == node[j][2] and node[cur_node][3] == node[j][3])) then 
+        if i ~= cur_ply and is_busy[i][j] == false and (((node[cur_node][2] == node[j][2]) or (node[cur_node][2] == 'LOCAL' or node[j][2] == 'LOCAL')) and node[cur_node][3] == node[j][3]) then 
           --add connection
           is_busy[cur_ply][cur_node] = true
           is_busy[i][j] = true
