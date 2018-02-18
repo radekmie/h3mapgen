@@ -22,7 +22,7 @@ local function ComputeZoneLevels(state)
   local worseStartChance = 0
   if dp.difficulty.str == 'Impossible' then worseStartChance=0.3 end
   if dp.difficulty.str == 'Expert' then worseStartChance=0.1 end
-  if rand() < worseStartChance then minLocal = 2 end
+  if rand() < worseStartChance then minLocal = minLocal + 1 end
   --print (worseStartChance, minLocal)
   
   -- we set up max (buffer) zone level depending on the map size
