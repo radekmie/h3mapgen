@@ -17,7 +17,7 @@ function Feature.New(typeorobj, value, class)
   else 
     obj = {type=typeorobj, value=value, class=class}
   end
-  obj.class = Class.New(obj.class)
+  --obj.class = Class.New(obj.class)
   return setmetatable(obj, Feature_mt)
 end
 

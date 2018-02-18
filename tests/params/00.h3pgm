@@ -1,34 +1,95 @@
 
-config = { Graphviz_keep_dotsource=true, LML_draw_final=true, LML_draw_steps=false, LML_max_steps=1000, LML_verbose_debug=true, MaxZoneLevel=10, StandardZoneSize=18, ZoneSizeStep=3, }
+config = 
+{
+  BufferTownChance = { 0.1, 0.2, 0.3, 0.4, 0.5, },
+  BufferTownType = { NEUTRAL=5, RACE=4, RANDOM=1, },
+  Graphviz_keep_dotsource = true,
+  LML_draw_final = true,
+  LML_draw_steps = false,
+  LML_max_steps = 1000,
+  LML_verbose_debug = true,
+  LocalTownChance = { 0.05, 0.15, 0.25, 0.35, 0.45, },
+  LocalTownType = { NEUTRAL=4, RACE=5, RANDOM=1, },
+  MaxZoneLevel = 10,
+  MineBaseOtherTownChance = { 0.2, 0.5, 0.7, 0.9, 1.0, },
+  MineBasePlayerTownChance = { 0.6, 1.0, 1.0, 1.0, 1.0, },
+  MineGoldOtherTownChance = { 0.0, 0.0, 0.1, 0.2, 0.3, },
+  MineGoldPlayerTownChance = { 0.0, 0.0, 0.0, 0.0, 0.1, },
+  MinePrimaryOtherTownChance = { 0.1, 0.2, 0.3, 0.4, 0.5, },
+  MinePrimaryPlayerTownChance = { 0.2, 0.3, 0.5, 0.7, 0.9, },
+  MineRandomBufferChance = { 0.1, 0.2, 0.3, 0.4, 0.5, },
+  MineRandomBufferMax = { 1, 2, 3, 3, 4, },
+  MineRandomLocalChance = { 0.1, 0.2, 0.3, 0.4, 0.5, },
+  MineRandomLocalMax = { 1, 1, 2, 3, 3, },
+  OuterBufferDifficulty = { [-1]=0, [0]=2, [1]=2, [2]=1, },
+  OuterBufferExtraChance = { 0.1, 0.1, 0.1, 0.2, 0.2, },
+  OuterBufferExtraMax = { 0, 1, 2, 2, 3, },
+  OuterBufferFixed = 0.5,
+  OuterBufferRemainingChance = 0.5,
+  OuterLocalChance = { 0.1, 0.1, 0.1, 0.2, 0.2, },
+  OuterLocalLevelBonus = { -1, -0.5, 0, 0.5, 1, },
+  OuterLocalMax = { 1, 1, 2, 2, 3, },
+  OuterLocalSafetyLevel = { 1, 2, 2, 3, 4, },
+  StandardZoneSize = 18,
+  StartTownChance = { 0, 0, 0, 0.1, 0.3, },
+  TeleportRollLimit = 5.0,
+  TeleportSingleMax = 2,
+  TeleportZonesPerBatch = 10,
+  ZoneSizeStep = 3,
+}
+
+lmlInitialNode = 
+{
+  classes = 
+  {
+    { level=4, type="GOAL", },
+    { level=1, type="LOCAL", },
+    { level=4, type="LOCAL", },
+    { level=2, type="LOCAL", },
+    { level=3, type="LOCAL", },
+    { level=2, type="LOCAL", },
+  },
+  features = 
+  {
+    { class={ level=1, type="LOCAL", }, type="TOWN", value="START", },
+    { class={ level=2, type="LOCAL", }, type="TOWN", value="RACE", },
+    { class={ level=4, type="LOCAL", }, type="TOWN", value="RACE", },
+    { class={ level=4, type="GOAL", }, type="TOWN", value="RANDOM", },
+    { class={ level=1, type="LOCAL", }, type="MINE", value="BASE", },
+    { class={ level=2, type="LOCAL", }, type="MINE", value="RANDOM", },
+    { class={ level=2, type="LOCAL", }, type="OUTER", value=7, },
+    { class={ level=2, type="LOCAL", }, type="OUTER", value=7, },
+  },
+}
 
 paramsDetailed = 
 {
-  branching = 1,
-  difficulty = "Hard",
+  branching = 4,
+  difficulty = { ord=3, str="Hard", },
   focus = 5,
   grail = false,
   height = 72,
-  locations = 1,
-  monsters = 5,
+  locations = 4,
+  monsters = 4,
   players = 
   {
-    { castle="Stronghold", computerOnly=false, id=1, team=1, },
-    { castle="Dungeon", computerOnly=false, id=2, team=2, },
+    { castle="Fortress", computerOnly=false, id=1, team=1, },
+    { castle="Inferno", computerOnly=false, id=2, team=2, },
     { computerOnly=false, id=3, team=3, },
   },
-  seed = 1518135085,
-  size = "M",
-  towns = 3,
-  transitivity = 1,
+  seed = 1518713766,
+  size = { ord=2, str="M", },
+  towns = 2,
+  transitivity = 4,
   underground = true,
   version = "RoE",
-  water = 3,
-  welfare = 4,
+  water = 2,
+  welfare = 2,
   width = 72,
   winning = 2,
   zoneSide = 21,
   zonesize = 3,
-  zonesnum = { estimAll=17, singleBuffer=2, singleLocal=5, },
+  zonesnum = { estimAll=16, singleBuffer=1, singleLocal=5, },
 }
 
 paramsGeneral = 

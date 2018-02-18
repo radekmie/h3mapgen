@@ -3,7 +3,6 @@ local RNG = require'Random'
 local DetailedParams = {}
 
 local rand = RNG.Random
-local MapSizeOrder = {S=1, M=2, L=3, XL=4}
 
 
 --- Function randomizes values for which user choose 0 and player castles.
@@ -43,7 +42,7 @@ local function SetBasicInformation(state)
   local dp = state.paramsDetailed
   local cfg = state.config
   
-  local side = 36 * MapSizeOrder[dp.size]
+  local side = 36 * dp.size.ord
   dp.width = side
   dp.height = side
   
@@ -57,16 +56,16 @@ local function SetBasicInformation(state)
   -- 1  E
   local tmpdiff = (6-dp.welfare) + dp.monsters + (dp.locations <=2 and 0.5 or 0)
   local difficulty = ''
-  if     tmpdiff >= 9.5 then difficulty = 'Impossible'
-  elseif tmpdiff >= 8.5 then difficulty = 'Expert'
-  elseif tmpdiff >= 7.0 then difficulty = 'Hard'
-  elseif tmpdiff >= 5.0 then difficulty = 'Normal'
-  else                       difficulty = 'Easy'
+  if     tmpdiff >= 9.5 then difficulty = {str='Impossible', ord=5}
+  elseif tmpdiff >= 8.5 then difficulty = {str='Expert',     ord=4}
+  elseif tmpdiff >= 7.0 then difficulty = {str='Hard',       ord=3}
+  elseif tmpdiff >= 5.0 then difficulty = {str='Normal',     ord=2}
+  else                       difficulty = {str='Easy',       ord=1}
   end
   dp.difficulty = difficulty 
   
   dp.zoneSide = cfg.StandardZoneSize + (dp.zonesize-3)*cfg.ZoneSizeStep -- userchoice-dependent tuning
-  dp.zoneSide = dp.zoneSide + (MapSizeOrder[dp.size]-1) * cfg.ZoneSizeStep -- mapsize-dependent tuning
+  dp.zoneSide = dp.zoneSide + (dp.size.ord-1) * cfg.ZoneSizeStep -- mapsize-dependent tuning
   
 end
 -- SetBasicInformation
@@ -77,11 +76,13 @@ end
 local function SetNumberOfZones(state)
   local dp = state.paramsDetailed
   
-  -- focus (strong PvP) 1:0-20; 2:20-40; 3:40-60; 4:60-80; 5:80-100 (Strong PvE)
-  local localzonesprop = 0.01 * ((dp.focus-1)*20+rand(0,20))
+  -- focus (strong PvP) 1:20-32; 2:32-44; 3:44-56; 4:56-68; 5:68-80 (Strong PvE)
+  local localzonesprop = 0.20 + 0.01 * ((dp.focus-1)*12+rand(0,12))
+  -- focus (strong PvP) 1:0-20; 2:20-40; 3:40-60; 4:60-80; 5:80-100 (Strong PvE) // DEPRECATED
+  -- local localzonesprop = 0.01 * ((dp.focus-1)*20+rand(0,20))
   
   local multiallest = (dp.width*dp.height)/(dp.zoneSide*dp.zoneSide) -- basic estimation
-  local rlimit = 2 ^ (MapSizeOrder[dp.size] - 1)
+  local rlimit = 2 ^ (dp.size.ord - 1)
   if dp.underground then -- larger values for 2-level map
     multiallest = multiallest * 1.5 
     rlimit = rlimit * 1.5
@@ -145,6 +146,8 @@ function DetailedParams.Generate(state)
       dp[k] = {table.unpack(state.paramsGeneral[k])}
     end
   end
+  local MapSizeOrder = {S=1, M=2, L=3, XL=4}
+  dp.size = {str=dp.size, ord=MapSizeOrder[dp.size]}
   
   if dp.seed == 0 then
     dp.seed = os.time()

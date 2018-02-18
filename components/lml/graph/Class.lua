@@ -2,7 +2,7 @@
 local Class = {}
 local Class_mt = { __index = Class, __metatable = "Access resticted." }
 
-local TypeOrder = {LOCAL=1, TELEPORT=2, BUFFER=3, WATER=3, GOAL=5}
+local TypeOrder = {LOCAL=1, TELEPORT=2, BUFFER=3, WATER=3, WHIRLPOOL=4, GOAL=5}
 
 function Class_mt.__eq(a, b)
   return a.type==b.type and a.level==b.level
@@ -30,13 +30,18 @@ end
 function Class.New(typeorobj, level)
   local obj
   if level == nil then
-    obj = typeorobj
+    obj = {type=typeorobj.type, level=typeorobj.level} -- hardcopy constructor is slower but safer
   else 
     obj = {type=typeorobj, level=level}
   end
   return setmetatable(obj, Class_mt)
-
 end
 
+
+--- Shortened string
+-- @return First letter of type + level
+function Class:shortstr()
+  return string.format('%s%s', self.type:sub(1,1), self.level)
+end
 
 return Class
