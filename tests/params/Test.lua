@@ -1,7 +1,7 @@
 -- Run from the main directory ('generate.lua' level)
-package.path = ";components/params/?.lua" .. package.path
-package.path = ";components/lml/?.lua" .. package.path
-package.path = ";libs/?.lua" .. package.path
+package.path = package.path .. ";components/params/?.lua"
+package.path = package.path .. ";components/lml/?.lua"
+package.path = package.path .. ";libs/?.lua"
 
 
 local Params = require'Params'

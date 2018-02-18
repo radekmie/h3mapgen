@@ -18,7 +18,7 @@ local function ComputeZoneLevels(state)
   local classes = {}
   
   -- we set up minimal local zone level (which is 1 except low-probability hardcore cases ^^)
-  local minLocal = 1
+  local minLocal = cfg.MinLocalZoneLevel
   local worseStartChance = 0
   if dp.difficulty.str == 'Impossible' then worseStartChance=0.3 end
   if dp.difficulty.str == 'Expert' then worseStartChance=0.1 end
@@ -26,24 +26,26 @@ local function ComputeZoneLevels(state)
   --print (worseStartChance, minLocal)
   
   -- we set up max (buffer) zone level depending on the map size
-  local maxBufferEstim = minLocal + (cfg.MaxZoneLevel-minLocal)/4*dp.size.ord - 1
+  local mapSizes = 4 -- S, M, L, XL
+  local maxBufferEstim = minLocal + (cfg.MaxZoneLevel-minLocal)/mapSizes*dp.size.ord - 1
   local maxBuffer = RNG.UniformNeighbour(maxBufferEstim)
   --print (maxBufferEstim, maxBuffer)
 
   -- 'borderline' between PvP and PvE, higher PvP focus lower the border
-  local pvpBorder = minLocal + (maxBuffer-minLocal)/6*dp.focus
+  local pvpBuckets = 6 -- _ 1 _ 2 _ 3 _ 4 _ 5 _
+  local pvpBorder = minLocal + (maxBuffer-minLocal)/pvpBuckets*dp.focus
   --print (pvpBorder)
   
   local minBuffer = RNG.UniformNeighbour(pvpBorder)
-  if minBuffer == maxBuffer then minBuffer = maxBuffer - 1 end
-  if minBuffer == minLocal then minBuffer = minLocal + 1 end
+  if minBuffer >= maxBuffer then minBuffer = maxBuffer - 1 end
+  if minBuffer <= minLocal then minBuffer = minLocal + 1 end
   
   -- Always try to insert max zone (goal or buffer) and min zone
   local goalReq = dp.winning==2 or dp.winning==3 or dp.winning==4
   if znum.singleBuffer > 0 then table.insert(classes, Class.New(goalReq and 'GOAL' or 'BUFFER', maxBuffer)) end
   if znum.singleBuffer > 1 then table.insert(classes, Class.New('BUFFER', minBuffer)) end
 
-  local remBuf = znum.singleBuffer - 2;
+  local remBuf = znum.singleBuffer - 2
   local bufSlots = maxBuffer - minBuffer - 1
   if remBuf >= bufSlots then
     for lvl=minBuffer+1, maxBuffer-1 do -- insert new zone for each level slot
@@ -65,7 +67,7 @@ local function ComputeZoneLevels(state)
   if znum.singleLocal > 0 then table.insert(classes, Class.New('LOCAL', minLocal)) end
   if znum.singleLocal > 1 then table.insert(classes, Class.New('LOCAL', maxLocal)) end
   
-  local remLoc = znum.singleLocal - 2;
+  local remLoc = znum.singleLocal - 2
   local locSlots = maxLocal - minLocal - 1
   
   if remLoc >= locSlots then
