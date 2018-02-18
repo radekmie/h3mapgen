@@ -7,8 +7,8 @@ local function heuristic(sx,sy,tx,ty)
   return math.max(math.abs(tx-sx),math.abs(ty-sy))
 end
 
-local function check(x,y)
-  if x < 1 or x > 256 or y < 1 or y > 256 then
+local function check(x,y,width,height)
+  if x < 1 or x > width or y < 1 or y > height then
     return false
   else
     return true
@@ -18,7 +18,7 @@ end
 local diagonal_cost = 1 --can be modified
 local normal_cost = 1
 
-function pathfinding.search_path(world_grid,start,destination) --A* algorithm
+function pathfinding.search_path(world_grid,start,destination,size) --A* algorithm
   local map = {}
   for i = 1, 256 do
     map[i] = {}
@@ -32,6 +32,8 @@ function pathfinding.search_path(world_grid,start,destination) --A* algorithm
   local start_y = start[2]
   local des_x = destination[1]
   local des_y = destination[2]
+  local width = size[1]
+  local heigth = size[2]
   
   local queue = {}
   pq.enqueue(queue,start_x + start_y*256,heuristic(start_x,start_y,des_x,des_y))
@@ -68,7 +70,7 @@ function pathfinding.search_path(world_grid,start,destination) --A* algorithm
     evaluated[x][y] = true
     for i = -1,1 do
       for j = -1,1 do
-        if check(x+i,y+j) and map[x+i][y+j] ~= true and evaluated[x+i][y+j] == false then
+        if check(x+i,y+j,width,heigth) and map[x+i][y+j] ~= true and evaluated[x+i][y+j] == false then
           local new_score = gmap[x][y]
           if math.abs(i) + math.abs(j) == 2 then --diagonal move
             new_score = new_score + diagonal_cost
