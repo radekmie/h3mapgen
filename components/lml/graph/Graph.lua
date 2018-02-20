@@ -52,6 +52,20 @@ end
 -- Graph.IsConsistent
 
 
+--- Computes list of inconsistent nodes within the graph
+-- @return List of id's of inconsistent nodes
+function Graph:InconsistentIds()
+  local ids = {}
+  for k, v in ipairs(self) do
+    if not v:IsConsistent() then 
+      table.insert(ids, k)
+    end
+  end
+  return ids
+end
+-- Graph.IsConsistent
+
+
 --- Checks if all zones are uniform
 -- @return True iff all zones are consistent and contains only one class, and the list of nonfinal zones ids
 function Graph:IsFinal()
