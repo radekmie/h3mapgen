@@ -58,11 +58,7 @@ function GraphGenerator.Generate(state)
   local cfg = state.config
   
   local graph = Graph.Initialize(state.lmlInitialNode)
-  
-  
-  
-  --if true or CONFIG.LML_verbose_debug then print('LML Generation started with grammar containing '..#grammar..' rules.') end -- get rid of global CONFIG usage
-  --if debuging_path then self:Drawer():Draw(debuging_path..'-'..0) end
+  if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'-'..0) end
   
   local c, id, fc = graph:IsConsistent()
   if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end 
@@ -75,9 +71,10 @@ function GraphGenerator.Generate(state)
       local c, id, fc = graph:IsConsistent()
       if not c then error(string.format('[ERROR] <GraphGenerator> : Production %s made node %d inconsistent (feature class: %s).', choice, id, fc)) end 
       if success then 
-        print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d inconsistent), %d edges', 
-            choice, fails, #graph, #graph:InconsistentIds(), #graph:EdgesList()))
+        print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges', 
+            choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))
         fails = 0
+        if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'-'..step) end
         break 
       end
       fails = fails + 1

@@ -52,26 +52,12 @@ end
 -- Graph.IsConsistent
 
 
---- Computes list of inconsistent nodes within the graph
--- @return List of id's of inconsistent nodes
-function Graph:InconsistentIds()
-  local ids = {}
-  for k, v in ipairs(self) do
-    if not v:IsConsistent() then 
-      table.insert(ids, k)
-    end
-  end
-  return ids
-end
--- Graph.IsConsistent
-
-
 --- Computes list of edges in graph
 -- @return List of {id1, id2} edges (id1 < id2)
 function Graph:EdgesList()
   local edges = {}
   for id1, e in ipairs(self.edges) do
-    for _, id2 in ipairs(e) do
+    for id2, _ in ipairs(e) do
       if id1 < id2 then
         table.insert(edges, {id1, id2})
       end
@@ -94,11 +80,23 @@ end
 -- Graph.IsFinal
 
 
--- TODO - update the function
+--- Computes list of non-final nodes within the graph
+-- @return List of id's of non-final nodes
+function Graph:NonfinalIds()
+  local ids = {}
+  for k, v in ipairs(self) do
+    if not v:IsFinal() then 
+      table.insert(ids, k)
+    end
+  end
+  return ids
+end
+-- Graph.NonfinalIds
+
 
 --- Produces data for LML graph image
 -- @return GraphvizDrawer object containing current graph image data
-function Graph:Drawer()
+function Graph:Image()
   local gd = GD.New()
   gd:AddNode{id=0, shape='none', label=''}
   for i, z in ipairs(self) do
@@ -119,8 +117,8 @@ function Graph:Drawer()
 
     local shape = 'none'
     if not z:IsFinal() then shape='doubleoctagon' 
-    elseif z.class[1].type=='LOCAL' then shape='circle'
-    elseif z.class[1].type=='BUFFER' then shape='box'
+    elseif z.classes[1].type=='LOCAL' then shape='circle'
+    elseif z.classes[1].type=='BUFFER' then shape='box'
     end    
     gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ',')..'\\n'..table.concat(labelf, ','), color='#000000'}
     
@@ -135,6 +133,7 @@ function Graph:Drawer()
   
   return gd
 end
+-- Graph.Image
 
 
 return Graph
