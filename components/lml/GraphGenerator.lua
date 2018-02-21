@@ -53,33 +53,43 @@ end
 -- ProductionIterator
 
 --- Function generates 'lmlGraph' containing full LML graph
--- @param state H3pgm state containing 'lmlInitialNode', 'config' and optionally 'userparamsDetailed' keys, which is extended by 'lmlGraph'
+-- @param state H3pgm state containing 'lmlInitialNode', 'config' and 'userparamsDetailed' keys, which is extended by 'lmlGraph'
 function GraphGenerator.Generate(state)  
-
+  local cfg = state.config
+  
   local graph = Graph.Initialize(state.lmlInitialNode)
-  local x = ProductionIterator(state, Productions)
   
-  print ('lalala')
-  --local classes, zonelevels = ComputeZoneLevels(state)
   
-  --[[
-  local features = {}
   
-  local towns = ComputeTownFeatures(state, zonelevels)
-  for _, town in ipairs(towns) do table.insert(features, town) end
+  --if true or CONFIG.LML_verbose_debug then print('LML Generation started with grammar containing '..#grammar..' rules.') end -- get rid of global CONFIG usage
+  --if debuging_path then self:Drawer():Draw(debuging_path..'-'..0) end
   
-  local mines = ComputeMineFeatures(state, classes, towns)
-  for _, mine in ipairs(mines) do table.insert(features, mine) end
+  local c, id, fc = graph:IsConsistent()
+  if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end 
   
-  local outers = ComputeOuterFeatures(state, zonelevels)
-  for _, outer in ipairs(outers) do table.insert(features, outer) end
+  local fails = 0
+  for step = 1, cfg.GrammarMaxSteps do
+    if graph:IsFinal() then break end
+    for choice in ProductionIterator(state, Productions) do
+      local success = Productions[choice](graph, state)
+      local c, id, fc = graph:IsConsistent()
+      if not c then error(string.format('[ERROR] <GraphGenerator> : Production %s made node %d inconsistent (feature class: %s).', choice, id, fc)) end 
+      if success then 
+        print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d inconsistent), %d edges', 
+            choice, fails, #graph, #graph:InconsistentIds(), #graph:EdgesList()))
+        fails = 0
+        break 
+      end
+      fails = fails + 1
+    end
+    --if debugimg_path then self:Drawer():Draw(debuging_path..'-'..step) end
+  end
   
-  local teleports = ComputeTeleportFeatures(state, zonelevels)
-  for _, teleport in ipairs(teleports) do table.insert(features, teleport) end
-  
-  state.lmlInitialNode = {classes=classes, features=features}
-  --]]
-  
+  if graph:IsFinal() then
+    state.lmlGraph = graph
+  else
+    error('[ERROR] <GraphGenerator> : Generating final graph within '..cfg.GrammarMaxSteps..' steps failed.')
+  end
 end
 -- GraphGenerator.Generate
 

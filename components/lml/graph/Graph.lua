@@ -66,6 +66,22 @@ end
 -- Graph.IsConsistent
 
 
+--- Computes list of edges in graph
+-- @return List of {id1, id2} edges (id1 < id2)
+function Graph:EdgesList()
+  local edges = {}
+  for id1, e in ipairs(self.edges) do
+    for _, id2 in ipairs(e) do
+      if id1 < id2 then
+        table.insert(edges, {id1, id2})
+      end
+    end
+  end
+  return edges
+end
+-- Graph.EdgesList
+
+
 --- Checks if all zones are uniform
 -- @return True iff all zones are consistent and contains only one class, and the list of nonfinal zones ids
 function Graph:IsFinal()

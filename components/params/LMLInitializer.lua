@@ -299,7 +299,7 @@ local function ComputeOuterFeatures(state, zonelevels)
       end
     end
   end
-  for _, lvl in ipairs(bufouters) do
+  for _, lvl in ipairs(locouters) do
     local outerlvl = math.min(RNG.RandomRound(zonelevels.pvpBorder + (zonelevels.pvpBorder - lvl) + cfg.OuterLocalLevelBonus[dp.focus]), cfg.MaxZoneLevel)
     table.insert(outers, Feature.New('OUTER', outerlvl, Class.New('LOCAL', lvl)) )
   end

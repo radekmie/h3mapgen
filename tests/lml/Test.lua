@@ -13,16 +13,15 @@ local LML = require'LogicMapLayout'
 local function Test(name)
   local state = ConfigHandler.Read('tests/lml/'..name..'.h3pgm')  
   state.config = ConfigHandler.Read('config.cfg')
-  if not state.lmlInitialNode then
-    print ('// <Test> Generating params and init node!')
-    Params.GenerateDetailedParams(state)
-    Params.GenerateInitLMLNode(state)
-  end
+  Params.GenerateDetailedParams(state)
+  Params.GenerateInitLMLNode(state)
+  
+  ConfigHandler.Write('tests/lml/'..name..'.h3pgm', state)
   
   LML.GenerateGraph(state)
   
   local lml = Graph.Initialize(state.lmlInitialNode)
-  ConfigHandler.Write('tests/params/'..name..'.h3pgm', state)
+  ConfigHandler.Write('tests/lml/'..name..'.h3pgm', state)
   local gd = lml:Drawer()
   gd:Draw('tests/lml/'..name..'', true)
 end
