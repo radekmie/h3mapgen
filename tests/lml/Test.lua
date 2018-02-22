@@ -22,7 +22,7 @@ local function Test(name)
   
   local lml = Graph.Initialize(state.lmlInitialNode)
   ConfigHandler.Write('tests/lml/'..name..'.h3pgm', state)
-  local gd = lml:Drawer()
+  local gd = lml:Image()
   gd:Draw('tests/lml/'..name..'', true)
 end
 

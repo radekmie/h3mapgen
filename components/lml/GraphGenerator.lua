@@ -46,6 +46,7 @@ local function ProductionIterator(state, productions)
   end
   return function () 
               local choice = RNG.RouletteWheel(map)
+              if choice==nil then return nil end
               map[choice] = nil
               return choice
             end 
@@ -58,7 +59,7 @@ function GraphGenerator.Generate(state)
   local cfg = state.config
   
   local graph = Graph.Initialize(state.lmlInitialNode)
-  if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'-'..0) end
+  if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..0) end
   
   local c, id, fc = graph:IsConsistent()
   if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end 
@@ -74,7 +75,7 @@ function GraphGenerator.Generate(state)
         print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges', 
             choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))
         fails = 0
-        if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'-'..step) end
+        if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..step) end
         break 
       end
       fails = fails + 1

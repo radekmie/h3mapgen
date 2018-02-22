@@ -1,5 +1,5 @@
 local GL = require'grammar/GrammarLib'
-
+local Zone = require'graph/Zone'
 
 local Productions = {}
 
@@ -25,11 +25,9 @@ function Productions.Test (graph, state)
     end
   end
   
-  local nid, nzone = graph:AddZone()
-  zone.classes = smaller_c
-  zone.features = smaller_f
-  nzone.classes = greatereq_c
-  nzone.features = greatereq_f
+  graph[id] = Zone.New{classes=smaller_c, features=smaller_f}
+  local nid, nzone = graph:AddZone{classes=greatereq_c, features=greatereq_f}
+
   graph:AddEdge(id, nid)
   return true
 end
@@ -45,7 +43,7 @@ end
 
 function Productions.XXX (graph, state) 
   --print ('inside XXX')
-  return true
+  return false
 end
 
 
