@@ -18,12 +18,11 @@ local function Test(name)
   
   ConfigHandler.Write('tests/lml/'..name..'.h3pgm', state)
   
-  LML.GenerateGraph(state)
+  LML.GenerateGraph(state)  
+  LML.GenerateMetagraph(state)
   
-  local lml = Graph.Initialize(state.lmlInitialNode)
   ConfigHandler.Write('tests/lml/'..name..'.h3pgm', state)
-  local gd = lml:Image()
-  gd:Draw('tests/lml/'..name..'', true)
+  state.lmlMetagraph:Image():Draw(state.config.DebugOutPath..state.paramsDetailed.seed..'_Metagraph')
 end
 
 

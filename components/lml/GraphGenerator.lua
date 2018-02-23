@@ -7,27 +7,6 @@ local GraphGenerator = {}
 local rand = RNG.Random
 
 
-
-
---- Computes mine features for given set of zones
--- @param state H3pgm state
--- @param classes List of all zones info within the map (as Class objects)
--- @param towns List of all Towns (Feature objects) within the map
--- @return List of all Mines (Feature objects) within the map
-local function ComputeMineFeatures(state, classes, towns)
-  local dp = state.paramsDetailed
-  local cfg = state.config
-  local znum = dp.zonesnum
- 
-  
-  print (string.format('[INFO] <lmlInitializer> Mines: Player(base,primary,gold)=%d,%d,%d/%d;  Other(base,primary,gold)=%d,%d,%d/%d; RANDOM local=%d/%d, buffer=%d/%d', 
-      playerbase, playerprime, playergold, #playertowns, otherbase, otherprime, othergold, #othertowns, locrandom, loczones, bufrandom, bufzones))
-  
-  return mines
-end
--- ComputeMineFeatures
-
-
 --- Iterator providing grammar productions randomized by priorty weights
 -- @param state H3pgm state
 -- @param productions Table containing production functions (grammar/Productions)
@@ -52,6 +31,7 @@ local function ProductionIterator(state, productions)
             end 
 end
 -- ProductionIterator
+
 
 --- Function generates 'lmlGraph' containing full LML graph
 -- @param state H3pgm state containing 'lmlInitialNode', 'config' and 'userparamsDetailed' keys, which is extended by 'lmlGraph'
