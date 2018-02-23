@@ -3,6 +3,7 @@
 
 #include<vector>
 #include<cassert>
+#include <lua.hpp>
 using namespace std;
 
 // Representation of single cell's state
