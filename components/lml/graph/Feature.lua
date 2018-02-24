@@ -13,11 +13,11 @@ local Feature_mt = { __index = Feature, __metatable = "Access resticted." }
 function Feature.New(typeorobj, value, class)
   local obj
   if value == nil then
-    obj = typeorobj 
+    obj = {type=typeorobj.type, value=typeorobj.value, class=typeorobj.class} -- slower hardcopy constructor here (safer)
   else 
     obj = {type=typeorobj, value=value, class=class}
   end
-  --obj.class = Class.New(obj.class)
+  obj.class = Class.New(obj.class)
   return setmetatable(obj, Feature_mt)
 end
 

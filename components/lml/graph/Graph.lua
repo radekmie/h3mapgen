@@ -34,8 +34,13 @@ end
 -- @param z1id Id of one of the edges adjacent nodes
 -- @param z2id Id of second of the edges adjacent nodes
 function Graph:AddEdge(z1id, z2id)
-  self.edges[z1id][z2id]=true
-  self.edges[z2id][z1id]=true
+  if not self.edges[z1id][z2id] then
+    self.edges[z1id][z2id] = 1
+    self.edges[z2id][z1id] = 1
+  else
+    self.edges[z1id][z2id] = self.edges[z1id][z2id] + 1
+    self.edges[z2id][z1id] = self.edges[z2id][z1id] + 1
+  end
 end
 -- Graph.AddEdge
 
@@ -52,6 +57,22 @@ end
 -- Graph.IsConsistent
 
 
+--- Computes list of edges in graph
+-- @return List of {id1, id2} edges (id1 < id2)
+function Graph:EdgesList()
+  local edges = {}
+  for id1, e in pairs(self.edges) do
+    for id2, k in pairs(e) do
+      if id1 < id2 then
+        for i=1,k do table.insert(edges, {id1, id2}) end
+      end
+    end
+  end
+  return edges
+end
+-- Graph.EdgesList
+
+
 --- Checks if all zones are uniform
 -- @return True iff all zones are consistent and contains only one class, and the list of nonfinal zones ids
 function Graph:IsFinal()
@@ -64,12 +85,27 @@ end
 -- Graph.IsFinal
 
 
--- TODO - update the function
+--- Computes list of non-final nodes within the graph
+-- @return List of id's of non-final nodes
+function Graph:NonfinalIds()
+  local ids = {}
+  for k, v in ipairs(self) do
+    if not v:IsFinal() then 
+      table.insert(ids, k)
+    end
+  end
+  return ids
+end
+-- Graph.NonfinalIds
+
 
 --- Produces data for LML graph image
 -- @return GraphvizDrawer object containing current graph image data
-function Graph:Drawer()
+function Graph:Image()
   local gd = GD.New()
+  
+  local teleports = {}
+  
   gd:AddNode{id=0, shape='none', label=''}
   for i, z in ipairs(self) do
     local labelc = {}
@@ -77,34 +113,43 @@ function Graph:Drawer()
       labelc[#labelc+1] = c.type:sub(1,1)..c.level
     end
     local labelf = {}
-    for _, f in ipairs(z.features) do
+    for j, f in ipairs(z.features) do
+      
       if f.type == 'OUTER' then
-        gd:AddNode{id=i..'o', shape='point', style='invisible', label=''}
-        -- two options: one that all outer edges goes to their corresponding outer nodes, second that all goes to the common 0 node i.e.\ sink state
-        gd:AddEdge(i, i..'o', {label=f.value or '', style='dotted'}) -- or gd:AddEdge(i, 0, ...
+        gd:AddNode{id=i..'o'..j, shape='none', label=''}
+        gd:AddEdge(i, i..'o'..j, {label=f.value or '', style='bold'})
+      elseif f.type == 'TELEPORT' then
+        local tid = f.value.id
+        if teleports[tid] == nil then
+          teleports[tid]=true
+          gd:AddNode{id='T'..tid, shape='plaintext', label='T'..tid}
+        end
+        gd:AddEdge(i, 'T'..tid, {label=f.value.level, style='dotted'})
       else
         labelf[#labelf+1] = f.type:sub(1,1)..'-'..f.value:sub(1,1)
-      end
+      end      
     end
 
     local shape = 'none'
     if not z:IsFinal() then shape='doubleoctagon' 
-    elseif z.class[1].type=='LOCAL' then shape='circle'
-    elseif z.class[1].type=='BUFFER' then shape='box'
+    elseif z.classes[1].type=='LOCAL' then shape='circle'
+    elseif z.classes[1].type=='BUFFER' then shape='box'
+    elseif z.classes[1].type=='GOAL' then shape='diamond'
     end    
     gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ',')..'\\n'..table.concat(labelf, ','), color='#000000'}
-    
-    for e, n in pairs(z.edges or {}) do
-      if e <= i then -- display only one-direction of edge (from lhigher id's to lower)
-        for j=1, n do
-          gd:AddEdge(i, e) 
-        end
+  end
+  
+  for id1, e in pairs(self.edges) do
+    for id2, k in pairs(e) do
+      if id1 < id2 then
+        for i=1,k do gd:AddEdge(id1, id2) end
       end
     end
   end
   
   return gd
 end
+-- Graph.Image
 
 
 return Graph

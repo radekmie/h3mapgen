@@ -14,6 +14,7 @@ function Zone.New(data)
   for k, v in ipairs(data and data.classes or {}) do
     obj.classes[k] = Class.New(v)
   end
+  table.sort(obj.classes)
   obj.features = {}
   for k, v in ipairs(data and data.features or {}) do
     obj.features[k] = Feature.New(v)
@@ -29,7 +30,7 @@ function Zone:IsConsistent()
   local classes = {}
   for k, v in ipairs(self.classes) do classes[tostring(v)] = true end
   for k, v in ipairs(self.features) do 
-    if not classes[tostring(v.classes)] then return false, v end
+    if not classes[tostring(v.class)] then return false, v end
   end
   return true
 end
