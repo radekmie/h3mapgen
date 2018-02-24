@@ -54,7 +54,7 @@ function GraphGenerator.Generate(state)
     for choice in ProductionIterator(state, Productions) do
       local success = Productions[choice](graph, state)
       local c, id, fc = graph:IsConsistent()
-      if not c then error(string.format('[ERROR] <GraphGenerator> : Production %s made node %d inconsistent (feature class: %s).', choice, id, fc)) end 
+      if not c then error(string.format('[ERROR] <GraphGenerator> : Production %s made node %d inconsistent (feature class: %s).', choice, id, fc)) end
       if success then 
         print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges', 
             choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))

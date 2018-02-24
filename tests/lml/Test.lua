@@ -13,6 +13,8 @@ local LML = require'LogicMapLayout'
 local function Test(name)
   local state = ConfigHandler.Read('tests/lml/'..name..'.h3pgm')  
   state.config = ConfigHandler.Read('config.cfg')
+  os.execute('mkdir ' .. state.config.DebugOutPath:gsub('/', '\\'))
+
   Params.GenerateDetailedParams(state)
   Params.GenerateInitLMLNode(state)
   

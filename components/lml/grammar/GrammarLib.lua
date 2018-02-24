@@ -1,6 +1,9 @@
 local Zone = require'graph/Zone'
+local RNG = require'Random'
 
 local GrammarLib = {}
+
+local rand = RNG.Random
 
 
 --- Split features by their type into several sequences 
@@ -20,6 +23,7 @@ function GrammarLib.FeatureSplitByType(features)
   end
   return towns, basemines, primarymines, randommines, goldmines, outers, teleports
 end
+
 
 --- Compute zone's interestingness looking at its features
 -- @param zone Zone to evaluate
@@ -117,21 +121,40 @@ end
 
 
 --- Splits given sequence of classes using random pivot into two non-empty subsequences: smaller and grater-equal
--- @param classes Sequence of classes (should contain more than 2 classes)
--- @return Non-empty sequences of classes 'smaller' and 'greater-equal' then given pivot
-function GrammarLib.SplitInto2ByRandomPivot(classes)
-  local pivot = classes[math.random(#classes)]
+-- @param classes Sequence of classes (should contain at least 2 classes)
+-- @return Non-empty sequences of classes 'smaller' and 'greater-equal' then uniformly chosen  pivot
+function GrammarLib.SplitInto2ByRandomPivotUniformly(classes)
+  local pivot = classes[rand(#classes)]
   local smaller, equal, greater = GrammarLib.SplitInto3ByPivot(classes, pivot)
   for _, g in ipairs(greater) do
     table.insert(equal, g)
   end
   return smaller, equal
 end
--- GrammarLib.SplitInto2ByRandomPivot
+-- GrammarLib.SplitInto2ByRandomPivotUniformly
 
 
-
-
+--- Splits given sequence of classes using random pivot (geometric-sequence-weight based) into two non-empty subsequences: smaller and grater-equal
+-- @param classes Sequence of classes (should contain at least 2 classes)
+-- @param ratio Parameter modifying weights of subsequent classes (in geometric progression)
+-- @return Non-empty sequences of classes 'smaller' and 'greater-equal' then non-uniformly chosen pivot
+function GrammarLib.SplitInto2ByDeltaBasedPivot(classes, ratio)
+  local weightMap = {0, 1}
+  for i=3,#classes do
+    table.insert(weightMap, weightMap[#weightMap] * ratio)
+  end
+  --local x={} for _, c in ipairs(classes) do table.insert(x,tostring(c)) end print (table.concat(x, ', '))
+  --local y={} for _, w in ipairs(weightMap) do table.insert(y,tostring(w)) end print (table.concat(y, ', '))  
+  local index = RNG.RouletteWheel(weightMap) --print (index)
+  local pivot = classes[index]
+  
+  local smaller, equal, greater = GrammarLib.SplitInto3ByPivot(classes, pivot)
+  for _, g in ipairs(greater) do
+    table.insert(equal, g)
+  end
+  return smaller, equal
+end
+-- GrammarLib.SplitInto2ByDeltaBasedPivot
 
 
 return GrammarLib

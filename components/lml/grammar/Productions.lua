@@ -12,10 +12,16 @@ local rand = RNG.Random
 -- @param state H3pgm state 
 -- @return true iff productions succeed (it properly divided first nonfinal node)
 function Productions.PushOutGreaterThenPivot (graph, state) 
-  local id = graph:NonfinalIds()[1]
+  local nfids = graph:NonfinalIds()
+  local id = nfids[rand(#nfids)]
   local zone = graph[id]
   
-  local smaller_c, greatereq_c = GL.SplitInto2ByRandomPivot(zone.classes)
+  local smaller_c, greatereq_c
+  if zone.classes[1].type=='LOCAL' then
+    smaller_c, greatereq_c = GL.SplitInto2ByDeltaBasedPivot(zone.classes, state.config.PushOutDistantPivotRatio[state.paramsDetailed.focus])
+  else
+    smaller_c, greatereq_c = GL.SplitInto2ByRandomPivotUniformly(zone.classes)
+  end
   if #smaller_c==0 or #greatereq_c==0 then
     return false
   end
@@ -42,7 +48,8 @@ end
 -- @param state H3pgm state 
 -- @return true iff productions succeed (it properly divided first nonfinal node, which contain only one-class zones)
 function Productions.DivideEqualHorizontally (graph, state) 
-  local id = graph:NonfinalIds()[1]
+  local nfids = graph:NonfinalIds()
+  local id = nfids[rand(#nfids)]
   local zone = graph[id]
   local class = zone.classes[1]
   for _, c in ipairs(zone.classes) do
@@ -65,6 +72,9 @@ function Productions.DivideEqualHorizontally (graph, state)
       copy = copy + 1
     end
   end
+  if id==1 then -- safeguard: if this is initian node branching we need them fully connected
+    copy=#nzones
+  end
   
   graph[id] = nzones[1]
   for i=2,#nzones do
@@ -78,6 +88,27 @@ function Productions.DivideEqualHorizontally (graph, state)
 
   return true
 end
+-- Productions.DivideEqualHorizontally
+
+
+--- Duplicates random edge (if there is only one edge between the nodes)
+-- @param graph LML graph (modifying)
+-- @param state H3pgm state 
+-- @return true iff productions succeed (there is no duplicate for the edge we try to duplicate)
+function Productions.DuplicateEdge (graph, state) 
+  local edges = graph:EdgesList()
+  if #edges < 1 then 
+    return false 
+  end
+  local edge = edges[rand(#edges)]
+  if graph.edges[edge[1]][edge[2]] > 1 then
+    return false
+  else
+    graph:AddEdge(edge[1], edge[2])
+    return true
+  end
+end
+-- Productions.DuplicateEdge
 
 
 function Productions.XXX (graph, state) 
