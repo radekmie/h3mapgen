@@ -17,11 +17,15 @@ local function ProductionIterator(state, productions)
   
   local map = {}
   for name, weight in pairs(grammar) do
-    if type(weight) == 'string' then -- parameter name as weight
-      map[name] = dp[weight]
-    elseif type(weight) == 'number' and weight > 0 then -- raw number as weight
-      map[name] = weight
+    local w = 0
+    if type(weight) == 'number' then -- raw number as weight
+      w = weight
+    elseif type(weight) == 'string' then -- parameter name as weight
+      w = dp[weight]
+    --elseif type(weight) == 'function' then -- function as weight  -- UNSUPPORTED BY SERIALIZATION
+    --  w = weight(dp)
     end
+    if w > 0 then map[name] = w end
   end
   return function () 
               local choice = RNG.RouletteWheel(map)
@@ -39,7 +43,7 @@ function GraphGenerator.Generate(state)
   local cfg = state.config
   
   local graph = Graph.Initialize(state.lmlInitialNode)
-  if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..0) end
+  if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..0) end
   
   local c, id, fc = graph:IsConsistent()
   if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end 
@@ -55,14 +59,14 @@ function GraphGenerator.Generate(state)
         print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges', 
             choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))
         fails = 0
-        if cfg.GraphGeneratorDraw then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..step) end
+        if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..step) end
         break 
       end
       fails = fails + 1
     end
-    --if debugimg_path then self:Drawer():Draw(debuging_path..'-'..step) end
   end
   
+  if cfg. GraphGeneratorDrawFinal and not cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML') end
   if graph:IsFinal() then
     state.lmlGraph = graph
   else
