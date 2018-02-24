@@ -124,7 +124,7 @@ end
 -- @param classes Sequence of classes (should contain at least 2 classes)
 -- @return Non-empty sequences of classes 'smaller' and 'greater-equal' then uniformly chosen  pivot
 function GrammarLib.SplitInto2ByRandomPivotUniformly(classes)
-  local pivot = classes[rand(#classes)]
+  local pivot = RNG.Choice(classes)
   local smaller, equal, greater = GrammarLib.SplitInto3ByPivot(classes, pivot)
   for _, g in ipairs(greater) do
     table.insert(equal, g)

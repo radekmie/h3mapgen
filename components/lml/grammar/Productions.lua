@@ -13,7 +13,7 @@ local rand = RNG.Random
 -- @return true iff productions succeed (it properly divided first nonfinal node)
 function Productions.PushOutGreaterThenPivot (graph, state) 
   local nfids = graph:NonfinalIds()
-  local id = nfids[1] -- nfids[rand(#nfids)]
+  local id = nfids[1] -- RNG.Choice(nfids)
   local zone = graph[id]
   
   local smaller_c, greatereq_c
@@ -49,7 +49,7 @@ end
 -- @return true iff productions succeed (it properly divided first nonfinal node, which contain only one-class zones)
 function Productions.DivideEqualHorizontally (graph, state) 
   local nfids = graph:NonfinalIds()
-  local id = nfids[1] -- nfids[rand(#nfids)]
+  local id = nfids[1] -- RNG.Choice(nfids)
   local zone = graph[id]
   local class = zone.classes[1]
   for _, c in ipairs(zone.classes) do
@@ -100,7 +100,7 @@ function Productions.DuplicateEdge (graph, state)
   if #edges < 1 then 
     return false 
   end
-  local edge = edges[rand(#edges)]
+  local edge = RNG.Choice(edges)
   if graph.edges[edge[1]][edge[2]] > 1 then
     return false
   else
@@ -125,7 +125,7 @@ function Productions.ConnectDistantNodes (graph, state)
     end
   end
   if #ids2 == 0 then return false end
-  graph:AddEdge(id1, ids2[rand(#ids2)])
+  graph:AddEdge(id1, RNG.Choice(ids2))
   return true
 end
 -- Productions.ConnectDistantNodes
