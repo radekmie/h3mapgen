@@ -25,45 +25,47 @@ int main(int argc, char** argv) {
 
 /// Runs cellular automata on a board.
 // @function    run
-// @tparam      table       board           Board. A flat (1D) table of 0 (white, ' '), 1 (black, '#'), 2 (super white, '.') and 3 (super black, '$'). See board.hpp.
+// @tparam      table       board           Board. A 2D table of 0 (white, ' '), 1 (black, '#'), 2 (super white, '.') and 3 (super black, '$'). See board.hpp.
 // @tparam      integer     neighbourhood   Neighbourhood: either 'moore' or 'neumann'.
 // @tparam      float       probability     Probability.
 // @tparam      float       weight          Weight.
 // @tparam      integer     iterations      Iterations.
 // @tparam      integer     seed            Seed.
-// @treturn     table                       Board after CA.
+// @treturn     table                       Board (copied!) after CA.
 static int run(lua_State* L) {
   Board board;
 
   // Resize.
-  // TODO: Resize dynamically.
-  int size_x = 8;
-  int size_y = 8;
+  lua_geti(L, 1, 1);
+  lua_len(L, -1);
+  lua_len(L, 1);
+  int size_x = lua_tointeger(L, -2);
+  int size_y = lua_tointeger(L, -1);
+  lua_pop(L, 3);
 
   board.resize(size_y);
-  for (int i = 0; i < size_y; ++i)
-    board[i].resize(size_x, white);
+  for (int y = 0; y < size_y; ++y)
+    board[y].resize(size_x, white);
 
   // Load board.
-  lua_pushnil(L);
-  while (lua_next(L, 1)) {
-    int index = lua_tointeger(L, -2);
-    int state = lua_tointeger(L, -1);
+  for (int y = 0; y < size_y; ++y) {
+    lua_geti(L, 1, y + 1);
 
-    int x = ((index - 1) % size_x);
-    int y = ((index - 1) / size_x) % size_y;
+    for (int x = 0; x < size_x; ++x) {
+      lua_geti(L, -1, x + 1);
 
-    switch (state) {
-      case 0: board[x][y] = white; break;
-      case 1: board[x][y] = black; break;
-      case 2: board[x][y] = swhite; break;
-      case 3: board[x][y] = sblack; break;
+      switch (lua_tointeger(L, -1)) {
+        case 0: board[x][y] = white; break;
+        case 1: board[x][y] = black; break;
+        case 2: board[x][y] = swhite; break;
+        case 3: board[x][y] = sblack; break;
+      }
+
+      lua_pop(L, 1);
     }
 
     lua_pop(L, 1);
   }
-
-  lua_pop(L, 1);
 
   // Load rest arguments.
   std::string name = lua_tostring(L, 2);
@@ -82,8 +84,11 @@ static int run(lua_State* L) {
   lua_newtable(L);
 
   for (int y = 0; y < size_x; ++y) {
+    lua_pushinteger(L, y + 1);
+    lua_newtable(L);
+
     for (int x = 0; x < size_x; ++x) {
-      lua_pushinteger(L, 1 + x + y * size_x);
+      lua_pushinteger(L, x + 1);
 
       switch (result[x][y]) {
         case white:  lua_pushinteger(L, 0); break;
@@ -92,8 +97,10 @@ static int run(lua_State* L) {
         case sblack: lua_pushinteger(L, 3); break;
       }
 
-      lua_settable(L, 1);
+      lua_settable(L, 3);
     }
+
+    lua_settable(L, 1);
   }
 
   return 1;
