@@ -13,7 +13,7 @@ local rand = RNG.Random
 -- @return true iff productions succeed (it properly divided first nonfinal node)
 function Productions.PushOutGreaterThenPivot (graph, state) 
   local nfids = graph:NonfinalIds()
-  local id = nfids[rand(#nfids)]
+  local id = nfids[1] -- nfids[rand(#nfids)]
   local zone = graph[id]
   
   local smaller_c, greatereq_c
@@ -49,7 +49,7 @@ end
 -- @return true iff productions succeed (it properly divided first nonfinal node, which contain only one-class zones)
 function Productions.DivideEqualHorizontally (graph, state) 
   local nfids = graph:NonfinalIds()
-  local id = nfids[rand(#nfids)]
+  local id = nfids[1] -- nfids[rand(#nfids)]
   local zone = graph[id]
   local class = zone.classes[1]
   for _, c in ipairs(zone.classes) do
@@ -111,10 +111,24 @@ end
 -- Productions.DuplicateEdge
 
 
-function Productions.XXX (graph, state) 
-  --print ('inside XXX')
-  return false
+--- Adds edge between two random previously not connected nodes (only local-local or nonlocal-nonlocal)
+-- @param graph LML graph (modifying)
+-- @param state H3pgm state 
+-- @return true iff productions succeed (there is a valid matching for the randomly chosen node)
+function Productions.ConnectDistantNodes (graph, state)
+  local id1 = rand(#graph)
+  local islocal = graph[id1].classes[1].type == 'LOCAL'
+  local ids2 = {}
+  for i, z in ipairs(graph) do
+    if i ~= id1 and (z.classes[1].type == 'LOCAL') == islocal and graph.edges[id1][i] == nil then
+      table.insert(ids2, i)
+    end
+  end
+  if #ids2 == 0 then return false end
+  graph:AddEdge(id1, ids2[rand(#ids2)])
+  return true
 end
+-- Productions.ConnectDistantNodes
 
 
 function Productions.AlwaysFail (graph, state) 

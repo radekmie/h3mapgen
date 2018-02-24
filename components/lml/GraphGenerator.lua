@@ -51,12 +51,13 @@ function GraphGenerator.Generate(state)
   local fails = 0
   for step = 1, cfg.GrammarMaxSteps do
     if graph:IsFinal() then break end
-    for choice in ProductionIterator(state, Productions) do
+    --for choice in ProductionIterator(state, Productions) do
+    for _, choice in ipairs{ProductionIterator(state, Productions)()} do
       local success = Productions[choice](graph, state)
       local c, id, fc = graph:IsConsistent()
       if not c then error(string.format('[ERROR] <GraphGenerator> : Production %s made node %d inconsistent (feature class: %s).', choice, id, fc)) end
       if success then 
-        print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges', 
+        print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges',
             choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))
         fails = 0
         if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..step) end
