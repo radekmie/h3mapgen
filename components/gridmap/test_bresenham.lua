@@ -1,5 +1,5 @@
 local GridMap = require('GridMapSeparation/GridMap')
-require('mdsAdapter')
+local mdsRescale = require('mdsAdapter')
 
 local function test_bresenham ()
   print(os.date("%Y %m %d %H %M %S"))
@@ -8,14 +8,14 @@ local function test_bresenham ()
   dimensions.gH = 64
   dimensions.sW = 8
   dimensions.sH = 8
-  
+
   local rescaleX = function(oldX)
     return mdsRescale(oldX, dimensions.sW)
   end
   local rescaleY = function(oldY)
     return mdsRescale(oldY, dimensions.sH)
   end
-  
+
   local gdat = {}
   gdat[1] = {x=rescaleX(-1.3), y=rescaleY(-0.4), neighbors={4}, size=8}
   gdat[2] = {x=rescaleX(-0.4), y=rescaleY(1.3), neighbors={3}, size=8}

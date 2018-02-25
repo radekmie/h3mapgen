@@ -1,12 +1,12 @@
 
-function mdsRescale(value, unitsNum)
+local function mdsRescale(value, unitsNum)
   local mdsScale = 5.0
   -- rescale first so its in (0,1)
   local newVal = (value + mdsScale / 2.0) / mdsScale
-  
+
   -- multiply by number of units in given axis so its in (0,unitsNum)
   newVal = newVal * unitsNum
-  
+
   -- apply floor to give integer value, add 1 to keep lua numbering so its in [1,unitsNum]
   return math.floor(newVal) + 1
 end
@@ -24,3 +24,4 @@ local function test()
   print(mdsRescale(1.9, 8)) --8
 end
 
+return mdsRescale

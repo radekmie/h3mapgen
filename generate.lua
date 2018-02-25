@@ -1,7 +1,9 @@
 -- Instead of LUA_CPATH
+package.cpath = package.cpath .. ';components/ca/?.so'
 package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
 
 -- Instead of LUA_PATH
+package.path = package.path .. ';components/gridmap/?.lua'
 package.path = package.path .. ';components/mlml/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
@@ -10,9 +12,12 @@ local homm3lua = require('homm3lua')
 local ConfigHandler = require('ConfigHandler')
 local Serialization = require('Serialization')
 
+local CA      = require('ca')
 local Grammar = require('LogicMapLayout/Grammar/Grammar')
+local GridMap = require('GridMapSeparation/GridMap')
 local LML     = require('LogicMapLayout/LogicMapLayout')
 local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
+local rescale = require('mdsAdapter')
 
 -- Utils.
 local function generate (state, steps)
@@ -72,11 +77,19 @@ end
 
 -- Steps.
 local function step_ca (state)
-    shell(table.concat({
-        'components/ca/ca 0.5 3 2',
-        '<', state.paths.vor1,
-        '>', state.paths.cell
-    }, ' '))
+    state.world1 = {}
+
+    for _, row in ipairs(state.voronoi.grid) do
+        local line = {}
+
+        for _, col in ipairs(row) do
+            table.insert(line, col == -1 and 3 or 1)
+        end
+
+        table.insert(state.world1, line)
+    end
+
+    state.world2 = CA.run(state.world1, 'moore', 0.5, 3, 2, 0)
 end
 
 local function step_dump (state, index)
@@ -261,15 +274,12 @@ local function step_initPaths (state)
     -- Initialize paths.
     state.path = 'output/' .. state.seed .. '_' .. state._params.players
     state.paths = {
-        cell  = state.path .. '/cell.txt',
         dumps = state.path .. '/dumps/',
         emb   = state.path .. '/emb',
         graph = state.path .. '/graph.txt',
         map   = state.path .. '/map.h3m',
         mds   = state.path .. '/emb.txt',
-        pgm   = state.path .. '/mlml.h3pgm',
-        vor1  = state.path .. '/map.txt',
-        vor2  = state.path .. '/mapText.txt'
+        pgm   = state.path .. '/mlml.h3pgm'
     }
 
     print('Generating ' .. state.path .. '...')
@@ -299,19 +309,11 @@ local function step_mds (state)
 end
 
 local function step_parseWorld (state)
-    -- Terrain
-    local file = assert(io.open(state.paths.vor2))
-    local h1, w1, terrain = file:read('*number', '*number', '*all')
-    file:close()
-
-    -- World
-    local file = assert(io.open(state.paths.cell))
-    local h2, w2, world = file:read('*number', '*number', '*all')
-    file:close()
-
-    if h1 ~= w1 then error('Map have to be a square!') end
-    if h2 ~= w2 then error('Map have to be a square!') end
-    if h1 ~= h2 then error('Map terrain and world differ in size!') end
+    -- Backward compatibility.
+    local h1 = #state.world1
+    local w1 = #state.world1[1]
+    local h2 = h1
+    local w2 = w1
 
     -- Yay!
     state.world = {}
@@ -340,19 +342,17 @@ local function step_parseWorld (state)
             cell = cell or {homm3lua.TERRAIN_WATER}
         end
 
-        -- NOTE: +1 for line break, +2 for the initial offset.
-        local info = y2 * (w1 + 1) + x2 + 2
-        local char = terrain:sub(info, info)
-        local wall = world:sub(info, info)
+        local char = (x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1) and -1 or state.voronoi.grid[y2 + 1][x2 + 1]
+        local wall = (x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1) and -1 or state.world2[y2 + 1][x2 + 1]
 
         -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
-        if wall == '#' or wall == '$' then
-            local sprite = wall == '#' and 'Oak Trees' or 'Pine Trees'
+        if wall == 1 or wall == 3 then
+            local sprite = wall == 1 and 'Oak Trees' or 'Pine Trees'
             state.world_grid[xyz2position(x, y, z)] = true
             table.insert(state.world_obstacles, {sprite, {x=x, y=y, z=z}})
         end
 
-        local code = (char:byte() or 0) - ('a'):byte()
+        local code = char
         local zone = state.MLML_graph[code]
 
         if zone then
@@ -379,15 +379,36 @@ local function step_saveH3M (state)
 end
 
 local function step_voronoi (state)
-    shell(table.concat({
-        'components/voronoi/voronoi',
-        state.paths.mds,
-        state.paths.vor1,
-        state._params.size,
-        state._params.size,
-        state._params.sectors,
-        state._params.sectors
-    }, ' '))
+    local size    = state._params.size
+    local sectors = state._params.sectors
+
+    local data = {}
+
+    for _, node in pairs(state.MLML_graph) do
+        data[node.id] = {neighbors={}}
+
+        for edge, _ in pairs(node.edges) do
+            table.insert(data[node.id].neighbors, edge)
+        end
+    end
+
+    for line in io.lines(state.paths.mds) do
+        if not line:match('^%d+$') then
+            local item = {}
+
+            for part in line:gmatch('[^%s]+') do
+                table.insert(item, tonumber(part))
+            end
+
+            data[item[1]].x = rescale(item[2], sectors)
+            data[item[1]].y = rescale(item[3], sectors)
+            data[item[1]].size = 5
+        end
+    end
+
+    state.voronoi = GridMap.Initialize(data)
+    state.voronoi:Generate({gW=size, gH=size, sW=sectors, sH=sectors})
+    state.voronoi:RunVoronoi(3, 70, nil)
 end
 
 -- Main.
@@ -420,7 +441,7 @@ if arg[1] then
         step_parseWorld,
         step_gameCastles,
         step_debugZoneSigns,
-        step_dump,
+        -- step_dump,
         -- step_dumpH3M,
         step_saveH3M
     })
