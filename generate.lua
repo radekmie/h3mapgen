@@ -269,11 +269,11 @@ end
 
 local function step_initPaths (state)
     -- NOTE: Store it somewhere?
-    local isWindows = package.config[1] == '\\'
-    local delim = isWindows and '\\' or '/'
+    local isWindows = package.config:sub(1,1) == '\\'
+    local delim = package.config:sub(1,1)
 
     -- Initialize paths.
-    state.path = 'output' .. delim .. state._params.seed .. '_' .. state._params.players
+    state.path = 'output' .. delim .. state.seed .. '_' .. state._params.players
     state.paths = {
         dumps = state.path .. delim .. 'dumps' .. delim,
         emb   = state.path .. delim .. 'emb',

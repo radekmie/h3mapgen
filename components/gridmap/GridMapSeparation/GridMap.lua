@@ -238,6 +238,10 @@ end
 -- Can only be called from inside the Generate function.
 function GridMap:TryConnectBFS(id1, id2)
   local previous = {}
+  for y = 1, #self.sectors do
+    previous[#previous + 1] = {}
+  end
+
   local toCheck = {}
   local cFront = 1
   local cBack = 1
@@ -252,8 +256,10 @@ function GridMap:TryConnectBFS(id1, id2)
   end
   
   local pushBack = function(xyDist)
-    toCheck[cBack] = xyDist
-    cBack = cBack + 1
+    if previous[xyDist[1][2]][xyDist[1][1]] == nil then
+      toCheck[cBack] = xyDist
+      cBack = cBack + 1
+    end
   end
   
   local checkNeigh = function(previousxy, neigh)
@@ -263,11 +269,11 @@ function GridMap:TryConnectBFS(id1, id2)
     if neighX >= 1 and neighX <= #self.sectors[1] and neighY >= 1 and neighY <= #self.sectors then
       local neighId = self.sectors[neighY][neighX]
       if neighId == id2 then
-        previous[neighxy] = previousxy
-        return neighxy
-      elseif neighId == -1 and previous[neighxy] == nil then
+        previous[neighxy[2]][neighxy[1]] = previousxy
+        return neigh
+      elseif neighId == -1 and previous[neighxy[2]][neighxy[1]] == nil then
         pushBack(neigh)
-        previous[neighxy] = previousxy
+        previous[neighxy[2]][neighxy[1]] = previousxy
       end
     end
     return nil
@@ -275,12 +281,15 @@ function GridMap:TryConnectBFS(id1, id2)
   
   for xy, _ in pairs(self.sectorMaps[id1]) do
     pushBack({xy, 1})
-    previous[xy] = xy
+    previous[xy[2]][xy[1]] = xy
   end
   
   local foundEnd = nil
-  while cFront ~= cBack do
+  while cFront < cBack do
     local xy = popFront()
+    if xy == nil then
+      break
+    end
     local x = xy[1][1]
     local y = xy[1][2]
     local id = self.sectors[y][x]
@@ -290,25 +299,21 @@ function GridMap:TryConnectBFS(id1, id2)
       local neigh3 = {{x, y + 1}, xy[2] + 1}
       local neigh4 = {{x - 1, y}, xy[2] + 1}
       
-      local check = checkNeigh(xy, neigh1)
-      if check ~= nil then
-        foundEnd = neigh1
-        break;
+      foundEnd = checkNeigh(xy, neigh1)
+      if foundEnd ~= nil then
+        break
       end
-      check = checkNeigh(xy, neigh2)
-      if check ~= nil then
-        foundEnd = neigh2
-        break;
+      foundEnd = checkNeigh(xy, neigh2)
+      if foundEnd ~= nil then
+        break
       end
-      check = checkNeigh(xy, neigh3)
-      if check ~= nil then
-        foundEnd = neigh3
-        break;
+      foundEnd = checkNeigh(xy, neigh3)
+      if foundEnd ~= nil then
+        break
       end
-      check = checkNeigh(xy, neigh4)
-      if check ~= nil then
-        foundEnd = neigh4
-        break;
+      foundEnd = checkNeigh(xy, neigh4)
+      if foundEnd ~= nil then
+        break
       end
     end
     
@@ -324,11 +329,11 @@ function GridMap:TryConnectBFS(id1, id2)
   while dist >= 1 do
     path[dist] = runBack[1]
     dist = dist - 1
-    runBack = previous[runBack[1]]
+    runBack = previous[runBack[1][2]][runBack[1][1]]
   end
   
   return self:FillPath(path, 1, #path)
-  
+
 end
 
 
