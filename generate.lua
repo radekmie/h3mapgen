@@ -380,7 +380,7 @@ end
 
 local function step_voronoi (state)
     local size    = state._params.size
-    local sectors = state._params.sectors
+    local sectors = size // state._params.sectors
 
     local data = {}
 
