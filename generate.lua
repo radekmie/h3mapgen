@@ -269,17 +269,18 @@ end
 
 local function step_initPaths (state)
     -- NOTE: Store it somewhere?
-    local isWindows = package.config[1] == '/'
+    local isWindows = package.config[1] == '\\'
+    local delim = isWindows and '\\' or '/'
 
     -- Initialize paths.
-    state.path = 'output/' .. state.seed .. '_' .. state._params.players
+    state.path = 'output' .. delim .. state._params.seed .. '_' .. state._params.players
     state.paths = {
-        dumps = state.path .. '/dumps/',
-        emb   = state.path .. '/emb',
-        graph = state.path .. '/graph.txt',
-        map   = state.path .. '/map.h3m',
-        mds   = state.path .. '/emb.txt',
-        pgm   = state.path .. '/mlml.h3pgm'
+        dumps = state.path .. delim .. 'dumps' .. delim,
+        emb   = state.path .. delim .. 'emb',
+        graph = state.path .. delim .. 'graph.txt',
+        map   = state.path .. delim .. 'map.h3m',
+        mds   = state.path .. delim .. 'emb.txt',
+        pgm   = state.path .. delim .. 'mlml.h3pgm'
     }
 
     print('Generating ' .. state.path .. '...')
@@ -380,7 +381,7 @@ end
 
 local function step_voronoi (state)
     local size    = state._params.size
-    local sectors = size // state._params.sectors
+    local sectors = state._params.sectors
 
     local data = {}
     local mdsItems = {}
@@ -406,7 +407,7 @@ local function step_voronoi (state)
         end
     end
 
-    for id, items in ipairs(mdsItems) do
+    for id, items in pairs(mdsItems) do
       local avgx = 0.0
       local avgy = 0.0
 
@@ -424,7 +425,7 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gW=size, gH=size, sW=sectors, sH=sectors})
+    state.voronoi:Generate({gW=size, gH=size, sW=size//sectors, sH=size//sectors})
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
