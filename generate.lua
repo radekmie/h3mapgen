@@ -383,9 +383,11 @@ local function step_voronoi (state)
     local sectors = size // state._params.sectors
 
     local data = {}
+    local mdsItems = {}
 
     for _, node in pairs(state.MLML_graph) do
         data[node.id] = {neighbors={}}
+        mdsItems[node.id] = {}
 
         for edge, _ in pairs(node.edges) do
             table.insert(data[node.id].neighbors, edge)
@@ -400,10 +402,25 @@ local function step_voronoi (state)
                 table.insert(item, tonumber(part))
             end
 
-            data[item[1]].x = rescale(item[2], sectors)
-            data[item[1]].y = rescale(item[3], sectors)
-            data[item[1]].size = 5
+            mdsItems[item[1]][#mdsItems[item[1]] + 1] = {item[2], item[3]}
         end
+    end
+
+    for id, items in ipairs(mdsItems) do
+      local avgx = 0.0
+      local avgy = 0.0
+
+      for _, item in pairs(items) do
+        avgx = avgx + item[1]
+        avgy = avgy + item[2]
+      end
+
+      avgx = avgx / #items
+      avgy = avgy / #items
+
+      data[id].x = rescale(avgx, sectors)
+      data[id].y = rescale(avgy, sectors)
+      data[id].size = #items
     end
 
     state.voronoi = GridMap.Initialize(data)
