@@ -399,16 +399,12 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
   for y = 1, self.gH do
     local row = {}
     for x = 1, self.gW do
-      row[#row + 1] = -1
+      row[#row + 1] = {id = -1, dist = self.gH * self.gW}
     end
     self.grid[#self.grid + 1] = row
   end
   
-  local distance = function(xy1, xy2)
-    local dX = xy1[1] - xy2[1]
-    local dY = xy1[2] - xy2[2]
-    return math.sqrt(dX * dX + dY * dY)
-  end
+  local areaSizes = {}
   
   for y = 1, self.gH do
     local thisY = y - 0.5
@@ -421,17 +417,69 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       local bestDist = self.gH + self.gW
       for _,xy in pairs(nearestSectorsPos) do
         for _,sPoint in pairs(sectorPoints[xy[2]][xy[1]]) do
-          local thisDist = distance({thisX, thisY}, {sPoint[1], sPoint[2]})
+          local dX = thisX - sPoint[1]
+          local dY = thisY - sPoint[2]
+          local thisDist = math.sqrt(dX * dX + dY * dY)
           if thisDist < bestDist then
             bestId = sPoint[3]
             bestDist = thisDist
           end
         end
       end
-      self.grid[y][x] = bestId
+      self.grid[y][x].id = bestId
+      self.grid[y][x].dist = bestDist
+      
+      if areaSizes[bestId] == nil then
+        areaSizes[bestId] = 0
+      end
+      areaSizes[bestId] = areaSizes[bestId] + 1
     end
   end
   
+  local isMySquareWorse = function(myX, myY, otherX, otherY)
+    if otherX < 1 or otherX > self.gW or otherY < 1 or otherY > self.gH then
+      return false
+    end
+    
+    local myGridSquare = self.grid[myY][myX]
+    local otherGridSquare = self.grid[otherY][otherX]
+    if otherGridSquare.id == -1 or myGridSquare.id == otherGridSquare.id then
+      return false
+    end
+    if myGridSquare.dist > otherGridSquare.dist then
+      return true
+    end
+    return myGridSquare.dist == otherGridSquare.dist and areaSizes[myGridSquare.id] < areaSizes[otherGridSquare.id]
+  end
+  
+  local getGridNeighbors = function(x, y)
+    return {
+      {x - 1, y - 1}, {x, y - 1}, {x + 1, y - 1},
+      {x - 1, y},                 {x + 1, y},
+      {x - 1, y + 1}, {x, y + 1}, {x + 1, y + 1}
+    }
+  end
+  
+  for y = 1, self.gH do
+    for x = 1, self.gW do
+      if self.grid[y][x].id ~= -1 then
+        local neigh = getGridNeighbors(x, y)
+        for _, xy in pairs(neigh) do
+          if isMySquareWorse(x, y, xy[1], xy[2]) then
+            self.grid[y][x].id = -1
+            break
+          end
+        end
+      end
+    end
+  end
+  
+  for y = 1, self.gH do
+    for x = 1, self.gW do
+      self.grid[y][x] = self.grid[y][x].id
+    end
+  end
+
 end
 
 
