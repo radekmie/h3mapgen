@@ -29,16 +29,20 @@ function MLML:Generate(PLAYERS_NUM)
   end
   
   for playerId = 1, PLAYERS_NUM do
+    local shift = lmlSize * (playerId - 1)
     for _,zone in ipairs(self.lml) do
-      local shift = lmlSize * (playerId - 1)
       local zCopy = {}
       for k,v in pairs(zone) do
         zCopy[k] = v
       end
       zCopy.player = playerId
       local edges = {}
-      for i,k in ipairs(zone.edges) do
-        edges[i] = k + shift
+      for _,k in pairs(zone.edges) do
+        if edges[k + shift] then
+          edges[k + shift] = edges[k + shift] + 1
+        else
+          edges[k + shift] = 1
+        end
       end
       zCopy.edges = edges
       self[zone.id + shift] = Node.New(zCopy, zone.id + shift)
@@ -238,12 +242,12 @@ function MLML:Generate(PLAYERS_NUM)
       if targetNode.weight < 3 * node.weight then
         targetNode.weight = targetNode.weight + node.weight
       end
-      for k,_ in pairs(node.edges) do
+      for k,n in pairs(node.edges) do
         if k ~= target then
           if targetNode.edges[k] then
-            targetNode.edges[k] = targetNode.edges[k] + 1
+            targetNode.edges[k] = targetNode.edges[k] + n
           else
-            targetNode.edges[k] = 1
+            targetNode.edges[k] = n
           end
         end
       end
@@ -251,16 +255,19 @@ function MLML:Generate(PLAYERS_NUM)
         targetNode.players[p] = true
       end
       
-      for k,_ in pairs(node.edges) do
-        self[k].edges[node.id] = self[k].edges[node.id] - 1
-        if self[k].edges[node.id] == 0 then
-          self[k].edges[node.id] = nil
+      for k,n in pairs(node.edges) do
+        local kEdges = self[k].edges
+        if kEdges[node.id] then
+          kEdges[node.id] = kEdges[node.id] - n
+          if kEdges[node.id] <= 0 then
+            kEdges[node.id] = nil
+          end
         end
         if k ~= target then
-          if self[k].edges[target] then
-            self[k].edges[target] = self[k].edges[target] + 1
+          if kEdges[target] then
+            kEdges[target] = kEdges[target] + n
           else
-            self[k].edges[target] = 1
+            kEdges[target] = n
           end
         end
       end

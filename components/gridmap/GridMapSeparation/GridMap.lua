@@ -462,6 +462,16 @@ function GridMap:ShowMap(filename, mapData)
   end
   file:write('\n')
   
+  for i = #mapData, 1, -1 do
+    local line = ''..(i % 10)
+    local row = mapData[i]
+    for j = 1, #row do
+      line = line..' '..(row[j] == -1 and '#' or row[j])
+    end
+    file:write(line, "\n")
+  end
+
+  --[=[
   for i,row in pairs(mapData) do
     local line = ''..(i % 10)
     for j = 1, #row do
@@ -469,6 +479,7 @@ function GridMap:ShowMap(filename, mapData)
     end
     file:write(line, "\n")
   end
+  --]=]
 end
 
 
