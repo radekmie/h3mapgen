@@ -34,4 +34,16 @@ function Feature:IsConsistentWith(classes)
 end
 
 
+--- Graphviz in-node label
+-- @return String to be shown in graph
+function Feature:labelstr()
+  local val = self.value
+  if     val == 'PRIMARY' then val = 'PRIM'
+  elseif val == 'RANDOM'  then val = 'RND' 
+  elseif val == 'PLAYER'  then val = 'PLR' 
+  elseif val == 'NEUTRAL' then val = 'NEUT' 
+  end
+  return string.format('%s<SUB>%s</SUB>', self.type:sub(1,1), val)
+end
+
 return Feature

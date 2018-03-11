@@ -10,7 +10,7 @@ config =
   Grammar = { AlwaysFail=0, ConnectDistantNodes="branching", DivideEqualHorizontally=15, DuplicateEdge="branching", PushOutGreaterThenPivot=15, },
   GrammarMaxSteps = 100,
   GraphGeneratorDrawFinal = true,
-  GraphGeneratorDrawSteps = false,
+  GraphGeneratorDrawSteps = true,
   LocalTownChance = { 0.05, 0.15, 0.25, 0.35, 0.45, },
   LocalTownType = { NEUTRAL=4, RACE=5, RANDOM=1, },
   MaxZoneLevel = 10,
@@ -86,81 +86,64 @@ lmlGraph =
 {
   [1] = 
   {
-    classes = { { level=2, type="LOCAL", }, },
+    classes = { { level=1, type="LOCAL", }, },
     features = 
     {
-      { class={ level=2, type="LOCAL", }, type="TOWN", value="START", },
-      { class={ level=2, type="LOCAL", }, type="MINE", value="BASE", },
-      { class={ level=2, type="LOCAL", }, type="MINE", value="PRIMARY", },
-      { class={ level=2, type="LOCAL", }, type="MINE", value="BASE", },
-      { class={ level=2, type="LOCAL", }, type="OUTER", value=10, },
+      { class={ level=1, type="LOCAL", }, type="TOWN", value="START", },
+      { class={ level=1, type="LOCAL", }, type="MINE", value="BASE", },
+      { class={ level=1, type="LOCAL", }, type="MINE", value="PRIMARY", },
+      { class={ level=1, type="LOCAL", }, type="MINE", value="BASE", },
+      { class={ level=1, type="LOCAL", }, type="OUTER", value=8, },
     },
   },
   [2] = 
   {
-    classes = { { level=4, type="LOCAL", }, },
+    classes = { { level=5, type="BUFFER", }, },
     features = 
     {
-      { class={ level=4, type="LOCAL", }, type="TOWN", value="PLAYER", },
-      { class={ level=4, type="LOCAL", }, type="MINE", value="BASE", },
-      { class={ level=4, type="LOCAL", }, type="MINE", value="PRIMARY", },
-      { class={ level=4, type="LOCAL", }, type="MINE", value="BASE", },
+      { class={ level=5, type="BUFFER", }, type="MINE", value="RANDOM", },
+      { class={ level=5, type="BUFFER", }, type="MINE", value="RANDOM", },
+      { class={ level=5, type="BUFFER", }, type="OUTER", value=6, },
     },
   },
   [3] = 
   {
-    classes = { { level=8, type="BUFFER", }, },
+    classes = { { level=5, type="LOCAL", }, },
     features = 
     {
-      { class={ level=8, type="BUFFER", }, type="MINE", value="RANDOM", },
-      { class={ level=8, type="BUFFER", }, type="MINE", value="RANDOM", },
-      { class={ level=8, type="BUFFER", }, type="MINE", value="RANDOM", },
-      { class={ level=8, type="BUFFER", }, type="OUTER", value=8, },
+      { class={ level=5, type="LOCAL", }, type="MINE", value="RANDOM", },
     },
   },
   [4] = 
   {
-    classes = { { level=6, type="LOCAL", }, },
+    classes = { { level=5, type="GOAL", }, },
     features = 
     {
-      { class={ level=6, type="LOCAL", }, type="MINE", value="RANDOM", },
-      { class={ level=6, type="LOCAL", }, type="OUTER", value=10, },
+      { class={ level=5, type="GOAL", }, type="TOWN", value="NEUTRAL", },
     },
   },
   [5] = 
   {
-    classes = { { level=10, type="GOAL", }, },
+    classes = { { level=4, type="BUFFER", }, },
     features = 
     {
-      { class={ level=10, type="GOAL", }, type="TOWN", value="NEUTRAL", },
-    },
-  },
-  [6] = 
-  {
-    classes = { { level=9, type="LOCAL", }, },
-    features = 
-    {
-      { class={ level=9, type="LOCAL", }, type="MINE", value="RANDOM", },
-      { class={ level=9, type="LOCAL", }, type="MINE", value="RANDOM", },
-    },
-  },
-  [7] = 
-  {
-    classes = { { level=7, type="LOCAL", }, },
-    features = 
-    {
-      { class={ level=7, type="LOCAL", }, type="MINE", value="RANDOM", },
+      { class={ level=4, type="BUFFER", }, type="MINE", value="RANDOM", },
+      { class={ level=4, type="BUFFER", }, type="MINE", value="RANDOM", },
+      { class={ level=4, type="BUFFER", }, type="OUTER", value=4, },
+      {
+        class = { level=4, type="BUFFER", },
+        type = "TELEPORT",
+        value = { id=1, level=5, },
+      },
     },
   },
   edges = 
   {
+    { [2]=1, [3]=2, },
+    { [1]=1, [4]=1, },
+    { [1]=2, [5]=1, },
     { [2]=1, },
-    { [1]=1, [3]=1, [4]=1, },
-    { [2]=1, [5]=1, },
-    { [2]=1, [6]=1, [7]=1, },
     { [3]=1, },
-    { [4]=1, },
-    { [4]=1, },
   },
 }
 
@@ -168,47 +151,44 @@ lmlInitialNode =
 {
   classes = 
   {
-    { level=10, type="GOAL", },
-    { level=8, type="BUFFER", },
-    { level=2, type="LOCAL", },
-    { level=9, type="LOCAL", },
-    { level=4, type="LOCAL", },
-    { level=6, type="LOCAL", },
-    { level=7, type="LOCAL", },
+    { level=5, type="GOAL", },
+    { level=4, type="BUFFER", },
+    { level=5, type="BUFFER", },
+    { level=1, type="LOCAL", },
+    { level=5, type="LOCAL", },
   },
   features = 
   {
-    { class={ level=2, type="LOCAL", }, type="TOWN", value="START", },
-    { class={ level=4, type="LOCAL", }, type="TOWN", value="PLAYER", },
-    { class={ level=10, type="GOAL", }, type="TOWN", value="NEUTRAL", },
-    { class={ level=2, type="LOCAL", }, type="MINE", value="BASE", },
-    { class={ level=2, type="LOCAL", }, type="MINE", value="PRIMARY", },
-    { class={ level=4, type="LOCAL", }, type="MINE", value="BASE", },
-    { class={ level=4, type="LOCAL", }, type="MINE", value="PRIMARY", },
-    { class={ level=2, type="LOCAL", }, type="MINE", value="BASE", },
-    { class={ level=4, type="LOCAL", }, type="MINE", value="BASE", },
-    { class={ level=8, type="BUFFER", }, type="MINE", value="RANDOM", },
-    { class={ level=8, type="BUFFER", }, type="MINE", value="RANDOM", },
-    { class={ level=8, type="BUFFER", }, type="MINE", value="RANDOM", },
-    { class={ level=9, type="LOCAL", }, type="MINE", value="RANDOM", },
-    { class={ level=9, type="LOCAL", }, type="MINE", value="RANDOM", },
-    { class={ level=6, type="LOCAL", }, type="MINE", value="RANDOM", },
-    { class={ level=7, type="LOCAL", }, type="MINE", value="RANDOM", },
-    { class={ level=8, type="BUFFER", }, type="OUTER", value=8, },
-    { class={ level=2, type="LOCAL", }, type="OUTER", value=10, },
-    { class={ level=6, type="LOCAL", }, type="OUTER", value=10, },
+    { class={ level=1, type="LOCAL", }, type="TOWN", value="START", },
+    { class={ level=5, type="GOAL", }, type="TOWN", value="NEUTRAL", },
+    { class={ level=1, type="LOCAL", }, type="MINE", value="BASE", },
+    { class={ level=1, type="LOCAL", }, type="MINE", value="PRIMARY", },
+    { class={ level=1, type="LOCAL", }, type="MINE", value="BASE", },
+    { class={ level=4, type="BUFFER", }, type="MINE", value="RANDOM", },
+    { class={ level=4, type="BUFFER", }, type="MINE", value="RANDOM", },
+    { class={ level=5, type="BUFFER", }, type="MINE", value="RANDOM", },
+    { class={ level=5, type="BUFFER", }, type="MINE", value="RANDOM", },
+    { class={ level=5, type="LOCAL", }, type="MINE", value="RANDOM", },
+    { class={ level=4, type="BUFFER", }, type="OUTER", value=4, },
+    { class={ level=5, type="BUFFER", }, type="OUTER", value=6, },
+    { class={ level=1, type="LOCAL", }, type="OUTER", value=8, },
+    {
+      class = { level=4, type="BUFFER", },
+      type = "TELEPORT",
+      value = { id=1, level=5, },
+    },
   },
 }
 
-lmlMetagraph = { { 1, "LOCAL", 2, }, { 3, "BUFFER", 8, }, { 4, "LOCAL", 6, }, }
+lmlMetagraph = { { 1, "LOCAL", 1, }, { 2, "BUFFER", 5, }, { 5, "BUFFER", 4, }, }
 
 paramsDetailed = 
 {
-  branching = 2,
+  branching = 4,
   difficulty = { ord=5, str="Impossible", },
   focus = 5,
   grail = false,
-  height = 144,
+  height = 72,
   locations = 1,
   monsters = 5,
   players = 
@@ -218,26 +198,26 @@ paramsDetailed =
     { computerOnly=false, id=3, team=3, },
     { castle="Rampart", computerOnly=false, id=4, team=4, },
   },
-  seed = 1519507808,
-  size = { ord=4, str="XL", },
-  towns = 5,
+  seed = 1520708752,
+  size = { ord=2, str="M", },
+  towns = 3,
   transitivity = 3,
   underground = false,
   version = "RoE",
   water = 1,
   welfare = 5,
-  width = 144,
+  width = 72,
   winning = 3,
-  zoneSide = 27,
+  zoneSide = 21,
   zonesize = 3,
-  zonesnum = { estimAll=22, singleBuffer=2, singleLocal=5, },
+  zonesnum = { estimAll=11, singleBuffer=3, singleLocal=2, },
 }
 
 paramsDetailedUser = { seed=666, welfare=5, }
 
 paramsGeneral = 
 {
-  branching = 2,
+  branching = 4,
   focus = 5,
   grail = false,
   locations = 1,
@@ -260,8 +240,8 @@ paramsGeneral =
     { castle=    { "Rampart", }, computerOnly=false, id=4, team=4, },
   },
   seed = 0,
-  size = "XL",
-  towns = 5,
+  size = "M",
+  towns = 3,
   transitivity = 3,
   underground = false,
   version = "RoE",
