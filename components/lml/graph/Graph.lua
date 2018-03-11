@@ -126,7 +126,7 @@ function Graph:Image()
         end
         gd:AddEdge(i, 'T'..tid, {label=f.value.level, style='dotted'})
       else
-        labelf[#labelf+1] = f.type:sub(1,1)..'-'..f.value:sub(1,1)
+        labelf[#labelf+1] = f:labelstr()
       end      
     end
 
@@ -136,7 +136,7 @@ function Graph:Image()
     elseif z.classes[1].type=='BUFFER' then shape='box'
     elseif z.classes[1].type=='GOAL' then shape='diamond'
     end    
-    gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ',')..'\\n'..table.concat(labelf, ','), color='#000000'}
+    gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ', ')..'\\n'..table.concat(labelf, '\\n'), color='#000000'}
   end
   
   for id1, e in pairs(self.edges) do
