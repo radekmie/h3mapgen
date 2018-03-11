@@ -248,8 +248,9 @@ local function step_initLML (state)
     end
 
     local lml = LML.Initialize(init)
+
     -- TODO: Do not use a state._config?
-    lml:Generate(Grammar, state._config.LML_max_steps)
+    lml:Generate(Grammar, state._config.LML_max_steps or 100)
 
     state.LML_graph = lml
     state.LML_init = init
