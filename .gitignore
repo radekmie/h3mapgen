@@ -3,6 +3,8 @@
 /bin/_test/*.dot
 /bin/_test/*.png
 /components/ca/ca
+!/components/gridmap/_test
+/components/gridmap/_test/*
 /components/voronoi/voronoi
 /h3mapgen.love
 /output
