@@ -339,7 +339,7 @@ if __name__ == '__main__':
         data_trans_scaled = squeeze(data_trans_scaled, xlim_grav, ylim_grav)
 
         # improving the embeddings with 'gravity'
-        grav_points = make_grav_points(points_per_edge=6, xlim_grav, ylim_grav, grid=False)
+        grav_points = make_grav_points(6, xlim_grav, ylim_grav, grid=False)
 
         # 10 iterations, can be changed
         for i in range(10):
