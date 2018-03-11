@@ -60,18 +60,13 @@ $ make
 ## Run generator
 From the project root directory run `lua generate.lua players size sectors [seed]`. The output from all stages of generation is saved in `output/<seed>_<players>`. That directory should contain 10 files:
 
-| File              | Description                            |
-| ----------------- | -------------------------------------- |
-| `cell.txt`        | CA result                              |
-| `emb.png`         | Embedding result                       |
-| `emb.txt`         | Embedding coordinates                  |
-| `emb_pregrav.png` | Embedding result (before gravity)      |
-| `emb_pregrav.txt` | Embedding coordinates (before gravity) |
-| `graph.txt`       | Graph structure                        |
-| `map.h3m`         | _Playable_ map                         |
-| `map.txt`         | Zone borders after voronoi             |
-| `mapText.txt`     | Filled zones                           |
-| `mlml.h3pgm`      | Logic map layout                       |
+| File        | Description               |
+| ----------- | ------------------------- |
+| `emb.png`   | Embedding result          |
+| `emb.txt`   | Embedding coordinates     |
+| `graph.txt` | Graph structure           |
+| `map.h3m`   | _Playable_ map            |
+| `*.h3pgm`   | State at various moments. |
 
 Example: `lua generate.lua 4 72 4` or `lua generate.lua 8 144 36`.
 
