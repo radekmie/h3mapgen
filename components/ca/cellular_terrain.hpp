@@ -2,6 +2,8 @@
 #define CELLULAR_TERRAIN_H
 
 #include "board.hpp"
+#include <iostream>
+#include <lua.hpp>
 
 // Some consts:
 const unsigned int neighbourhood_radius = 2;
@@ -23,7 +25,7 @@ struct TerrainParams {
 // For the threshold to be picked automatically, just set it to 0.
 TerrainParams moore_neighbourhood(float probability, int self_weight=1, int threshold=0);
 TerrainParams neumann_neighbourhood(float probability, int self_weight=1, int threshold=0);
-void terrain(const Board& board, Board& result, const TerrainParams& parameters, unsigned int iterations);
+void terrain(const Board& board, Board& result, const TerrainParams& parameters, unsigned int iterations, int seed);
 
 // Example usage:
 // terrain(my_map, terrain_map, moore_neighbourhood(0.5), 2);
@@ -33,7 +35,7 @@ void terrain(const Board& board, Board& result, const TerrainParams& parameters,
 
 // Real stuff:
 void generation(const Board& board, Board& result, const TerrainParams& parameters, unsigned int iterations=1);
-void random_fill(const Board& board, Board& result, const TerrainParams& parameters);
+void random_fill(const Board& board, Board& result, const TerrainParams& parameters, int seed);
 // more_white flag is kind of heuristical; try both values on your own to find out what works best for your purposes
 void autoset_threshold(TerrainParams& params, const Board& randomfilled_board, bool more_white=true);
 

@@ -48,12 +48,13 @@ void generation(const Board& board, Board& result, const TerrainParams& paramete
 }
 
 // fills the board randomly according to the probability (with respect to swhite and sblack cells)
-void random_fill(const Board& board, Board& result, const TerrainParams& parameters) {
+void random_fill(const Board& board, Board& result, const TerrainParams& parameters, int seed) {
         unsigned int rows = board.size();
         unsigned int cols = board[0].size();
         board_set_size(result, rows, cols);
-        
-	auto seed = chrono::system_clock::now().time_since_epoch().count();
+
+  if (seed == 0)
+	 seed = chrono::system_clock::now().time_since_epoch().count();
 	default_random_engine gen(seed);
         bernoulli_distribution dist(parameters.probability);
 
@@ -108,13 +109,13 @@ TerrainParams neumann_neighbourhood(float probability, int self_weight, int thre
 }
 
 // threshold == 0 -> pick automatically
-void terrain(const Board& board, Board& result, const TerrainParams& parameters, unsigned int iterations) {
+void terrain(const Board& board, Board& result, const TerrainParams& parameters, unsigned int iterations, int seed) {
 	TerrainParams params = parameters;
 	Board tmp_board;
-	random_fill(board, tmp_board, params);
+	random_fill(board, tmp_board, params, seed);
 	if(params.threshold == 0)
 		autoset_threshold(params, tmp_board);
-	generation(tmp_board, result, params, iterations);	
+	generation(tmp_board, result, params, iterations);
 }
 
 const unsigned int auto_thresholding_limit = 1024;
