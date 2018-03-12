@@ -21,11 +21,11 @@ Component main function `TODO(h3pgm)` reads map as `h3pgm` table, and modifies i
 ### input 
 
 - `config` - content of user's [config.cfg](../../config.cfg) file
-- `userMapParams` - parameters specifying map provided by the user: [detailed specification](UserMapParams.md)
-- `userDetailedParams` - user-provided values overriding (maybe partially) `detailedParams` (but `detailedParams` are always computed to ensure the system is deterministic). Additionally, [`seed`](UserMapParams.md#seedint) value cannot be override this way.
+- `paramsGeneral` - parameters specifying map provided by the user: [detailed specification](GeneralParams.md)
+- `paramsDetailedUser` - user-provided values overriding (maybe partially) `detailedParams` (but `detailedParams` are always computed to ensure the system is deterministic). Additionally, [`seed`](GeneralParams.md#seedint) value cannot be override this way.
 
 ### output
 
-- `detailedParams` - concretization of `userParameters` (if random inputted) plus additional values computed based on that parameters: [detailed specification](DetailedParams.md). If user provides non-empty `userDetailedParams`, his values always (except for `seed`) override the generated ones.
-- `LML_init` - initial node of the LML graph, containing all classes and map features (see [LML specification](../mlml/README.md))
+- `paramsDetailed` - concretization of `paramsGeneral` (if random inputted) plus additional values computed based on that parameters: [detailed specification](DetailedParams.md). If user provides non-empty `paramsDetailedUser`, his values always (except for `seed`) override the generated ones.
+- `lmlInitialNode` - initial node of the LML graph, containing all classes and map features (see [LML specification](../mlml/README.md))
 

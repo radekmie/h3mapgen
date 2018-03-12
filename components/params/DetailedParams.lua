@@ -1,24 +1,14 @@
+local RNG = require'Random'
+
 local DetailedParams = {}
-local DetailedParams_mt = { __index = DetailedParams, __metatable = "Access resticted." }
 
-local rand = math.random
-local MapSizeOrder = {S=1, M=2, L=3, XL=4}
-
---- Rounds given number up or down with the probability dependent on its fractional part
--- @param Number to round
--- @return Rounded integer
-local function RandomRound(x)
-  local i, f = math.modf (x)
-  if rand() > f then i = i + 1 end
-  return i
-end
--- RandomRound
+local rand = RNG.Random
 
 
 --- Function randomizes values for which user choose 0 and player castles.
--- @param state H3pgm state (modifying state.detailedParams)
+-- @param state H3pgm state (modifying state.paramsDetailed)
 local function RandomizeNotChosen(state)
-  local dp = state.detailedParams
+  local dp = state.paramsDetailed
   for i, p in ipairs(dp.players) do
     local np = {id=p.id, team=p.team, computerOnly=p.computerOnly}
     if #p.castle>0 then
@@ -47,12 +37,12 @@ end
 
 
 --- Sets basic information: map width and height, difficulty, zoneSide
--- @param state H3pgm state (modifying state.detailedParams)
+-- @param state H3pgm state (modifying state.paramsDetailed)
 local function SetBasicInformation(state)
-  local dp = state.detailedParams
+  local dp = state.paramsDetailed
   local cfg = state.config
   
-  local side = 36 * MapSizeOrder[dp.size]
+  local side = 36 * dp.size.ord
   dp.width = side
   dp.height = side
   
@@ -66,31 +56,33 @@ local function SetBasicInformation(state)
   -- 1  E
   local tmpdiff = (6-dp.welfare) + dp.monsters + (dp.locations <=2 and 0.5 or 0)
   local difficulty = ''
-  if     tmpdiff >= 9.5 then difficulty = 'Impossible'
-  elseif tmpdiff >= 8.5 then difficulty = 'Expert'
-  elseif tmpdiff >= 7.0 then difficulty = 'Hard'
-  elseif tmpdiff >= 5.0 then difficulty = 'Normal'
-  else                       difficulty = 'Easy'
+  if     tmpdiff >= 9.5 then difficulty = {str='Impossible', ord=5}
+  elseif tmpdiff >= 8.5 then difficulty = {str='Expert',     ord=4}
+  elseif tmpdiff >= 7.0 then difficulty = {str='Hard',       ord=3}
+  elseif tmpdiff >= 5.0 then difficulty = {str='Normal',     ord=2}
+  else                       difficulty = {str='Easy',       ord=1}
   end
   dp.difficulty = difficulty 
   
   dp.zoneSide = cfg.StandardZoneSize + (dp.zonesize-3)*cfg.ZoneSizeStep -- userchoice-dependent tuning
-  dp.zoneSide = dp.zoneSide + (MapSizeOrder[dp.size]-1) * cfg.ZoneSizeStep -- mapsize-dependent tuning
+  dp.zoneSide = dp.zoneSide + (dp.size.ord-1) * cfg.ZoneSizeStep -- mapsize-dependent tuning
   
 end
 -- SetBasicInformation
 
 
 --- Set number of local/buffer zones for LML (MLML)
--- @param state H3pgm state (modifying state.detailedParams)
+-- @param state H3pgm state (modifying state.paramsDetailed)
 local function SetNumberOfZones(state)
-  local dp = state.detailedParams
+  local dp = state.paramsDetailed
   
-  -- focus (strong PvP) 1:0-20; 2:20-40; 3:40-60; 4:60-80; 5:80-100 (Strong PvE)
-  local localzonesprop = 0.01 * ((dp.focus-1)*20+rand(0,20))
+  -- focus (strong PvP) 1:20-32; 2:32-44; 3:44-56; 4:56-68; 5:68-80 (Strong PvE)
+  local localzonesprop = 0.20 + 0.01 * ((dp.focus-1)*12+rand(0,12))
+  -- focus (strong PvP) 1:0-20; 2:20-40; 3:40-60; 4:60-80; 5:80-100 (Strong PvE) // DEPRECATED
+  -- local localzonesprop = 0.01 * ((dp.focus-1)*20+rand(0,20))
   
   local multiallest = (dp.width*dp.height)/(dp.zoneSide*dp.zoneSide) -- basic estimation
-  local rlimit = 2 ^ (MapSizeOrder[dp.size] - 1)
+  local rlimit = 2 ^ (dp.size.ord - 1)
   if dp.underground then -- larger values for 2-level map
     multiallest = multiallest * 1.5 
     rlimit = rlimit * 1.5
@@ -98,7 +90,7 @@ local function SetNumberOfZones(state)
   rlimit = math.tointeger(rlimit)
   multiallest = multiallest + rand(-rlimit, rlimit)
   if multiallest < #dp.players then multiallest = #dp.players end -- low-number edgecase safeguard
-  multiallest = RandomRound(multiallest) -- we need integer from now on
+  multiallest = RNG.RandomRound(multiallest) -- we need integer from now on
   
   -- Returns estimation on number of singleplayer buffers maching known global estimation and given # of single local zones
   local function EstimateSingleBuffers(slocal) 
@@ -126,32 +118,42 @@ local function SetNumberOfZones(state)
       bestsloc = i
     end
   end
+  local bestbuf = EstimateSingleBuffers(bestsloc)
   
-  dp.zonesnum = {estimAll=multiallest, singleLocal=bestsloc, singleBuffer=EstimateSingleBuffers(bestsloc)}
-  print (string.format('[INFO] <DetailedParams> Zones: multi_estim=%i, sLocal=%i, sBuffer=%i  (%s, %i players);  targetProp=%.3f, foundProp=%.3f', 
-      multiallest, bestsloc, EstimateSingleBuffers(bestsloc), dp.size, #dp.players, localzonesprop, proportions[bestsloc]))
+  -- There has to be at least one buffer zone for some winning conditions (capture town, monster, artifact)
+  -- Let's hardput this zone without making any other changes
+  local bufferReq = dp.winning==2 or dp.winning==3 or dp.winning==4
+  if bufferReq and bestbuf==0 then
+    bestbuf = 1
+  end
+  
+  dp.zonesnum = {estimAll=multiallest, singleLocal=bestsloc, singleBuffer=bestbuf}
+  print (string.format('[INFO] <paramsDetailed> Zones: multi_estim=%i, sLocal=%i, sBuffer=%i  (%s, %i players);  targetProp=%.3f, foundProp=%.3f', 
+      multiallest, bestsloc, bestbuf, dp.size, #dp.players, localzonesprop, proportions[bestsloc]))
   
 end
 -- SetNumberOfZones
 
 
---- Function generates 'detailedParams' based on user's wishes about the generated map (also overrides generated values with the ones in 'userDetailedParams' if necessary)
--- @param state H3pgm state containing 'userMapParams', 'config' and optionally 'userDetailedParams' keys, which is extended by 'detailedParams'
+--- Function generates 'paramsDetailed' based on user's wishes about the generated map (also overrides generated values with the ones in 'userparamsDetailed' if necessary)
+-- @param state H3pgm state containing 'paramsGeneral', 'config' and optionally 'userparamsDetailed' keys, which is extended by 'paramsDetailed'
 function DetailedParams.Generate(state)  
   local dp = {}
-  for k, v in pairs(state.userMapParams) do
-    if type(state.userMapParams[k]) ~= 'table' then
-      dp[k] = state.userMapParams[k]
+  for k, v in pairs(state.paramsGeneral) do
+    if type(state.paramsGeneral[k]) ~= 'table' then
+      dp[k] = state.paramsGeneral[k]
     else
-      dp[k] = {table.unpack(state.userMapParams[k])}
+      dp[k] = {table.unpack(state.paramsGeneral[k])}
     end
   end
+  local MapSizeOrder = {S=1, M=2, L=3, XL=4}
+  dp.size = {str=dp.size, ord=MapSizeOrder[dp.size]}
   
   if dp.seed == 0 then
     dp.seed = os.time()
   end
   math.randomseed(dp.seed)
-  state.detailedParams = dp
+  state.paramsDetailed = dp
   
   RandomizeNotChosen(state)
   
@@ -159,10 +161,10 @@ function DetailedParams.Generate(state)
   SetNumberOfZones(state)
   
   -- todo
-  -- potem mamy zbiór podfunkcji nadpisujący rózne konkretne wartości detailedParams (liczby zamków, priorytety produkcji, itd, itp)
+  -- potem mamy zbiór podfunkcji nadpisujący rózne konkretne wartości paramsDetailed (liczby zamków, priorytety produkcji, itd, itp)
   
 end
--- DetailedParams.Generate
+-- paramsDetailed.Generate
 
 
 return DetailedParams

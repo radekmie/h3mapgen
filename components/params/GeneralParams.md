@@ -1,4 +1,4 @@
-# `userMapParams` specification
+# `paramsGeneral` specification
 
 Partially based on arrangements pictured [here](../../docs/17.02.01-MapParams-1.jpg).
 
@@ -93,7 +93,7 @@ _**Monster Strength**: Influences the strength of monsters._
 </details>
 
 ### `welfare`:int
-_**Welfare**: Influences the number of available resources, artifacts, etc._
+_**Welfare**: Influences the number of available resources, mines, artifacts, etc._
 <details>
   
 - `0` - _Random_

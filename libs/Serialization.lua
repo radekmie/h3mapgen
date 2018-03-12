@@ -47,10 +47,19 @@ end
 -- @param item Table 
 -- @return Sequence with alphabetically sorted keys
 local function order_keys(item)
-  local keys = {}
-  for k, _ in pairs(item) do keys[#keys+1] = k end
-  table.sort(keys)
-  return keys
+  local numkeys = {}
+  local strkeys = {}
+  for k, _ in pairs(item) do 
+    if type(k)=='number' then 
+      table.insert(numkeys, k)
+    else
+    table.insert(strkeys, k)
+    end
+  end
+  table.sort(numkeys)
+  table.sort(strkeys)
+  for _, k in ipairs(strkeys) do table.insert(numkeys, k) end
+  return numkeys
 end
 
 --- Checks if string can be put as key without quotes.
