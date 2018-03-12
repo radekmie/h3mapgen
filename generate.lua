@@ -248,8 +248,9 @@ local function step_initLML (state)
     end
 
     local lml = LML.Initialize(init)
+
     -- TODO: Do not use a state._config?
-    lml:Generate(Grammar, state._config.LML_max_steps)
+    lml:Generate(Grammar, state._config.GrammarMaxSteps)
 
     state.LML_graph = lml
     state.LML_init = init
@@ -269,17 +270,18 @@ end
 
 local function step_initPaths (state)
     -- NOTE: Store it somewhere?
-    local isWindows = package.config[1] == '/'
+    local isWindows = package.config:sub(1,1) == '\\'
+    local delim = package.config:sub(1,1)
 
     -- Initialize paths.
-    state.path = 'output/' .. state.seed .. '_' .. state._params.players
+    state.path = 'output' .. delim .. state.seed .. '_' .. state._params.players
     state.paths = {
-        dumps = state.path .. '/dumps/',
-        emb   = state.path .. '/emb',
-        graph = state.path .. '/graph.txt',
-        map   = state.path .. '/map.h3m',
-        mds   = state.path .. '/emb.txt',
-        pgm   = state.path .. '/mlml.h3pgm'
+        dumps = state.path .. delim .. 'dumps' .. delim,
+        emb   = state.path .. delim .. 'emb',
+        graph = state.path .. delim .. 'graph.txt',
+        map   = state.path .. delim .. 'map.h3m',
+        mds   = state.path .. delim .. 'emb.txt',
+        pgm   = state.path .. delim .. 'mlml.h3pgm'
     }
 
     print('Generating ' .. state.path .. '...')
@@ -383,9 +385,11 @@ local function step_voronoi (state)
     local sectors = state._params.sectors
 
     local data = {}
+    local mdsItems = {}
 
     for _, node in pairs(state.MLML_graph) do
         data[node.id] = {neighbors={}}
+        mdsItems[node.id] = {}
 
         for edge, _ in pairs(node.edges) do
             table.insert(data[node.id].neighbors, edge)
@@ -400,14 +404,29 @@ local function step_voronoi (state)
                 table.insert(item, tonumber(part))
             end
 
-            data[item[1]].x = rescale(item[2], sectors)
-            data[item[1]].y = rescale(item[3], sectors)
-            data[item[1]].size = 5
+            mdsItems[item[1]][#mdsItems[item[1]] + 1] = {item[2], item[3]}
         end
     end
 
+    for id, items in pairs(mdsItems) do
+      local avgx = 0.0
+      local avgy = 0.0
+
+      for _, item in pairs(items) do
+        avgx = avgx + item[1]
+        avgy = avgy + item[2]
+      end
+
+      avgx = avgx / #items
+      avgy = avgy / #items
+
+      data[id].x = rescale(avgx, sectors)
+      data[id].y = rescale(avgy, sectors)
+      data[id].size = #items
+    end
+
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gW=size, gH=size, sW=sectors, sH=sectors})
+    state.voronoi:Generate({gW=size, gH=size, sW=size//sectors, sH=size//sectors})
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 

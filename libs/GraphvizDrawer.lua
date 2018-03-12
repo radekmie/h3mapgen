@@ -23,7 +23,9 @@ function GraphvizDrawer:AddNode(nodetable)
   for k, v in pairs(nodetable) do
     if k~='id' then
       local needquote = k=='label' or (k=='color' and v:sub(1,1)=='#')
-      attrs[#attrs+1] = string.format('%s='..(needquote and '"%s"' or '%s'), k, v) -- use "%s" instead of %q because of the newline problems
+      local needhtml = k=='label' and #v > 0
+      if needhtml then v = v:gsub('\\n', '<BR/>') end
+      attrs[#attrs+1] = string.format('%s='..((needhtml and '<%s>') or (needquote and '"%s"') or '%s'), k, v) -- use "%s" instead of %q because of the newline problems
     end
   end
   self.nodes[#self.nodes+1] = name..' ['..table.concat(attrs, ',')..'];'

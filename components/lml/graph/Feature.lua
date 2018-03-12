@@ -13,11 +13,11 @@ local Feature_mt = { __index = Feature, __metatable = "Access resticted." }
 function Feature.New(typeorobj, value, class)
   local obj
   if value == nil then
-    obj = typeorobj 
+    obj = {type=typeorobj.type, value=typeorobj.value, class=typeorobj.class} -- slower hardcopy constructor here (safer)
   else 
     obj = {type=typeorobj, value=value, class=class}
   end
-  --obj.class = Class.New(obj.class)
+  obj.class = Class.New(obj.class)
   return setmetatable(obj, Feature_mt)
 end
 
@@ -33,5 +33,17 @@ function Feature:IsConsistentWith(classes)
   return false
 end
 
+
+--- Graphviz in-node label
+-- @return String to be shown in graph
+function Feature:labelstr()
+  local val = self.value
+  if     val == 'PRIMARY' then val = 'PRIM'
+  elseif val == 'RANDOM'  then val = 'RND' 
+  elseif val == 'PLAYER'  then val = 'PLR' 
+  elseif val == 'NEUTRAL' then val = 'NEUT' 
+  end
+  return string.format('%s<SUB>%s</SUB>', self.type:sub(1,1), val)
+end
 
 return Feature
