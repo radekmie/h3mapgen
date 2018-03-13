@@ -126,8 +126,8 @@ function Graph:Image()
         end
         gd:AddEdge(i, 'T'..tid, {label=f.value.level, style='dotted'})
       else
-        labelf[#labelf+1] = f:labelstr()
-      end      
+        labelf[#labelf+1] = f:labelstr(#labelc>1)
+      end
     end
 
     local shape = 'none'

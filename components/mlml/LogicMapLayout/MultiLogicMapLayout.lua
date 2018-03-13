@@ -27,7 +27,7 @@ function MLML:Generate(PLAYERS_NUM)
     singleData.addedEdges = {}
     self.playerData[playerId] = singleData
   end
-  
+
   for playerId = 1, PLAYERS_NUM do
     local shift = lmlSize * (playerId - 1)
     for _,zone in ipairs(self.lml) do
@@ -49,7 +49,7 @@ function MLML:Generate(PLAYERS_NUM)
 --      self.playerData[playerId].nodes[#self.playerData[playerid].nodes + 1] = zone.id + shift
     end
   end
-  
+
   local bEdges = {}
   local lEdges = {}
   for _,zone in ipairs(self.lml) do
@@ -67,7 +67,7 @@ function MLML:Generate(PLAYERS_NUM)
       end
     end
   end
-  
+
   local bufferEdges = {}
   local localEdges = {}
   for level,zones in pairs(bEdges) do
@@ -76,7 +76,7 @@ function MLML:Generate(PLAYERS_NUM)
   for level,zones in pairs(lEdges) do
     localEdges[#localEdges + 1] = {level, zones}
   end
-  
+
   local createEdges = function (levelZones, pConn)
     -- This is the first version, should be done differently to assure automorphism of graph.
     local zonePairs = {}
@@ -133,13 +133,13 @@ function MLML:Generate(PLAYERS_NUM)
     end
     return newEdges
   end
-  
+
   local pConn = {}
   for pIndex = 1, PLAYERS_NUM do
     pConn[#pConn + 1] = {}
     pConn[pIndex][pIndex] = true
   end
-  
+
   local newEdges = {}
   for i=#bufferEdges, 1, -1 do
     local edges = createEdges(bufferEdges[i], pConn)
@@ -147,14 +147,14 @@ function MLML:Generate(PLAYERS_NUM)
       newEdges[#newEdges + 1] = edge
     end
   end
-  
+
   for i=#localEdges, 1, -1 do
     local edges = createEdges(localEdges[i], pConn)
     for _,edge in ipairs(edges) do
       newEdges[#newEdges + 1] = edge
     end
   end
-  
+
   local addEdge = function(lId, rId)
     local lEdges = self[lId].edges
     if lEdges[rId] then
@@ -169,14 +169,14 @@ function MLML:Generate(PLAYERS_NUM)
       rEdges[lId] = 1
     end
   end
-  
+
   for _,edge in ipairs(newEdges) do
     addEdge(edge[2], edge[3])
   end
-  
+
   -- from this point on - should work for later version of connecting vertices.
   -- should not have to be changed.
-  
+
   local newEdgeGraph = {}
   for _,edge in ipairs(newEdges) do
     if not newEdgeGraph[edge[2]] then
@@ -188,14 +188,14 @@ function MLML:Generate(PLAYERS_NUM)
     newEdgeGraph[edge[2]][edge[3]] = true
     newEdgeGraph[edge[3]][edge[2]] = true
   end
-  
+
   local zipTo = {}
   local processed = {}
   for vertex,_ in pairs(newEdgeGraph) do
     zipTo[vertex] = vertex
     processed[vertex] = false
   end
-  
+
   for baseVertex,_ in pairs(newEdgeGraph) do
     if not processed[baseVertex] and self[baseVertex].type == "BUFFER" then
       local reached = {}
@@ -229,7 +229,7 @@ function MLML:Generate(PLAYERS_NUM)
       end
     end
   end
-  
+
   local toRemove = {}
   for vertex,target in pairs(zipTo) do
     local node = self[vertex]
@@ -237,7 +237,7 @@ function MLML:Generate(PLAYERS_NUM)
     if node.type == "BUFFER" and vertex ~= target then
       print('merging zone '..vertex..' to zone '..target)
       toRemove[vertex] = true
-      
+
       -- NOTE: It's not so obvious.
       if targetNode.weight < 3 * node.weight then
         targetNode.weight = targetNode.weight + node.weight
@@ -254,7 +254,7 @@ function MLML:Generate(PLAYERS_NUM)
       for p,_ in pairs(node.players) do
         targetNode.players[p] = true
       end
-      
+
       for k,n in pairs(node.edges) do
         local kEdges = self[k].edges
         if kEdges[node.id] then
@@ -273,11 +273,11 @@ function MLML:Generate(PLAYERS_NUM)
       end
     end
   end
-  
+
   for i,_ in pairs(toRemove) do
     self[i] = nil
   end
-  
+
   --[=====[
   local toZip = {}
   for _,edge in ipairs(newEdges) do
@@ -286,7 +286,7 @@ function MLML:Generate(PLAYERS_NUM)
       toZip[self[edge[3]].baseid] = true
     end
   end
-  
+
   for _,edge in ipairs(newEdges) do
     local fType = self[edge[2]].type
     local sType = self[edge[3]].type
@@ -297,15 +297,15 @@ function MLML:Generate(PLAYERS_NUM)
         toZip[fBaseId] = false
       end
     end
-    
+
     if sType == "BUFFER" and toZip[sBaseId] then
       if fType == "LOCAL" or sBaseId ~= fBaseId then
         toZip[sBaseId] = false
       end
     end
-  end  
+  end
   --]=====]
-  
+
   self.playerData = nil
   self.lml = nil
 end
@@ -327,13 +327,13 @@ end
 function MLML:PrintToMDS(filename)
   local file = io.open(filename, "w")
   local count = 0
-  for _,_ in pairs(self) do
+  for i,_ in pairs(self) do
     if type(i) == 'number' then
       count = count + 1
     end
   end
   file:write(count, "\n")
-  
+
   for i,node in pairs(self) do
     if type(i) == 'number' then
       local line = ''..node.id..' '..node.weight
@@ -360,7 +360,7 @@ function MLML:Generate(PLAYERS_NUM)
     print (zone.id, zone.edges[1], zone.edges[2], zone.type)
     self[zone.id] = Node.New(zone, zone.id)
   end
-  
+
   local lmlSize = #self.lml
   print ("size "..lmlSize)
   for playerId = 2, PLAYERS_NUM do
