@@ -16,10 +16,7 @@ function MLMLNode.New(data, id)
   obj.players = {}
   local playerId = data and data.player or 1
   obj.players[playerId] = true
-  obj.edges = {}
-  for _,k in ipairs(data and data.edges or {}) do
-    obj.edges[k] = true
-  end
+  obj.edges = data and data.edges or {}
   return setmetatable(obj, MLMLNode_mt)
 end
 
