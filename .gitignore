@@ -6,6 +6,7 @@
 !/components/gridmap/_test
 /components/gridmap/_test/*
 /components/voronoi/voronoi
+/components/sfp/sfp
 /h3mapgen.love
 /output
 /tests/out

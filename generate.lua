@@ -101,74 +101,122 @@ local function step_dumpH3M (state, index)
 end
 
 local function step_gameCastles (state)
-    for zoneId, zone in pairs(state.MLML_graph) do
-        local base = state.LML_graph[zone.baseid]
-        local town = false
+    local file = io.open(state.paths.sfp, 'w')
+    file:write('2 1 0 1\n')
+    file:write('12 12\n')
+    file:write('############\n')
+    file:write('#####....###\n')
+    file:write('###.......##\n')
+    file:write('##........##\n')
+    file:write('##.......###\n')
+    file:write('#..##......#\n')
+    file:write('##.........#\n')
+    file:write('#..........#\n')
+    file:write('#.........##\n')
+    file:write('###......###\n')
+    file:write('####....####\n')
+    file:write('############\n')
+    file:write('1 4\n')
+    file:write('3 3\n')
+    file:write('_#_\n')
+    file:write('###\n')
+    file:write('_#_\n')
+    file:write('1 1\n')
+    file:write('12 12\n')
+    file:write('############\n')
+    file:write('######.....#\n')
+    file:write('#####...##.#\n')
+    file:write('###...###..#\n')
+    file:write('#...####..##\n')
+    file:write('#.....######\n')
+    file:write('##...###...#\n')
+    file:write('###......###\n')
+    file:write('#...###....#\n')
+    file:write('##...###..##\n')
+    file:write('###......###\n')
+    file:write('############\n')
+    file:write('10 2\n')
+    file:write('2 4\n')
+    file:write('####\n')
+    file:write('___#\n')
+    file:write('1 3\n')
+    file:close()
 
-        for _, feature in ipairs(base.features) do
-            if feature.type == 'TOWN' then
-                town = true
-                break
-            end
-        end
+    print(shell(table.concat({
+        './components/sfp/sfp',
+        '<', state.paths.sfp,
+    }, ' ')))
 
-        if town then
-            local play = 0
-            for player in pairs(zone.players) do
-                play = player
-                break
-            end
+    error('EHO')
 
-            local cells = {}
+    -- for zoneId, zone in pairs(state.MLML_graph) do
+    --     local base = state.LML_graph[zone.baseid]
+    --     local town = false
 
-            for cellId, cell in pairs(state.world) do
-                if cell.zone == zoneId then
-                    cells[cellId] = true
-                end
-            end
+    --     for _, feature in ipairs(base.features) do
+    --         if feature.type == 'TOWN' then
+    --             town = true
+    --             break
+    --         end
+    --     end
 
-            local valid = {}
+    --     if town then
+    --         local play = 0
+    --         for player in pairs(zone.players) do
+    --             play = player
+    --             break
+    --         end
 
-            for cellId in pairs(cells) do
-                local x, y, z = position2xyz(cellId)
+    --         local cells = {}
 
-                if  not state.world_grid[xyz2position(x - 2,     y,     z)]
-                and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
-                and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
-                and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
-                and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
-                and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
-                    -- TODO: Check if this position is valid.
-                    table.insert(valid, cellId)
-                end
-            end
+    --         for cellId, cell in pairs(state.world) do
+    --             if cell.zone == zoneId then
+    --                 cells[cellId] = true
+    --             end
+    --         end
 
-            if #valid > 0 then
-                for _, cellId in ipairs(valid) do
-                    local x, y, z = position2xyz(cellId)
+    --         local valid = {}
 
-                    local sprite = ({
-                        homm3lua.TOWN_CASTLE,
-                        homm3lua.TOWN_DUNGEON,
-                        homm3lua.TOWN_FORTRESS,
-                        homm3lua.TOWN_INFERNO,
-                        homm3lua.TOWN_NECROPOLIS,
-                        homm3lua.TOWN_RAMPART,
-                        homm3lua.TOWN_STRONGHOLD,
-                        homm3lua.TOWN_TOWER
-                    })[play]
+    --         for cellId in pairs(cells) do
+    --             local x, y, z = position2xyz(cellId)
 
-                    -- TODO: Define town as main one.
-                    local isMain = false
-                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1, isMain})
+    --             if  not state.world_grid[xyz2position(x - 2,     y,     z)]
+    --             and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
+    --             and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
+    --             and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
+    --             and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
+    --             and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
+    --                 -- TODO: Check if this position is valid.
+    --                 table.insert(valid, cellId)
+    --             end
+    --         end
 
-                    break
-                end
-            else
-                print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
-            end
-        end
-    end
+    --         if #valid > 0 then
+    --             for _, cellId in ipairs(valid) do
+    --                 local x, y, z = position2xyz(cellId)
+
+    --                 local sprite = ({
+    --                     homm3lua.TOWN_CASTLE,
+    --                     homm3lua.TOWN_DUNGEON,
+    --                     homm3lua.TOWN_FORTRESS,
+    --                     homm3lua.TOWN_INFERNO,
+    --                     homm3lua.TOWN_NECROPOLIS,
+    --                     homm3lua.TOWN_RAMPART,
+    --                     homm3lua.TOWN_STRONGHOLD,
+    --                     homm3lua.TOWN_TOWER
+    --                 })[play]
+
+    --                 -- TODO: Define town as main one.
+    --                 local isMain = false
+    --                 table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1, isMain})
+
+    --                 break
+    --             end
+    --         else
+    --             print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
+    --         end
+    --     end
+    -- end
 end
 
 local function step_debugZoneSigns (state)
@@ -281,7 +329,8 @@ local function step_initPaths (state)
         graph = state.path .. delim .. 'graph.txt',
         map   = state.path .. delim .. 'map.h3m',
         mds   = state.path .. delim .. 'emb.txt',
-        pgm   = state.path .. delim .. 'mlml.h3pgm'
+        pgm   = state.path .. delim .. 'mlml.h3pgm',
+        sfp   = state.path .. delim .. 'sfp.txt'
     }
 
     print('Generating ' .. state.path .. '...')
