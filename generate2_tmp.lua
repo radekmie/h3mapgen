@@ -38,6 +38,7 @@ local function GenerateOldLMLInterface(graph)
     zone.id = id
     if node.classes[1].type=='LOCAL' then zone.type = 'LOCAL' end
     if node.classes[1].type=='BUFFER' then zone.type = 'BUFFER' end
+    if node.classes[1].type=='GOAL' then zone.type = 'GOAL' end
     local edges = {}
     for k, v in pairs(graph.edges[id]) do
       for i = 1, v do edges[#edges+1] = k end
