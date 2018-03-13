@@ -52,7 +52,8 @@ end
 
 --- Draws graph into an image
 -- @param filepath Name of the output file (without extension, will be png)
-function GraphvizDrawer:Draw(filepath, keepdotsource)--, config) 
+-- @param keepdotsource True if we do not want to remove graph sources in '.dot' format
+function GraphvizDrawer:Draw(filepath, keepdotsource)
   local src = 'digraph G \n{\n'..'  edge [arrowhead="none"];\n\n'
   src = src..'  '..table.concat(self.nodes, '\n  ')..'\n\n'
   src = src..'  '..table.concat(self.edges, '\n  ')..'\n'

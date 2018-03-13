@@ -29,7 +29,7 @@ all: homm3lua $(TARGETS)
 # Rules
 FILES_CA := $(subst .cpp,.o,$(shell find components/ca -name '*.cpp'))
 components/ca/ca: $(FILES_CA)
-	 $(CXX) $(CXXFLAGS) $(LDLIBS) -o $@ $^
+	 $(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 components/ca/ca.so: $(FILES_CA)
 	 $(CXX) $(CXXFLAGS) $(LDLIBS) -o $@ $^ $(SHARED)
 

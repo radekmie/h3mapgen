@@ -295,8 +295,10 @@ local function step_initPaths (state)
     -- Initialize paths.
     state.path = 'output' .. delim .. state.seed .. '_' .. #state.paramsGeneral.players
     state.paths = {
+        path = state.path..delim,
         delim = delim,
         dumps = state.path .. delim .. 'dumps' .. delim,
+        imgs  = state.path .. delim .. 'imgs' .. delim,
         emb   = state.path .. delim .. 'emb',
         graph = state.path .. delim .. 'graph.txt',
         map   = state.path .. delim .. 'map.h3m',
@@ -305,13 +307,14 @@ local function step_initPaths (state)
     }
 
     -- TODO: Inconsistency...
-    state.config.DebugOutPath = state.path
+    --state.config.DebugOutPath = state.path
 
     print('Generating ' .. state.path .. '...')
 
     -- Create dir.
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.dumps)
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.imgs)
 end
 
 local function step_initParams (state)
@@ -321,7 +324,6 @@ end
 
 local function step_initSeed (state)
     -- Set shared seed for determinacy.
-    -- TODO: 0 or -1?
     if state.paramsGeneral.seed == 0 then
         state.seed = os.time()
     else

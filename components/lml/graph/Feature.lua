@@ -35,15 +35,16 @@ end
 
 
 --- Graphviz in-node label
+-- @param verbose Do we need additional info on class?
 -- @return String to be shown in graph
-function Feature:labelstr()
+function Feature:labelstr(verbose)
   local val = self.value
   if     val == 'PRIMARY' then val = 'PRIM'
   elseif val == 'RANDOM'  then val = 'RND' 
   elseif val == 'PLAYER'  then val = 'PLR' 
   elseif val == 'NEUTRAL' then val = 'NEUT' 
   end
-  return string.format('%s<SUB>%s</SUB>', self.type:sub(1,1), val)
+  return string.format('%s<SUB>%s</SUB> %s', self.type:sub(1,1), val, verbose and '('..self.class.type:sub(1,1)..self.class.level..')' or '')
 end
 
 return Feature

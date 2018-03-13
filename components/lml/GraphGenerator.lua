@@ -41,9 +41,10 @@ end
 -- @param state H3pgm state containing 'lmlInitialNode', 'config' and 'userparamsDetailed' keys, which is extended by 'lmlGraph'
 function GraphGenerator.Generate(state)
   local cfg = state.config
+  local drawkeepsrc = cfg.GraphGeneratorDrawKeepDotSources
 
   local graph = Graph.Initialize(state.lmlInitialNode)
-  if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..0) end
+  if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(state.paths.imgs..'LML-0', drawkeepsrc) end
 
   local c, id, fc = graph:IsConsistent()
   if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end
@@ -60,15 +61,14 @@ function GraphGenerator.Generate(state)
         print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges',
             choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))
         fails = 0
-        if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..step) end
+        if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(state.paths.imgs..'LML-'..step, drawkeepsrc) end
         break
       end
       fails = fails + 1
     end
   end
 
-  -- TODO: Use state.paths here.
-  if cfg. GraphGeneratorDrawFinal and not cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paths.delim..'lml') end
+  if cfg. GraphGeneratorDrawFinal then graph:Image():Draw(state.paths.path..'LML', drawkeepsrc) end -- deprecated (different path now): and not cfg.GraphGeneratorDrawSteps
   if graph:IsFinal() then
     state.lmlGraph = graph
   else
