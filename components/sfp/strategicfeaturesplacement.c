@@ -58,7 +58,7 @@ int main(void)
         printf("\n");
     }*/
     
-    struct possible_positions P;
+    /*struct possible_positions P;
     
     create_possible_positions(&D, &P);
     
@@ -91,8 +91,18 @@ int main(void)
         printf("\n");
         
         mutation(&monster, &P, D.nzones, D.nsfw);
+    }*/
+    
+    struct creature* answer = genetic(&D);
+    for (int i = 0; i < D.nzones; i++)
+    {
+        printf("Zone %d:\n", i+1);
+        for (int j = 0; j < D.nsfw; j++)
+        {
+            printf("Object %d: %d %d\n", j+1, answer->P[i][j].x, answer->P[i][j].y);
+        }
     }
-        
+    printf("Value: %d\n", evaluate(answer, &D));
     
     return 0;
 }

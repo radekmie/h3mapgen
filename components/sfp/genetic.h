@@ -164,6 +164,24 @@ int evaluate(struct creature* monster, struct data* D)
                     result += (obj2obj[i][k][l] - obj2obj[j][k][l]) * (obj2obj[i][k][l] - obj2obj[j][k][l]);
             }
     
+    for (int i = 0; i < D->nzones; i++)
+        for (int k = D->npois1; k < D->npois1+D->npois2; k++)
+            for (int j = 0; j < D->nsfw-1; j++)
+                for (int l = D->npois1; l < D->nsfw-1; l++)
+                    if (obj2poi[i][l][k] > obj2poi[i][l+1][k])
+                    {
+                        int tmp = obj2poi[i][l][k];
+                        obj2poi[i][l][k] = obj2poi[i][l+1][k];
+                        obj2poi[i][l+1][k] = tmp;
+                    }
+    
+    for (int i = 0; i < D->nzones; i++)
+        for (int j = 0; j < D->nsfw; j++)
+            for (int k = D->npois1; k < D->npois1+D->npois2; k++)
+                for (int l = k+1; k < D->npois1+D->npois2; l++)
+                    result += (obj2poi[i][j][k] - obj2poi[i][j][l]) * (obj2poi[i][j][k] - obj2poi[i][j][l]);
+            
+    
     return result;
 }
 

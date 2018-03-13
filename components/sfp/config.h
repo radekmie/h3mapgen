@@ -10,9 +10,9 @@
 
 #define oo      1000000
 
-#define pop_size  100
-#define best_size 15
-#define n_iter 15
+#define pop_size  10
+#define best_size 5
+#define n_iter 5
 #define mut_prom 50
 // usunąć n_iter i zastąpić czymś lepszym
 
