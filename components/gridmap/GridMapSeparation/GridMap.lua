@@ -90,7 +90,7 @@ function GridMap:Generate(dimensions)
         end
       end
       if newPos then
-        print('Fix attempt found available sector. Assigning id '..id..' to sector '..newPos.x..'/'..newPos.y..'.')
+        print('Fix attempt found available sector. Assigning id '..id..' to sector '..newPos[1]..'/'..newPos[2]..'.')
         self.gdat[id].x = newPos[1]
         self.gdat[id].y = newPos[2]
         placeSector(id, self.gdat[id])
