@@ -43,14 +43,29 @@ end
 function MLMLHelper.GenerateImage(mlml, lml)
   local gd = GD.New()
   
-  
+  local colors = {[0]='#000000', '#b41513', '#4059c6', '#c99e76', '#216228', '#e5760d', '#62336f', '#447174', '#e591a2'} -- taken from HOMM3 flags ^^
   
   gd:AddNode{id=0, shape='none', label=''}
-  for i, z in ipairs(self) do
+  for i, z in pairs(mlml) do
+    local baseclass = lml[z.baseid].classes[1]
+    
+    local players = {}
+    for p=1,8 do
+      if z.players[p] then table.insert(players, p) end
+    end
+    
+    local color = colors[0]
+    if #players==1 then color = colors[players[1]] end
+    
+    local label = baseclass.type:sub(1,1)..baseclass.level .. ' (' .. z.baseid .. ') <br/>'
+    label = label .. 'P' .. table.concat(players, ',')
+    
+    --[[
     local labelc = {}
     for _, c in ipairs(z.classes) do
       labelc[#labelc+1] = c.type:sub(1,1)..c.level
     end
+    
     local labelf = {}
     for j, f in ipairs(z.features) do
       
@@ -68,16 +83,25 @@ function MLMLHelper.GenerateImage(mlml, lml)
         labelf[#labelf+1] = f:labelstr(#labelc>1)
       end
     end
-
+    --]]
     local shape = 'none'
-    if not z:IsFinal() then shape='doubleoctagon' 
-    elseif z.classes[1].type=='LOCAL' then shape='circle'
-    elseif z.classes[1].type=='BUFFER' then shape='box'
-    elseif z.classes[1].type=='GOAL' then shape='diamond'
-    end    
-    gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ', ')..'\\n'..table.concat(labelf, '\\n'), color='#000000'}
-  end
+    
+    if z.type ~= baseclass.type then print('Critical Error Multi<->Single zone type mismatch for MLML zone '..i) end
+    
+    if     z.type=='LOCAL'  then shape='circle'
+    elseif z.type=='BUFFER' then shape='box'
+    elseif z.type=='GOAL'   then shape='diamond'
+    end
   
+    gd:AddNode{id=i, shape=shape, label=label, color=color}
+    
+    for e, n in pairs(z.edges) do
+      if e <= i then -- display only one-direction of edge (from higher id's to lower)
+        for j=1, n do gd:AddEdge(i, e) end
+      end
+    end
+  end
+  --[[
   for id1, e in pairs(self.edges) do
     for id2, k in pairs(e) do
       if id1 < id2 then
@@ -85,7 +109,9 @@ function MLMLHelper.GenerateImage(mlml, lml)
       end
     end
   end
+  --]]
   
+
   return gd
 end
 -- MLMLHelper.GenerateImage

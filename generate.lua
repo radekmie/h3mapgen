@@ -306,6 +306,8 @@ local function step_initMLML (state)
 
     state.MLML_graph = mlml
     state.MLML_interface = mlml:Interface()
+    
+    MLMLHelper.GenerateImage(mlml, state.lmlGraph):Draw(state.paths.path..'MLML', state.config.GraphGeneratorDrawKeepDotSources)
 end
 
 local function step_initPaths (state)

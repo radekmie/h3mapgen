@@ -136,7 +136,7 @@ function Graph:Image()
     elseif z.classes[1].type=='BUFFER' then shape='box'
     elseif z.classes[1].type=='GOAL' then shape='diamond'
     end    
-    gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ', ')..'\\n'..table.concat(labelf, '\\n'), color='#000000'}
+    gd:AddNode{id=i, shape=shape, label=table.concat(labelc, ', ')..'<br/>'..table.concat(labelf, '<br/>'), color='#000000'}
   end
   
   for id1, e in pairs(self.edges) do

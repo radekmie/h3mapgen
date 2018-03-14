@@ -17,7 +17,10 @@ local function Test(name)
   local state = ConfigHandler.Read('tests/lml/'..name..'.h3pgm')  
   state.config = ConfigHandler.Read('config.cfg')
   
-  local dir = state.paramsDetailed.seed .. '_' .. #state.paramsGeneral.players
+  Params.GenerateDetailedParams(state)
+  Params.GenerateInitLMLNode(state)
+  
+    local dir = state.paramsDetailed.seed .. '_' .. #state.paramsGeneral.players
   state.paths = { 
     base = 'tests/out/',
     path = 'tests/out/'..dir..'/',
@@ -28,9 +31,6 @@ local function Test(name)
   os.execute('mkdir ' .. (state.paths.path):gsub('/', '\\'))
   os.execute('mkdir ' .. (state.paths.imgs):gsub('/', '\\'))
 
-  Params.GenerateDetailedParams(state)
-  Params.GenerateInitLMLNode(state)
-  
   ConfigHandler.Write(state.paths.h3pgm, state)
   
   LML.GenerateGraph(state)  
@@ -40,21 +40,18 @@ local function Test(name)
   ConfigHandler.Write(state.paths.h3pgm, state)
   state.lmlMetagraph:Image():Draw(state.paths.path..'Metagraph')
   
-  print ('<xxx>')
+  print ('<MLML>')
   
   local mlml = MLML.Initialize(state.LML_interface_OLD)
   
-  --[[
-  
-      
-    mlml:Generate(#state.paramsDetailed.players)
+  mlml:Generate(#state.paramsDetailed.players)
+  state.MLML_graph = mlml
+  state.MLML_interface = mlml:Interface()
 
-    -- TODO: Should be stored in state, not in a file.
-    mlml:PrintToMDS(state.paths.graph)
+  ConfigHandler.Write(state.paths.h3pgm, state)
 
-    state.MLML_graph = mlml
-    state.MLML_interface = mlml:Interface()
-    --]]
+  MLMLHelper.GenerateImage(mlml, state.lmlGraph):Draw(state.paths.path..'MLML')
+  print ('</MLML>')
   
 end
 
