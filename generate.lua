@@ -18,6 +18,7 @@ local CA      = require('ca')
 local GridMap = require('GridMapSeparation/GridMap')
 local LML     = require('LogicMapLayout')
 local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
+local MLMLHelper = require('LogicMapLayout/MLMLHelper')
 local Params  = require('Params')
 local rescale = require('mdsAdapter')
 
@@ -81,36 +82,6 @@ local function shell (command)
     return result:gsub('^%s*(.-)%s*$', '%1')
 end
 
--- TODO: Get rid of GenerateOldLMLInterface.
---- Creates serializable LML object interface table that can be used to generate MultiLML
--- @param lml LML graph in new format
--- @return Table with properly formated LML interface
-local function GenerateOldLMLInterface(graph)
-  local interface = {}
-  for id, node in ipairs(graph) do
-    -- from old function Zone:Interface(id)
-    local zone = {}
-    zone.id = id
-    if node.classes[1].type=='LOCAL' then zone.type = 'LOCAL' end
-    if node.classes[1].type=='BUFFER' then zone.type = 'BUFFER' end
-    if node.classes[1].type=='GOAL' then zone.type = 'GOAL' end
-    local edges = {}
-    for k, v in pairs(graph.edges[id]) do
-      for i = 1, v do edges[#edges+1] = k end
-    end
-    zone.edges = edges
-    local outer = {}
-    for _, f in ipairs(node.features) do
-      if f.type == 'OUTER' then
-        outer[#outer+1] = f.value
-      end
-    end
-    zone.outer = outer
-    -- from old interface[i] = k:Interface(i)
-    interface[id] = zone
-  end
-  return interface
-end
 
 -- Steps.
 local function step_ca (state)
@@ -323,7 +294,7 @@ local function step_initLML (state)
     -- TODO: Inconsistency...
     state.LML_graph = state.lmlGraph
 
-    state.LML_interface_OLD = GenerateOldLMLInterface(state.LML_graph)
+    state.LML_interface_OLD = MLMLHelper.GenerateOldLMLInterface(state.LML_graph)
 end
 
 local function step_initMLML (state)
