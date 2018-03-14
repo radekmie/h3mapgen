@@ -52,6 +52,10 @@ local function saveH3M (state, path)
         instance:sign(table.unpack(sign))
     end
 
+    for _, mine in ipairs(state.world_mines) do
+        instance:mine(table.unpack(mine))
+    end
+
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
@@ -101,122 +105,120 @@ local function step_dumpH3M (state, index)
 end
 
 local function step_gameCastles (state)
-    local file = io.open(state.paths.sfp, 'w')
-    file:write('2 1 0 1\n')
-    file:write('12 12\n')
-    file:write('############\n')
-    file:write('#####....###\n')
-    file:write('###.......##\n')
-    file:write('##........##\n')
-    file:write('##.......###\n')
-    file:write('#..##......#\n')
-    file:write('##.........#\n')
-    file:write('#..........#\n')
-    file:write('#.........##\n')
-    file:write('###......###\n')
-    file:write('####....####\n')
-    file:write('############\n')
-    file:write('1 4\n')
-    file:write('3 3\n')
-    file:write('_#_\n')
-    file:write('###\n')
-    file:write('_#_\n')
-    file:write('1 1\n')
-    file:write('12 12\n')
-    file:write('############\n')
-    file:write('######.....#\n')
-    file:write('#####...##.#\n')
-    file:write('###...###..#\n')
-    file:write('#...####..##\n')
-    file:write('#.....######\n')
-    file:write('##...###...#\n')
-    file:write('###......###\n')
-    file:write('#...###....#\n')
-    file:write('##...###..##\n')
-    file:write('###......###\n')
-    file:write('############\n')
-    file:write('10 2\n')
-    file:write('2 4\n')
-    file:write('####\n')
-    file:write('___#\n')
-    file:write('1 3\n')
-    file:close()
+    local baseIds = {}
 
-    print(shell(table.concat({
-        './components/sfp/sfp',
-        '<', state.paths.sfp,
-    }, ' ')))
+    for zoneId, zone in pairs(state.MLML_graph) do
+        baseIds[zone.baseid] = true
+    end
 
-    error('EHO')
+    for baseId, _ in pairs(baseIds) do
+        local features = {}
+        for _, feature in ipairs(state.LML_graph[baseId].features) do
+            if feature.type == 'MINE' then
+                -- TODO: Mine instance?
+                -- TODO: Mine template.
+                table.insert(features, {
+                    instance = feature,
+                    template = table.concat({
+                        '2 4',
+                        '_###',
+                        '##.#',
+                        '1 2',
+                        ''
+                    }, '\n')
+                })
+            end
 
-    -- for zoneId, zone in pairs(state.MLML_graph) do
-    --     local base = state.LML_graph[zone.baseid]
-    --     local town = false
+            if feature.type == 'TOWN' then
+                -- TODO: Town template.
+                table.insert(features, {
+                    instance = feature,
+                    template = table.concat({
+                        '3 5',
+                        '#####',
+                        '#####',
+                        '##.##',
+                        '2 2',
+                        ''
+                    }, '\n')
+                })
+            end
+        end
 
-    --     for _, feature in ipairs(base.features) do
-    --         if feature.type == 'TOWN' then
-    --             town = true
-    --             break
-    --         end
-    --     end
+        local zones = {}
+        for zoneId, zone in pairs(state.MLML_graph) do
+            if zone.baseid == baseId then
+                local lines = {}
 
-    --     if town then
-    --         local play = 0
-    --         for player in pairs(zone.players) do
-    --             play = player
-    --             break
-    --         end
+                for z = 0, 0 do
+                for y = 0, #state.world1 - 1 do
+                local line = {}
+                for x = 0, #state.world1[1] - 1 do
+                    local id = xyz2position(x, y, z)
+                    table.insert(line, state.world[id].zone ~= zoneId and '#' or '.')
+                end
+                table.insert(lines, table.concat(line, ''))
+                end
+                end
 
-    --         local cells = {}
+                table.insert(lines, '')
+                table.insert(zones, table.concat(lines, '\n'))
+            end
+        end
 
-    --         for cellId, cell in pairs(state.world) do
-    --             if cell.zone == zoneId then
-    --                 cells[cellId] = true
-    --             end
-    --         end
+        if #features > 0 then
+            local nzones = #zones
+            local npois1 = 0
+            local npois2 = 0
+            local nfsw = #features
 
-    --         local valid = {}
+            local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
+            file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
-    --         for cellId in pairs(cells) do
-    --             local x, y, z = position2xyz(cellId)
+            for _, zone in ipairs(zones) do
+                file:write(#state.world1 .. ' ' .. #state.world1[1] .. '\n')
+                file:write(zone)
 
-    --             if  not state.world_grid[xyz2position(x - 2,     y,     z)]
-    --             and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
-    --             and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
-    --             and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
-    --             and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
-    --             and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
-    --                 -- TODO: Check if this position is valid.
-    --                 table.insert(valid, cellId)
-    --             end
-    --         end
+                -- TODO: Points.
+                -- for _, point in ipairs(points1) do
+                --     file:write(table.concat(point, ' ') .. '\n')
+                -- end
 
-    --         if #valid > 0 then
-    --             for _, cellId in ipairs(valid) do
-    --                 local x, y, z = position2xyz(cellId)
+                for _, feature in ipairs(features) do
+                    file:write(feature.template)
+                end
+            end
 
-    --                 local sprite = ({
-    --                     homm3lua.TOWN_CASTLE,
-    --                     homm3lua.TOWN_DUNGEON,
-    --                     homm3lua.TOWN_FORTRESS,
-    --                     homm3lua.TOWN_INFERNO,
-    --                     homm3lua.TOWN_NECROPOLIS,
-    --                     homm3lua.TOWN_RAMPART,
-    --                     homm3lua.TOWN_STRONGHOLD,
-    --                     homm3lua.TOWN_TOWER
-    --                 })[play]
+            file:close()
 
-    --                 -- TODO: Define town as main one.
-    --                 local isMain = false
-    --                 table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1, isMain})
+            local result = shell(table.concat({
+                './components/sfp/sfp',
+                '<', state.paths.sfp .. '.' .. baseId,
+            }, ' '))
 
-    --                 break
-    --             end
-    --         else
-    --             print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
-    --         end
-    --     end
-    -- end
+            local read = string.gmatch(result, '[^\r\n]+')
+            read()
+
+            for _, zone in ipairs(zones) do
+                read()
+                for _, feature in ipairs(features) do
+                    local x = read()
+                    local token = string.gmatch(x, '%d+')
+                    token()
+
+                    local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+
+                    if feature.instance.type == 'MINE' then
+                        table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
+                    end
+
+                    if feature.instance.type == 'TOWN' then
+                        table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                    end
+                end
+            end
+        end
+    end
 end
 
 local function step_debugZoneSigns (state)
@@ -369,6 +371,7 @@ local function step_parseWorld (state)
     -- Yay!
     state.world = {}
     state.world_grid = {}
+    state.world_mines = {}
     state.world_obstacles = {}
     state.world_size = nil
     state.world_towns = {}
@@ -382,8 +385,8 @@ local function step_parseWorld (state)
 
     -- TODO: Store underground info somewhere.
     for z = 0, 0 do
-    for y = 0, state.world_size do
-    for x = 0, state.world_size do
+    for y = 0, state.world_size - 1 do
+    for x = 0, state.world_size - 1 do
         local cell = nil
 
         local x2 = x - (state.world_size - w1) // 2
