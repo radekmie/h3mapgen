@@ -58,17 +58,23 @@ $ make
 ```
 
 ## Run generator
-From the project root directory run `lua generate.lua players size sectors [seed]`. The output from all stages of generation is saved in `output/<seed>_<players>`. That directory should contain 10 files:
+From the project root directory run `lua generate.lua initial-h3pgm`. The output from all stages of generation is saved in `output/<seed>_<players>`. That directory should contain these directories and files:
 
-| File        | Description               |
-| ----------- | ------------------------- |
-| `emb.png`   | Embedding result          |
-| `emb.txt`   | Embedding coordinates     |
-| `graph.txt` | Graph structure           |
-| `map.h3m`   | _Playable_ map            |
-| `*.h3pgm`   | State at various moments. |
+| File             | Description                                |
+| ---------------- | ------------------------------------------ |
+| `dumps/*.h3m`    | State at various moments (map).            |
+| `dumps/*.h3pgm`  | State at various moments.                  |
+| `imgs/LML-*.dot` | LML at different evolution stage (source). |
+| `imgs/LML-*.png` | LML at different evolution stage.          |
+| `LML.dot`        | Final LML (source).                        |
+| `LML.png`        | Final LML.                                 |
+| `emb.png`        | Embedding result.                          |
+| `emb.txt`        | Embedding coordinates.                     |
+| `graph.txt`      | Graph structure.                           |
+| `map.h3m`        | _Playable_ map.                            |
+| `sfp.txt.*`      | SFP algorithm arguments.                   |
 
-Example: `lua generate.lua 4 72 4` or `lua generate.lua 8 144 36`.
+Example: `lua generate.lua '>'`.
 
 ## Run GUI
 There's no single executable file yet, but you can run it with [love2d](https://love2d.org/):

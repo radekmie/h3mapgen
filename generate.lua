@@ -137,7 +137,7 @@ local function step_dumpH3M (state, index)
     saveH3M(state, state.paths.dumps .. index .. '.h3m')
 end
 
-local function step_gameCastles (state)
+local function step_gameSFP (state)
     local baseIds = {}
 
     for zoneId, zone in pairs(state.MLML_graph) do
@@ -468,7 +468,7 @@ local function step_voronoi (state)
     local gW = state.paramsDetailed.width
 
     -- TODO: Sectors...?
-    local sectors = state.paramsDetailed.zoneSide
+    local sectors = state.config.StandardZoneSize // 2
 
     local data = {}
     local mdsItems = {}
@@ -532,23 +532,27 @@ if arg[1] then
         step_initSeed,
         step_initPaths,
         step_initParams,
-        -- step_dump,
+        step_dump,
         step_initLML,
-        -- step_dump,
+        step_dump,
         step_initMLML,
         step_dump,
         step_mds,
-        -- step_dump,
+        step_dump,
         step_voronoi,
-        -- step_dump,
+        step_dump,
         step_ca,
-        -- step_dump,
+        step_dump,
         -- NOTE: This makes state renderable, i.e. .h3m-able.
         step_parseWorld,
-        step_gameCastles,
+        step_dump,
+        step_dumpH3M,
+        step_gameSFP,
+        step_dump,
+        step_dumpH3M,
         step_debugZoneSigns,
-        -- step_dump,
-        -- step_dumpH3M,
+        step_dump,
+        step_dumpH3M,
         step_saveH3M
     })
 else
