@@ -343,6 +343,7 @@ function MLML:PrintToMDS(filename)
       file:write(line, "\n")
     end
   end
+  file:close()
 end
 
 

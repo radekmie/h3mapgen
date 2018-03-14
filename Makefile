@@ -19,6 +19,7 @@ TARGETS := \
 	components/ca/ca \
 	components/ca/ca.so \
 	components/voronoi/voronoi \
+	components/sfp/sfp \
 	h3mapgen.love
 
 # Meta
@@ -29,13 +30,17 @@ all: homm3lua $(TARGETS)
 # Rules
 FILES_CA := $(subst .cpp,.o,$(shell find components/ca -name '*.cpp'))
 components/ca/ca: $(FILES_CA)
-	 $(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 components/ca/ca.so: $(FILES_CA)
-	 $(CXX) $(CXXFLAGS) $(LDLIBS) -o $@ $^ $(SHARED)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(SHARED)
 
 FILES_VORONOI := $(subst .cpp,.o,$(shell find components/voronoi -name '*.cpp'))
 components/voronoi/voronoi: $(FILES_VORONOI)
-	 $(CXX) $(CXXFLAGS) $(LDLIBS) -o $@ $^
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
+
+FILES_SFP := $(subst .cpp,.o,$(shell find components/sfp -name '*.cpp'))
+components/sfp/sfp: $(FILES_SFP)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 
 h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi)
 	$(RM) $@

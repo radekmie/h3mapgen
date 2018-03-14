@@ -54,6 +54,10 @@ local function saveH3M (state, path)
         instance:sign(table.unpack(sign))
     end
 
+    for _, mine in ipairs(state.world_mines) do
+        instance:mine(table.unpack(mine))
+    end
+
     for _, town in ipairs(state.world_towns) do
         instance:town(table.unpack(town))
     end
@@ -134,71 +138,117 @@ local function step_dumpH3M (state, index)
 end
 
 local function step_gameCastles (state)
-    for zoneId, zone in pairs(state.MLML_graph) do
-        local base = state.LML_graph[zone.baseid]
-        local town = false
+    local baseIds = {}
 
-        for _, feature in ipairs(base.features) do
+    for zoneId, zone in pairs(state.MLML_graph) do
+        baseIds[zone.baseid] = true
+    end
+
+    for baseId, _ in pairs(baseIds) do
+        local features = {}
+        for _, feature in ipairs(state.LML_graph[baseId].features) do
+            if feature.type == 'MINE' then
+                -- TODO: Mine instance?
+                -- TODO: Mine template.
+                table.insert(features, {
+                    instance = feature,
+                    template = table.concat({
+                        '2 4',
+                        '_###',
+                        '##.#',
+                        '1 2',
+                        ''
+                    }, '\n')
+                })
+            end
+
             if feature.type == 'TOWN' then
-                town = true
-                break
+                -- TODO: Town template.
+                table.insert(features, {
+                    instance = feature,
+                    template = table.concat({
+                        '3 5',
+                        '#####',
+                        '#####',
+                        '##.##',
+                        '2 2',
+                        ''
+                    }, '\n')
+                })
             end
         end
 
-        if town then
-            local play = 0
-            for player in pairs(zone.players) do
-                play = player
-                break
+        local zones = {}
+        for zoneId, zone in pairs(state.MLML_graph) do
+            if zone.baseid == baseId then
+                local lines = {}
+
+                for z = 0, 0 do
+                for y = 0, #state.world1 - 1 do
+                local line = {}
+                for x = 0, #state.world1[1] - 1 do
+                    local id = xyz2position(x, y, z)
+                    table.insert(line, state.world[id].zone ~= zoneId and '#' or '.')
+                end
+                table.insert(lines, table.concat(line, ''))
+                end
+                end
+
+                table.insert(lines, '')
+                table.insert(zones, table.concat(lines, '\n'))
             end
+        end
 
-            local cells = {}
+        if #features > 0 then
+            local nzones = #zones
+            local npois1 = 0
+            local npois2 = 0
+            local nfsw = #features
 
-            for cellId, cell in pairs(state.world) do
-                if cell.zone == zoneId then
-                    cells[cellId] = true
+            local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
+            file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
+
+            for _, zone in ipairs(zones) do
+                file:write(#state.world1 .. ' ' .. #state.world1[1] .. '\n')
+                file:write(zone)
+
+                -- TODO: Points.
+                -- for _, point in ipairs(points1) do
+                --     file:write(table.concat(point, ' ') .. '\n')
+                -- end
+
+                for _, feature in ipairs(features) do
+                    file:write(feature.template)
                 end
             end
 
-            local valid = {}
+            file:close()
 
-            for cellId in pairs(cells) do
-                local x, y, z = position2xyz(cellId)
+            local result = shell(table.concat({
+                './components/sfp/sfp',
+                '<', state.paths.sfp .. '.' .. baseId,
+            }, ' '))
 
-                if  not state.world_grid[xyz2position(x - 2,     y,     z)]
-                and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
-                and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
-                and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
-                and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
-                and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
-                    -- TODO: Check if this position is valid.
-                    table.insert(valid, cellId)
+            local read = string.gmatch(result, '[^\r\n]+')
+            read()
+
+            for _, zone in ipairs(zones) do
+                read()
+                for _, feature in ipairs(features) do
+                    local x = read()
+                    local token = string.gmatch(x, '%d+')
+                    token()
+
+                    local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+
+                    if feature.instance.type == 'MINE' then
+                        table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
+                    end
+
+                    if feature.instance.type == 'TOWN' then
+                        table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                    end
                 end
-            end
-
-            if #valid > 0 then
-                for _, cellId in ipairs(valid) do
-                    local x, y, z = position2xyz(cellId)
-
-                    local sprite = ({
-                        homm3lua.TOWN_CASTLE,
-                        homm3lua.TOWN_DUNGEON,
-                        homm3lua.TOWN_FORTRESS,
-                        homm3lua.TOWN_INFERNO,
-                        homm3lua.TOWN_NECROPOLIS,
-                        homm3lua.TOWN_RAMPART,
-                        homm3lua.TOWN_STRONGHOLD,
-                        homm3lua.TOWN_TOWER
-                    })[play]
-
-                    -- TODO: Define town as main one.
-                    local isMain = false
-                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1, isMain})
-
-                    break
-                end
-            else
-                print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
             end
         end
     end
@@ -303,7 +353,8 @@ local function step_initPaths (state)
         graph = state.path .. delim .. 'graph.txt',
         map   = state.path .. delim .. 'map.h3m',
         mds   = state.path .. delim .. 'emb.txt',
-        pgm   = state.path .. delim .. 'mlml.h3pgm'
+        pgm   = state.path .. delim .. 'mlml.h3pgm',
+        sfp   = state.path .. delim .. 'sfp.txt'
     }
 
     -- TODO: Inconsistency...
@@ -351,6 +402,7 @@ local function step_parseWorld (state)
     -- Yay!
     state.world = {}
     state.world_grid = {}
+    state.world_mines = {}
     state.world_obstacles = {}
     state.world_size = nil
     state.world_towns = {}
@@ -364,8 +416,8 @@ local function step_parseWorld (state)
 
     -- TODO: Store underground info somewhere.
     for z = 0, 0 do
-    for y = 0, state.world_size do
-    for x = 0, state.world_size do
+    for y = 0, state.world_size - 1 do
+    for x = 0, state.world_size - 1 do
         local cell = nil
 
         local x2 = x - (state.world_size - w1) // 2
