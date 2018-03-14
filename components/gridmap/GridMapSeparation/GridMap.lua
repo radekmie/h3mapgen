@@ -13,6 +13,15 @@ function GridMap.Initialize(graph_data)
 end
 
 
+local getGridNeighbors = function(x, y)
+  return {
+    {x - 1, y - 1}, {x, y - 1}, {x + 1, y - 1},
+    {x - 1, y},                 {x + 1, y},
+    {x - 1, y + 1}, {x, y + 1}, {x + 1, y + 1}
+  }
+end
+
+
 --- Generates GridMap based on initialized graph data.
 -- GridMap objects have to be initialized before calling Generate.
 -- @param dimensions - Set of constants containing dimensions (gW, gH, sW, sH) of the map. (gW and gH should be multiples of sW and sH respectively)
@@ -41,25 +50,53 @@ function GridMap:Generate(dimensions)
     self.sectorMaps[id] = {}
   end
   
+  local placeSector = function(id, sector)
+      self.sectorMaps[id][{sector.x, sector.y}] = true
+      self.sectors[sector.y][sector.x] = id
+      if self.neighbors[id] == nil then
+        self.neighbors[id] = {}
+      end
+      for _,nId in pairs(sector.neighbors) do
+        -- now you can be a neighbor many times
+        self.neighbors[id][nId] = (self.neighbors[id][nId] or 0) + 1
+        --self.neighbors[id][nId] = 1
+      end
+  end
+  
+  local failedToPlace = {}
+  
   self.neighbors = {}
   for id, sector in pairs(self.gdat) do
     if self.sectors[sector.y][sector.x] ~= -1 then
-      print('Assigning sector id ' .. id .. ' to non-empty sector. Errors to be expected.')
+      print('Attempted to assign sector id ' .. id .. ' to non-empty sector. Fix attempt will be made.')
+      failedToPlace[#failedToPlace + 1] = id
+    else
+      placeSector(id, sector)
     end
-    self.sectorMaps[id][{sector.x, sector.y}] = true
-    self.sectors[sector.y][sector.x] = id
-    if self.neighbors[id] == nil then
-      self.neighbors[id] = {}
-    end
-    for _,nId in pairs(sector.neighbors) do
-      self.neighbors[id][nId] = 1
-      --[=[
-      -- for now you can only be a neighbor once anyway
-      if self.neighbors[id][nId] == nil then
-        self.neighbors[id][nId] = 0
+  end
+  
+  for _,id in pairs(failedToPlace) do
+    local sector = self.gdat[id]
+    if self.sectors[sector.y][sector.x] == -1 then
+      print('Fix attempt shows that no id was set in this sector. Assigning id '..id)
+      placeSector(id, sector)
+    else
+      local neigh = getGridNeighbors(sector.x, sector.y)
+      local newPos = nil
+      for _, newXY in pairs(neigh) do
+        if self.sectors[newXY[2]][newXY[1]] == -1 then
+          newPos = newXY
+          break
+        end
       end
-      self.neighbors[id][nId] = self.neighbors[id][nId] + 1
-      --]=]
+      if newPos then
+        print('Fix attempt found available sector. Assigning id '..id..' to sector '..newPos[1]..'/'..newPos[2]..'.')
+        self.gdat[id].x = newPos[1]
+        self.gdat[id].y = newPos[2]
+        placeSector(id, self.gdat[id])
+      else
+        print('Fix attempt did not find available sector for id '..id..'. Errors to be expected.')
+      end
     end
   end
   
@@ -450,14 +487,6 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       return true
     end
     return myGridSquare.dist == otherGridSquare.dist and areaSizes[myGridSquare.id] < areaSizes[otherGridSquare.id]
-  end
-  
-  local getGridNeighbors = function(x, y)
-    return {
-      {x - 1, y - 1}, {x, y - 1}, {x + 1, y - 1},
-      {x - 1, y},                 {x + 1, y},
-      {x - 1, y + 1}, {x, y + 1}, {x + 1, y + 1}
-    }
   end
   
   for y = 1, self.gH do
