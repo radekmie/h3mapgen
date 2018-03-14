@@ -4,7 +4,9 @@ package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
 
 -- Instead of LUA_PATH
 package.path = package.path .. ';components/gridmap/?.lua'
+package.path = package.path .. ';components/lml/?.lua'
 package.path = package.path .. ';components/mlml/?.lua'
+package.path = package.path .. ';components/params/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
 local homm3lua = require('homm3lua')
@@ -13,10 +15,10 @@ local ConfigHandler = require('ConfigHandler')
 local Serialization = require('Serialization')
 
 local CA      = require('ca')
-local Grammar = require('LogicMapLayout/Grammar/Grammar')
 local GridMap = require('GridMapSeparation/GridMap')
-local LML     = require('LogicMapLayout/LogicMapLayout')
+local LML     = require('LogicMapLayout')
 local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
+local Params  = require('Params')
 local rescale = require('mdsAdapter')
 
 -- Utils.
@@ -44,7 +46,7 @@ local function saveH3M (state, path)
     instance:name('Random Map')
     instance:description('Seed: ' .. state.seed)
 
-    for player = 1, state._params.players do
+    for player = 1, #state.paramsGeneral.players do
         instance:player(player - 1)
     end
 
@@ -77,6 +79,37 @@ local function shell (command)
     handle:close()
 
     return result:gsub('^%s*(.-)%s*$', '%1')
+end
+
+-- TODO: Get rid of GenerateOldLMLInterface.
+--- Creates serializable LML object interface table that can be used to generate MultiLML
+-- @param lml LML graph in new format
+-- @return Table with properly formated LML interface
+local function GenerateOldLMLInterface(graph)
+  local interface = {}
+  for id, node in ipairs(graph) do
+    -- from old function Zone:Interface(id)
+    local zone = {}
+    zone.id = id
+    if node.classes[1].type=='LOCAL' then zone.type = 'LOCAL' end
+    if node.classes[1].type=='BUFFER' then zone.type = 'BUFFER' end
+    if node.classes[1].type=='GOAL' then zone.type = 'GOAL' end
+    local edges = {}
+    for k, v in pairs(graph.edges[id]) do
+      for i = 1, v do edges[#edges+1] = k end
+    end
+    zone.edges = edges
+    local outer = {}
+    for _, f in ipairs(node.features) do
+      if f.type == 'OUTER' then
+        outer[#outer+1] = f.value
+      end
+    end
+    zone.outer = outer
+    -- from old interface[i] = k:Interface(i)
+    interface[id] = zone
+  end
+  return interface
 end
 
 -- Steps.
@@ -233,6 +266,10 @@ local function step_debugZoneSigns (state)
       local mlmlNode = state.MLML_graph[zoneId]
       local descr_bzone = 'Zone Base-ID: '..mlmlNode.baseid
       local lmlNode = state.LML_graph[mlmlNode.baseid]
+
+      -- TODO: Inconsistency...
+      lmlNode.class = lmlNode.classes
+
       local descr_level = 'Level: '..lmlNode.class[1].level
       local players = {}
       for p=1,8 do
@@ -280,36 +317,18 @@ local function step_debugZoneSigns (state)
 end
 
 local function step_initLML (state)
-    local init = {class={}, features={}}
-    local rand = function (from, to)
-        return math.floor(math.random() * (to - from)) + from
-    end
+    LML.GenerateGraph(state)
+    LML.GenerateMetagraph(state)
 
-    for level = 0, rand(1, 6) do
-        table.insert(init.class,           {level=level, type='LOCAL'})
-        table.insert(init.features, {class={level=level, type='LOCAL'}, type='TOWN', value='PLAYER'})
-    end
+    -- TODO: Inconsistency...
+    state.LML_graph = state.lmlGraph
 
-    for buffer = 1, rand(1, 4) do
-        local level = rand(3, 6)
-
-        table.insert(init.class,           {level=level, type='BUFFER'})
-        table.insert(init.features, {class={level=level, type='BUFFER'}, type='OUTER', value=0})
-    end
-
-    local lml = LML.Initialize(init)
-
-    -- TODO: Do not use a state._config?
-    lml:Generate(Grammar, state._config.GrammarMaxSteps)
-
-    state.LML_graph = lml
-    state.LML_init = init
-    state.LML_interface = lml:Interface()
+    state.LML_interface_OLD = GenerateOldLMLInterface(state.LML_graph)
 end
 
 local function step_initMLML (state)
-    local mlml = MLML.Initialize(state.LML_interface)
-    mlml:Generate(state._params.players)
+    local mlml = MLML.Initialize(state.LML_interface_OLD)
+    mlml:Generate(#state.paramsDetailed.players)
 
     -- TODO: Should be stored in state, not in a file.
     mlml:PrintToMDS(state.paths.graph)
@@ -324,9 +343,12 @@ local function step_initPaths (state)
     local delim = package.config:sub(1,1)
 
     -- Initialize paths.
-    state.path = 'output' .. delim .. state.seed .. '_' .. state._params.players
+    state.path = 'output' .. delim .. state.seed .. '_' .. #state.paramsGeneral.players
     state.paths = {
+        path = state.path..delim,
+        delim = delim,
         dumps = state.path .. delim .. 'dumps' .. delim,
+        imgs  = state.path .. delim .. 'imgs' .. delim,
         emb   = state.path .. delim .. 'emb',
         graph = state.path .. delim .. 'graph.txt',
         map   = state.path .. delim .. 'map.h3m',
@@ -335,19 +357,28 @@ local function step_initPaths (state)
         sfp   = state.path .. delim .. 'sfp.txt'
     }
 
+    -- TODO: Inconsistency...
+    --state.config.DebugOutPath = state.path
+
     print('Generating ' .. state.path .. '...')
 
     -- Create dir.
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.dumps)
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.imgs)
+end
+
+local function step_initParams (state)
+    Params.GenerateDetailedParams(state)
+    Params.GenerateInitLMLNode(state)
 end
 
 local function step_initSeed (state)
     -- Set shared seed for determinacy.
-    if state._params.seed == -1 then
+    if state.paramsGeneral.seed == 0 then
         state.seed = os.time()
     else
-        state.seed = state._params.seed
+        state.seed = state.paramsGeneral.seed
     end
 
     math.randomseed(state.seed)
@@ -433,8 +464,11 @@ local function step_saveH3M (state)
 end
 
 local function step_voronoi (state)
-    local size    = state._params.size
-    local sectors = state._params.sectors
+    local gH = state.paramsDetailed.height
+    local gW = state.paramsDetailed.width
+
+    -- TODO: Sectors...?
+    local sectors = state.paramsDetailed.zoneSide
 
     local data = {}
     local mdsItems = {}
@@ -478,25 +512,26 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gW=size, gH=size, sW=size//sectors, sH=size//sectors})
+    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors})
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
 -- Main.
+if arg[1] == '?' then
+  arg[1] = 'tests/lml/01.h3pgm'
+end
+
 if arg[1] then
-    local seed = {
-        _config = ConfigHandler.Read('config.cfg'),
-        _params = {
-            players = tonumber(arg[1]),
-            sectors = tonumber(arg[3]),
-            seed    = tonumber(arg[4] or -1),
-            size    = tonumber(arg[2])
-        }
-    }
+    local seed = ConfigHandler.Read(arg[1])
+    seed.config = ConfigHandler.Read('config.cfg')
+
+    -- TODO: There's an inconsistency...
+    seed._config = seed.config
 
     generate(seed, {
         step_initSeed,
         step_initPaths,
+        step_initParams,
         -- step_dump,
         step_initLML,
         -- step_dump,
@@ -517,9 +552,8 @@ if arg[1] then
         step_saveH3M
     })
 else
-    print('generate.lua players size sectors [seed]')
+    print('generate.lua h3pgm-file')
     print('  Example:')
-    print('           lua generate.lua 8 144 36')
-    print('           lua generate.lua 4 90 15')
-    print('           lua generate.lua 2 72 4')
+    print('           lua ?')
+    print('           lua tests/lml/01.h3pgm')
 end

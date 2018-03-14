@@ -327,7 +327,7 @@ end
 function MLML:PrintToMDS(filename)
   local file = io.open(filename, "w")
   local count = 0
-  for _,_ in pairs(self) do
+  for i,_ in pairs(self) do
     if type(i) == 'number' then
       count = count + 1
     end

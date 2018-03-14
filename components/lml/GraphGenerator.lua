@@ -14,7 +14,7 @@ local rand = RNG.Random
 local function ProductionIterator(state, productions)
   local dp = state.paramsDetailed
   local grammar = state.config.Grammar
-  
+
   local map = {}
   for name, weight in pairs(grammar) do
     local w = 0
@@ -27,27 +27,28 @@ local function ProductionIterator(state, productions)
     end
     if w > 0 then map[name] = w end
   end
-  return function () 
+  return function ()
               local choice = RNG.RouletteWheel(map)
               if choice==nil then return nil end
               map[choice] = nil
               return choice
-            end 
+            end
 end
 -- ProductionIterator
 
 
 --- Function generates 'lmlGraph' containing full LML graph
 -- @param state H3pgm state containing 'lmlInitialNode', 'config' and 'userparamsDetailed' keys, which is extended by 'lmlGraph'
-function GraphGenerator.Generate(state)  
+function GraphGenerator.Generate(state)
   local cfg = state.config
-  
+  local drawkeepsrc = cfg.GraphGeneratorDrawKeepDotSources
+
   local graph = Graph.Initialize(state.lmlInitialNode)
-  if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..0) end
-  
+  if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(state.paths.imgs..'LML-0', drawkeepsrc) end
+
   local c, id, fc = graph:IsConsistent()
-  if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end 
-  
+  if not c then error(string.format('[ERROR] <GraphGenerator> : Initial grammar node %d inconsistent (feature class: %s).', id, fc)) end
+
   local fails = 0
   for step = 1, cfg.GrammarMaxSteps do
     if graph:IsFinal() then break end
@@ -56,18 +57,18 @@ function GraphGenerator.Generate(state)
       local success = Productions[choice](graph, state)
       local c, id, fc = graph:IsConsistent()
       if not c then error(string.format('[ERROR] <GraphGenerator> : Production %s made node %d inconsistent (feature class: %s).', choice, id, fc)) end
-      if success then 
+      if success then
         print (string.format('[INFO] <GraphGenerator> Production "%s" applied (after %d fails); Graph: %d nodes (%d non-final), %d edges',
             choice, fails, #graph, #graph:NonfinalIds(), #graph:EdgesList()))
         fails = 0
-        if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML-'..step) end
-        break 
+        if cfg.GraphGeneratorDrawSteps then graph:Image():Draw(state.paths.imgs..'LML-'..step, drawkeepsrc) end
+        break
       end
       fails = fails + 1
     end
   end
-  
-  if cfg. GraphGeneratorDrawFinal and not cfg.GraphGeneratorDrawSteps then graph:Image():Draw(cfg.DebugOutPath..state.paramsDetailed.seed..'_LML') end
+
+  if cfg. GraphGeneratorDrawFinal then graph:Image():Draw(state.paths.path..'LML', drawkeepsrc) end -- deprecated (different path now): and not cfg.GraphGeneratorDrawSteps
   if graph:IsFinal() then
     state.lmlGraph = graph
   else
