@@ -25,7 +25,8 @@ end
 --- Generates GridMap based on initialized graph data.
 -- GridMap objects have to be initialized before calling Generate.
 -- @param dimensions - Set of constants containing dimensions (gW, gH, sW, sH) of the map. (gW and gH should be multiples of sW and sH respectively)
-function GridMap:Generate(dimensions)
+-- @param forceFill - forces filling the map even if causes uneven sizes
+function GridMap:Generate(dimensions, forceFill)
   self.gW = dimensions.gW
   self.gH = dimensions.gH
   self.sW = dimensions.sW
@@ -165,22 +166,29 @@ function GridMap:Generate(dimensions)
     }
   end
   
+  local addNeighborSector = function(id, xy)
+    local goodNeigh = nil
+    for _, neigh in pairs(getSectorNeighbors(xy[1], xy[2])) do
+      if neigh[1] >= 1 and neigh[1] <= #self.sectors[1] and neigh[2] >= 1 and neigh[2] <= #self.sectors
+        and self.sectors[neigh[2]][neigh[1]] == -1 then
+          goodNeigh = neigh
+          break
+      end
+    end
+    if goodNeigh then
+      self.sectorMaps[id][{goodNeigh[1], goodNeigh[2]}] = true
+      self.sectors[goodNeigh[2]][goodNeigh[1]] = id
+      return true
+    end
+    return nil
+  end
+  
   for _, zoneRatio in pairs(zoneRatios) do
     local proportion = getProportion(zoneRatio)
     while proportion * acceptableRatioToBest < largestProportion do
       local addedSector = nil
-      for _, sector in pairs(self.sectorMaps[zoneRatio[1]]) do
-        local goodNeigh = nil
-        for _, neigh in pairs(getSectorNeighbors(sector.x, sector.y)) do
-          if self.sectors[neigh[2]][neigh[1]] == -1 then
-            goodNeigh = neigh
-            break
-          end
-        end
-        if goodNeigh then
-          self.sectorMaps[zoneRatio[1]][{goodNeigh.x, goodNeigh.y}] = true
-          self.sectors[goodNeigh.y][goodNeigh.x] = zoneRatio[1]
-          addedSector = true
+      for sector, _ in pairs(self.sectorMaps[id]) do
+        if addNeighborSector(zoneRatio[1], sector) then
           break
         end
       end
@@ -188,6 +196,29 @@ function GridMap:Generate(dimensions)
         proportion = getProportion(zoneRatio)
       else
         print('Could not grow zone '..zoneRatio[1]..' anymore, might be smaller than expected.')
+        break
+      end
+    end
+  end
+  
+  if forceFill then
+    local canBeAdded = true
+    print('Force filling the map.')
+    while canBeAdded do
+      local addedSector = nil
+      local y = 1
+      while y <= #self.sectors and not addedSector do
+        local x = 1
+        while x <= #self.sectors[y] and not addedSector do
+          if self.sectors[y][x] ~= -1 and addNeighborSector(self.sectors[y][x], {x, y}) then
+            addedSector = true
+          end
+          x = x + 1
+        end
+        y = y + 1
+      end
+      if not addedSector then
+        canBeAdded = false
         break
       end
     end

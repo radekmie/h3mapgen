@@ -488,7 +488,7 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors})
+    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors}, true)
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
