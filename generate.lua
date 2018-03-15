@@ -173,6 +173,7 @@ local function step_gameCastles (state)
             local nfsw = #features
 
             local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
+            file:write('-1 -1 -1 -1\n')
             file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
             for _, zone in ipairs(zones) do
@@ -197,23 +198,25 @@ local function step_gameCastles (state)
             }, ' '))
 
             local read = string.gmatch(result, '[^\r\n]+')
-            read()
+            local fail = read() == 'check_data returned 1.'
+            print('SFP for baseId=' .. baseId .. ' ' .. (fail and 'failed' or 'succeed'))
 
-            for _, zone in ipairs(zones) do
-                read()
-                for _, feature in ipairs(features) do
-                    local x = read()
-                    local token = string.gmatch(x, '%d+')
-                    token()
+            if not fail then
+                for _, zone in ipairs(zones) do
+                    read()
+                    for _, feature in ipairs(features) do
+                        local token = string.gmatch(read(), '%d+')
+                        token()
 
-                    local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+                        local position = {y=tonumber(token()), x=tonumber(token()), z=0}
 
-                    if feature.instance.type == 'MINE' then
-                        table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
-                    end
+                        if feature.instance.type == 'MINE' then
+                            table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
+                        end
 
-                    if feature.instance.type == 'TOWN' then
-                        table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                        if feature.instance.type == 'TOWN' then
+                            table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                        end
                     end
                 end
             end
