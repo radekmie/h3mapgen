@@ -4,7 +4,9 @@ package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
 
 -- Instead of LUA_PATH
 package.path = package.path .. ';components/gridmap/?.lua'
+package.path = package.path .. ';components/lml/?.lua'
 package.path = package.path .. ';components/mlml/?.lua'
+package.path = package.path .. ';components/params/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
 local homm3lua = require('homm3lua')
@@ -12,12 +14,13 @@ local homm3lua = require('homm3lua')
 local ConfigHandler = require('ConfigHandler')
 local Serialization = require('Serialization')
 
-local CA      = require('ca')
-local Grammar = require('LogicMapLayout/Grammar/Grammar')
-local GridMap = require('GridMapSeparation/GridMap')
-local LML     = require('LogicMapLayout/LogicMapLayout')
-local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
-local rescale = require('mdsAdapter')
+local CA         = require('ca')
+local GridMap    = require('GridMapSeparation/GridMap')
+local LML        = require('LogicMapLayout')
+local MLML       = require('LogicMapLayout/MultiLogicMapLayout')
+local MLMLHelper = require('LogicMapLayout/MLMLHelper')
+local Params     = require('Params')
+local rescale    = require('mdsAdapter')
 
 -- Utils.
 local function generate (state, steps)
@@ -44,7 +47,7 @@ local function saveH3M (state, path)
     instance:name('Random Map')
     instance:description('Seed: ' .. state.seed)
 
-    for player = 1, state._params.players do
+    for player = 1, #state.paramsGeneral.players do
         instance:player(player - 1)
     end
 
@@ -79,6 +82,7 @@ local function shell (command)
     return result:gsub('^%s*(.-)%s*$', '%1')
 end
 
+
 -- Steps.
 local function step_ca (state)
     state.world1 = {}
@@ -104,7 +108,7 @@ local function step_dumpH3M (state, index)
     saveH3M(state, state.paths.dumps .. index .. '.h3m')
 end
 
-local function step_gameCastles (state)
+local function step_gameSFP (state)
     local baseIds = {}
 
     for zoneId, zone in pairs(state.MLML_graph) do
@@ -173,6 +177,7 @@ local function step_gameCastles (state)
             local nfsw = #features
 
             local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
+            file:write('-1 -1 -1 -1\n')
             file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
             for _, zone in ipairs(zones) do
@@ -197,23 +202,25 @@ local function step_gameCastles (state)
             }, ' '))
 
             local read = string.gmatch(result, '[^\r\n]+')
-            read()
+            local fail = read() ~= 'check_data returned 0.'
+            print('SFP for baseId=' .. baseId .. ' ' .. (fail and 'failed' or 'succeed'))
 
-            for _, zone in ipairs(zones) do
-                read()
-                for _, feature in ipairs(features) do
-                    local x = read()
-                    local token = string.gmatch(x, '%d+')
-                    token()
+            if not fail then
+                for _, zone in ipairs(zones) do
+                    read()
+                    for _, feature in ipairs(features) do
+                        local token = string.gmatch(read(), '%d+')
+                        token()
 
-                    local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+                        local position = {y=tonumber(token()), x=tonumber(token()), z=0}
 
-                    if feature.instance.type == 'MINE' then
-                        table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
-                    end
+                        if feature.instance.type == 'MINE' then
+                            table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
+                        end
 
-                    if feature.instance.type == 'TOWN' then
-                        table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                        if feature.instance.type == 'TOWN' then
+                            table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                        end
                     end
                 end
             end
@@ -233,6 +240,10 @@ local function step_debugZoneSigns (state)
       local mlmlNode = state.MLML_graph[zoneId]
       local descr_bzone = 'Zone Base-ID: '..mlmlNode.baseid
       local lmlNode = state.LML_graph[mlmlNode.baseid]
+
+      -- TODO: Inconsistency...
+      lmlNode.class = lmlNode.classes
+
       local descr_level = 'Level: '..lmlNode.class[1].level
       local players = {}
       for p=1,8 do
@@ -280,42 +291,26 @@ local function step_debugZoneSigns (state)
 end
 
 local function step_initLML (state)
-    local init = {class={}, features={}}
-    local rand = function (from, to)
-        return math.floor(math.random() * (to - from)) + from
-    end
+    LML.GenerateGraph(state)
+    LML.GenerateMetagraph(state)
 
-    for level = 0, rand(1, 6) do
-        table.insert(init.class,           {level=level, type='LOCAL'})
-        table.insert(init.features, {class={level=level, type='LOCAL'}, type='TOWN', value='PLAYER'})
-    end
+    -- TODO: Inconsistency...
+    state.LML_graph = state.lmlGraph
 
-    for buffer = 1, rand(1, 4) do
-        local level = rand(3, 6)
-
-        table.insert(init.class,           {level=level, type='BUFFER'})
-        table.insert(init.features, {class={level=level, type='BUFFER'}, type='OUTER', value=0})
-    end
-
-    local lml = LML.Initialize(init)
-
-    -- TODO: Do not use a state._config?
-    lml:Generate(Grammar, state._config.GrammarMaxSteps)
-
-    state.LML_graph = lml
-    state.LML_init = init
-    state.LML_interface = lml:Interface()
+    state.LML_interface_OLD = MLMLHelper.GenerateOldLMLInterface(state.LML_graph)
 end
 
 local function step_initMLML (state)
-    local mlml = MLML.Initialize(state.LML_interface)
-    mlml:Generate(state._params.players)
+    local mlml = MLML.Initialize(state.LML_interface_OLD)
+    mlml:Generate(#state.paramsDetailed.players)
 
     -- TODO: Should be stored in state, not in a file.
     mlml:PrintToMDS(state.paths.graph)
 
     state.MLML_graph = mlml
     state.MLML_interface = mlml:Interface()
+
+    MLMLHelper.GenerateImage(mlml, state.lmlGraph):Draw(state.paths.path..'MLML', state.config.GraphGeneratorDrawKeepDotSources)
 end
 
 local function step_initPaths (state)
@@ -324,9 +319,12 @@ local function step_initPaths (state)
     local delim = package.config:sub(1,1)
 
     -- Initialize paths.
-    state.path = 'output' .. delim .. state.seed .. '_' .. state._params.players
+    state.path = 'output' .. delim .. state.seed .. '_' .. #state.paramsGeneral.players
     state.paths = {
+        path = state.path..delim,
+        delim = delim,
         dumps = state.path .. delim .. 'dumps' .. delim,
+        imgs  = state.path .. delim .. 'imgs' .. delim,
         emb   = state.path .. delim .. 'emb',
         graph = state.path .. delim .. 'graph.txt',
         map   = state.path .. delim .. 'map.h3m',
@@ -335,19 +333,28 @@ local function step_initPaths (state)
         sfp   = state.path .. delim .. 'sfp.txt'
     }
 
+    -- TODO: Inconsistency...
+    --state.config.DebugOutPath = state.path
+
     print('Generating ' .. state.path .. '...')
 
     -- Create dir.
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.dumps)
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.imgs)
+end
+
+local function step_initParams (state)
+    Params.GenerateDetailedParams(state)
+    Params.GenerateInitLMLNode(state)
 end
 
 local function step_initSeed (state)
     -- Set shared seed for determinacy.
-    if state._params.seed == -1 then
+    if state.paramsGeneral.seed == 0 then
         state.seed = os.time()
     else
-        state.seed = state._params.seed
+        state.seed = state.paramsGeneral.seed
     end
 
     math.randomseed(state.seed)
@@ -419,8 +426,8 @@ local function step_parseWorld (state)
             end
         end
 
-        -- NOTE: It should NOT happen, but... You know.
-        cell = cell or {homm3lua.H3M_TERRAIN_ROCK}
+        -- No zone.
+        cell = cell or {homm3lua.TERRAIN_LAVA}
 
         state.world[xyz2position(x, y, z)] = {cell = cell, zone = code}
     end
@@ -433,8 +440,11 @@ local function step_saveH3M (state)
 end
 
 local function step_voronoi (state)
-    local size    = state._params.size
-    local sectors = state._params.sectors
+    local gH = state.paramsDetailed.height
+    local gW = state.paramsDetailed.width
+
+    -- TODO: Sectors...?
+    local sectors = state.config.StandardZoneSize // 2
 
     local data = {}
     local mdsItems = {}
@@ -478,48 +488,87 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gW=size, gH=size, sW=size//sectors, sH=size//sectors})
+    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors})
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
 -- Main.
-if arg[1] then
-    local seed = {
-        _config = ConfigHandler.Read('config.cfg'),
-        _params = {
-            players = tonumber(arg[1]),
-            sectors = tonumber(arg[3]),
-            seed    = tonumber(arg[4] or -1),
-            size    = tonumber(arg[2])
-        }
-    }
+if arg[1] == '?' then
+  arg[1] = 'tests/lml/01.h3pgm'
+end
+
+if arg[1] == '!' then
+    arg[1] = 'tests/paperMap.h3pgm'
+    local seed = ConfigHandler.Read(arg[1])
+    seed.config = ConfigHandler.Read('config.cfg')
+
+    -- TODO: There's an inconsistency...
+    seed._config = seed.config
 
     generate(seed, {
         step_initSeed,
         step_initPaths,
-        -- step_dump,
-        step_initLML,
-        -- step_dump,
+        --step_initParams, -- commented - we want to use predefined LML
+        --step_dump,
+        --step_initLML,
+        --step_dump,
         step_initMLML,
         step_dump,
         step_mds,
-        -- step_dump,
+        step_dump,
         step_voronoi,
-        -- step_dump,
+        step_dump,
         step_ca,
-        -- step_dump,
+        step_dump,
         -- NOTE: This makes state renderable, i.e. .h3m-able.
         step_parseWorld,
-        step_gameCastles,
+        step_dump,
+        step_dumpH3M,
+        step_gameSFP,
+        step_dump,
+        step_dumpH3M,
         step_debugZoneSigns,
-        -- step_dump,
-        -- step_dumpH3M,
+        step_dump,
+        step_dumpH3M,
+        step_saveH3M
+    })
+elseif arg[1] then
+    local seed = ConfigHandler.Read(arg[1])
+    seed.config = ConfigHandler.Read('config.cfg')
+
+    -- TODO: There's an inconsistency...
+    seed._config = seed.config
+
+    generate(seed, {
+        step_initSeed,
+        step_initPaths,
+        --step_initParams,
+        --step_dump,
+        --step_initLML,
+        --step_dump,
+        step_initMLML,
+        step_dump,
+        step_mds,
+        step_dump,
+        step_voronoi,
+        step_dump,
+        step_ca,
+        step_dump,
+        -- NOTE: This makes state renderable, i.e. .h3m-able.
+        step_parseWorld,
+        step_dump,
+        step_dumpH3M,
+        step_gameSFP,
+        step_dump,
+        step_dumpH3M,
+        step_debugZoneSigns,
+        step_dump,
+        step_dumpH3M,
         step_saveH3M
     })
 else
-    print('generate.lua players size sectors [seed]')
+    print('generate.lua h3pgm-file')
     print('  Example:')
-    print('           lua generate.lua 8 144 36')
-    print('           lua generate.lua 4 90 15')
-    print('           lua generate.lua 2 72 4')
+    print('           lua ?')
+    print('           lua tests/lml/01.h3pgm')
 end
