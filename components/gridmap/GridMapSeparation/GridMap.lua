@@ -100,6 +100,8 @@ function GridMap:Generate(dimensions)
     end
   end
 
+  self.joinAt = {}
+
   -- we now have all data required - which sector has which starting id.
   -- which sectors are neighbors
 
@@ -386,14 +388,28 @@ function GridMap:FillPath(path, fragStart, fragEnd)
   local endxy = path[fragEnd]
   local endId = self.sectors[endxy[2]][endxy[1]]
 
+  local joined = false
+
   for pos = fragStart, fragEnd do
     local xy = path[pos]
     if self.sectors[xy[2]][xy[1]] == -1 then
-      local currentId = (pos <= (fragStart + fragEnd) / 2 and startId or endId)
+      local previousId = (pos - 1 <= (fragStart + fragEnd) / 2 and startId or endId)
+      local currentId  = (pos     <= (fragStart + fragEnd) / 2 and startId or endId)
+
+      if previousId ~= currentId then
+        joined = true
+        table.insert(self.joinAt, {startId, endId, path[pos - 1], xy})
+      end
+
       self.sectors[xy[2]][xy[1]] = currentId
       self.sectorMaps[currentId][xy] = true
     end
   end
+
+  if not joined then
+    table.insert(self.joinAt, {startId, endId, path[fragEnd - 1], path[fragEnd]})
+  end
+
   return true
 end
 
@@ -436,7 +452,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
   for y = 1, self.gH do
     local row = {}
     for x = 1, self.gW do
-      row[#row + 1] = {id = -1, dist = self.gH * self.gW}
+      row[#row + 1] = {id = -1, dist = self.gH * self.gW, sector = {-1, -1}}
     end
     self.grid[#self.grid + 1] = row
   end
@@ -452,6 +468,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       local nearestSectorsPos = self:GetNearestSectors(sectorX, sectorY)
       local bestId = -1
       local bestDist = self.gH + self.gW
+      local bestSector = {-1, -1}
       for _,xy in pairs(nearestSectorsPos) do
         for _,sPoint in pairs(sectorPoints[xy[2]][xy[1]]) do
           local dX = thisX - sPoint[1]
@@ -460,11 +477,13 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
           if thisDist < bestDist then
             bestId = sPoint[3]
             bestDist = thisDist
+            bestSector = xy
           end
         end
       end
       self.grid[y][x].id = bestId
       self.grid[y][x].dist = bestDist
+      self.grid[y][x].sector = bestSector
 
       if areaSizes[bestId] == nil then
         areaSizes[bestId] = 0
@@ -489,36 +508,66 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
     return myGridSquare.dist == otherGridSquare.dist and areaSizes[myGridSquare.id] < areaSizes[otherGridSquare.id]
   end
 
-  self.joined = {}
+  for _, join in ipairs(self.joinAt) do
+    local idA, idB, xyA, xyB = table.unpack(join)
+    local connected = {-1, -1}
+
+    for y = 2, self.gH - 1 do
+      for x = 2, self.gW - 1 do
+        if self.grid[y][x].id == idA and
+           self.grid[y][x].sector[1] == xyA[1] and
+           self.grid[y][x].sector[2] == xyA[2]
+        then
+          local isAnyB
+          local isEveryAorBorNeutral = true
+
+          for i, xy in pairs(getGridNeighbors(x, y)) do
+            local cell = self.grid[xy[2]][xy[1]]
+            local isAxis = i == 2 or i == 4 or i == 5 or i == 7
+
+            if isAxis and cell.sector[1] == xyB[1] and cell.sector[2] == xyB[2] then
+              if cell.id ~= idA and cell.id ~= idB and cell.id ~= -1 then
+                isEveryAorBorNeutral = false
+                break
+              end
+
+              if cell.id == idB then
+                isAnyB = xy
+              end
+            end
+          end
+
+          if isAnyB ~= nil and isEveryAorBorNeutral then
+            -- Super white.
+            self.grid[y][x].id = -2
+            self.grid[isAnyB[2]][isAnyB[1]].id = -2
+
+            connected = {x, y, isAnyB[1], isAnyB[2]}
+            break
+          end
+        end
+      end
+
+      if connected[1] ~= -1 then
+        break
+      end
+    end
+
+    print(
+      'Zone ' .. idA .. ' connected with ' .. idB .. ' at ' ..
+      connected[1] .. 'x' .. connected[2] ..
+      ' - ' ..
+      connected[3] .. 'x' .. connected[4]
+    )
+  end
 
   for y = 1, self.gH do
     for x = 1, self.gW do
-      if self.grid[y][x].id ~= -1 then
-        for i, xy in pairs(getGridNeighbors(x, y)) do
+      if self.grid[y][x].id > 0 then
+        for _, xy in pairs(getGridNeighbors(x, y)) do
           if isMySquareWorse(x, y, xy[1], xy[2]) then
-            local a = self.grid[y][x].id
-            local b = self.grid[xy[2]][xy[1]].id
-
-            if a > 0 and b > 0 and self.neighbors[a][b] then
-              local isAxisAligned = i == 2 or i == 4 or i == 5 or i == 7
-              local joinsCount = (self.joined[a] and self.joined[a][b]) or 0
-
-              if isAxisAligned and joinsCount < 1 then
-                if self.joined[a] == nil then self.joined[a] = {} end
-                if self.joined[b] == nil then self.joined[b] = {} end
-
-                self.joined[a][b] = joinsCount + 1
-                self.joined[b][a] = joinsCount + 1
-
-                self.grid[y][x].id = -2
-              else
-                self.grid[y][x].id = -1
-              end
-
-              break
-            else
-              self.grid[y][x].id = -1
-            end
+            self.grid[y][x].id = -1
+            break
           end
         end
       end
