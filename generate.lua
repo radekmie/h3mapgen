@@ -494,7 +494,8 @@ if arg[1] == '?' then
   arg[1] = 'tests/lml/01.h3pgm'
 end
 
-if arg[1] then
+if arg[1] == '!' then
+    arg[1] = 'tests/paperMap.h3pgm'
     local seed = ConfigHandler.Read(arg[1])
     seed.config = ConfigHandler.Read('config.cfg')
 
@@ -504,10 +505,44 @@ if arg[1] then
     generate(seed, {
         step_initSeed,
         step_initPaths,
-        step_initParams,
+        --step_initParams, -- commented - we want to use predefined LML
+        --step_dump,
+        --step_initLML,
+        --step_dump,
+        step_initMLML,
         step_dump,
-        step_initLML,
+        step_mds,
         step_dump,
+        step_voronoi,
+        step_dump,
+        step_ca,
+        step_dump,
+        -- NOTE: This makes state renderable, i.e. .h3m-able.
+        step_parseWorld,
+        step_dump,
+        step_dumpH3M,
+        step_gameSFP,
+        step_dump,
+        step_dumpH3M,
+        step_debugZoneSigns,
+        step_dump,
+        step_dumpH3M,
+        step_saveH3M
+    })
+elseif arg[1] then
+    local seed = ConfigHandler.Read(arg[1])
+    seed.config = ConfigHandler.Read('config.cfg')
+
+    -- TODO: There's an inconsistency...
+    seed._config = seed.config
+
+    generate(seed, {
+        step_initSeed,
+        step_initPaths,
+        --step_initParams,
+        --step_dump,
+        --step_initLML,
+        --step_dump,
         step_initMLML,
         step_dump,
         step_mds,
