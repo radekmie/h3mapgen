@@ -137,6 +137,15 @@ function GridMap:Generate(dimensions, forceFill)
     sectorSizes[id] = sectorSize
   end
   
+  local filledSectors = {}
+  for y = 1, #self.sectors do
+    for x = 1, #self.sectors[y] do
+      if self.sectors[y][x] ~= -1 then
+        filledSectors[#filledSectors + 1] = {x,y}
+      end
+    end
+  end
+  
   local zoneRatios = {}
   for id, _ in pairs(self.sectorMaps) do
     zoneRatios[#zoneRatios + 1] = {id, sectorSizes[id], self.gdat[id].size}
@@ -178,9 +187,8 @@ function GridMap:Generate(dimensions, forceFill)
     if goodNeigh then
       self.sectorMaps[id][{goodNeigh[1], goodNeigh[2]}] = true
       self.sectors[goodNeigh[2]][goodNeigh[1]] = id
-      return true
     end
-    return nil
+    return goodNeigh
   end
   
   for _, zoneRatio in pairs(zoneRatios) do
@@ -205,21 +213,13 @@ function GridMap:Generate(dimensions, forceFill)
     local canBeAdded = true
     print('Force filling the map.')
     while canBeAdded do
-      local addedSector = nil
-      local y = 1
-      while y <= #self.sectors and not addedSector do
-        local x = 1
-        while x <= #self.sectors[y] and not addedSector do
-          if self.sectors[y][x] ~= -1 and addNeighborSector(self.sectors[y][x], {x, y}) then
-            addedSector = true
-          end
-          x = x + 1
+      canBeAdded = false
+      for _, xy in pairs(filledSectors) do
+        local addedSector = addNeighborSector(self.sectors[xy[2]][xy[1]], xy)
+        if addedSector then
+          filledSectors[#filledSectors + 1] = addedSector
+          canBeAdded = true
         end
-        y = y + 1
-      end
-      if not addedSector then
-        canBeAdded = false
-        break
       end
     end
   end
