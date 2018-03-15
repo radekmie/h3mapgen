@@ -130,7 +130,7 @@ function GridMap:Generate(dimensions)
   local sectorSizes = {}
   for id, sectors in pairs(self.sectorMaps) do
     local sectorSize = sectorSizes[id] or 0
-    for _, sector in pairs(sectors) do
+    for _, _ in pairs(sectors) do
       sectorSize = sectorSize + 1
     end
     sectorSizes[id] = sectorSize
@@ -171,7 +171,7 @@ function GridMap:Generate(dimensions)
       local addedSector = nil
       for _, sector in pairs(self.sectorMaps[zoneRatio[1]]) do
         local goodNeigh = nil
-        for _, neigh in pairs(getSectorNeighbors(sector.x sector.y)) do
+        for _, neigh in pairs(getSectorNeighbors(sector.x, sector.y)) do
           if self.sectors[neigh[2]][neigh[1]] == -1 then
             goodNeigh = neigh
             break
