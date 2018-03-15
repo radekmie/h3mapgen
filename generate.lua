@@ -309,7 +309,7 @@ local function step_initMLML (state)
 
     state.MLML_graph = mlml
     state.MLML_interface = mlml:Interface()
-    
+
     MLMLHelper.GenerateImage(mlml, state.lmlGraph):Draw(state.paths.path..'MLML', state.config.GraphGeneratorDrawKeepDotSources)
 end
 
@@ -426,8 +426,8 @@ local function step_parseWorld (state)
             end
         end
 
-        -- NOTE: It should NOT happen, but... You know.
-        cell = cell or {homm3lua.H3M_TERRAIN_ROCK}
+        -- No zone.
+        cell = cell or {homm3lua.TERRAIN_LAVA}
 
         state.world[xyz2position(x, y, z)] = {cell = cell, zone = code}
     end
