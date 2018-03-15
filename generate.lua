@@ -91,7 +91,7 @@ local function step_ca (state)
         local line = {}
 
         for _, col in ipairs(row) do
-            table.insert(line, col == -1 and 3 or 1)
+            table.insert(line, col == -1 and 3 or (col == -2 and 2 or 1))
         end
 
         table.insert(state.world1, line)
@@ -120,12 +120,12 @@ local function step_gameSFP (state)
         for _, feature in ipairs(state.LML_graph[baseId].features) do
             if feature.type == 'MINE' then
                 -- TODO: Mine instance?
-                -- TODO: Mine template.
+                -- TODO: Mine template. This is a sawmill.
                 table.insert(features, {
                     instance = feature,
                     template = table.concat({
                         '2 4',
-                        '_###',
+                        '__##',
                         '##.#',
                         '1 2',
                         ''
@@ -134,12 +134,11 @@ local function step_gameSFP (state)
             end
 
             if feature.type == 'TOWN' then
-                -- TODO: Town template.
                 table.insert(features, {
                     instance = feature,
                     template = table.concat({
                         '3 5',
-                        '#####',
+                        '_###_',
                         '#####',
                         '##.##',
                         '2 2',
