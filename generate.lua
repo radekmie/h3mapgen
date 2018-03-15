@@ -91,7 +91,7 @@ local function step_ca (state)
         local line = {}
 
         for _, col in ipairs(row) do
-            table.insert(line, col == -1 and 3 or 1)
+            table.insert(line, col == 0 and 3 or (col < 0 and 2 or 1))
         end
 
         table.insert(state.world1, line)
@@ -150,29 +150,41 @@ local function step_gameSFP (state)
         end
 
         local zones = {}
+        local pois1 = {}
         for zoneId, zone in pairs(state.MLML_graph) do
             if zone.baseid == baseId then
                 local lines = {}
+                local poisA = {}
 
                 for z = 0, 0 do
                 for y = 0, #state.world1 - 1 do
                 local line = {}
                 for x = 0, #state.world1[1] - 1 do
-                    local id = xyz2position(x, y, z)
-                    table.insert(line, state.world[id].zone ~= zoneId and '#' or '.')
+                    local id = state.world[xyz2position(x, y, z)].zone
+                    if id == zoneId or id == -zoneId then
+                        table.insert(line, '.')
+
+                        if state.world2[y + 1][x + 1] == 2 and state.voronoi.grid[y + 1][x + 1] == -zoneId then
+                            table.insert(poisA, x .. ' ' .. y)
+                        end
+                    else
+                        table.insert(line, '#')
+                    end
                 end
                 table.insert(lines, table.concat(line, ''))
                 end
                 end
 
                 table.insert(lines, '')
+                table.insert(poisA, '')
                 table.insert(zones, table.concat(lines, '\n'))
+                table.insert(pois1, poisA)
             end
         end
 
         if #features > 0 then
             local nzones = #zones
-            local npois1 = 0
+            local npois1 = #pois1[1]
             local npois2 = 0
             local nfsw = #features
 
@@ -180,14 +192,10 @@ local function step_gameSFP (state)
             file:write('-1 -1 -1 -1\n')
             file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
-            for _, zone in ipairs(zones) do
+            for index, zone in ipairs(zones) do
                 file:write(#state.world1 .. ' ' .. #state.world1[1] .. '\n')
                 file:write(zone)
-
-                -- TODO: Points.
-                -- for _, point in ipairs(points1) do
-                --     file:write(table.concat(point, ' ') .. '\n')
-                -- end
+                file:write(table.concat(pois1[index], '\n'))
 
                 for _, feature in ipairs(features) do
                     file:write(feature.template)
