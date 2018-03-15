@@ -39,7 +39,7 @@ void destroy_map(struct map* M)
     free(M->T);
 }
 
-void print_map(struct map* M)
+void map_print(struct map* M)
 {
     for (int i = 0; i < M->n; i++)
         printf("%s\n", M->T[i]);
@@ -83,7 +83,7 @@ void read_pattern(struct pattern* T)
 
 void print_pattern(struct pattern* T)
 {
-    print_map(&T->M);
+    map_print(&T->M);
     print_poi(&T->P);
 }
 
