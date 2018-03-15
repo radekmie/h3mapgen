@@ -5,11 +5,28 @@
 
 int main(void)
 {
-    // w jaki sposób korzystać z losowości?
     struct data D;
 
+    int a, b, c, d;
+
+    srand(time(NULL));
+
+    scanf("%d%d%d%d", &a, &b, &c, &d);
+
+    if (a != -1)
+        pop_size = a;
+    if (b != -1)
+        mut_prom = b;
+    if (c != -1)
+        time_limit = c;
+    if (d != -1)
+        srand(d);
+
     read_data(&D);
-    printf("check_data returned %d.\n", check_data(&D));
+    int ret = check_data(&D);
+    printf("check_data returned %d.\n", ret);
+    if (ret != 0)
+        return ret;
     //print_data(&D);
 
     /*for (int i = 0; i < D.zone[1].n; i++)
@@ -102,7 +119,7 @@ int main(void)
             printf("Object %d: %d %d\n", j+1, answer->P[i][j].x, answer->P[i][j].y);
         }
     }
-    printf("Value: %d\n", evaluate(answer, &D));
+    printf("Value: %d\n", evaluate(answer, &D, 1));
 
     return 0;
 }
