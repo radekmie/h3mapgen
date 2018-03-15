@@ -202,7 +202,7 @@ local function step_gameSFP (state)
             }, ' '))
 
             local read = string.gmatch(result, '[^\r\n]+')
-            local fail = read() == 'check_data returned 1.'
+            local fail = read() ~= 'check_data returned 0.'
             print('SFP for baseId=' .. baseId .. ' ' .. (fail and 'failed' or 'succeed'))
 
             if not fail then
