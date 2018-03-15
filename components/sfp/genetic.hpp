@@ -115,9 +115,6 @@ void crate_random_creature(struct creature* monster, struct possible_positions* 
 
 void mutation(struct creature* monster, struct possible_positions* P, int nzones, int nsfw, int mut)
 {
-    int rzone = rand() % nzones;
-    int rsfw  = rand() % nsfw;
-    
     for (int i = 0; i < nzones; i++)
         for (int j = 0; j < nsfw; j++)
             if (rand()%1000 < mut)
@@ -205,7 +202,10 @@ int evaluate(struct creature* monster, struct data* D, int print = 0)
         }
         
         if (print == 1)
+        {
             map_print(&print_map);
+            printf("\n");
+        }
     
         destroy_map(&temp_map);
         if (print == 1) destroy_map(&print_map);
@@ -271,6 +271,178 @@ int evaluate(struct creature* monster, struct data* D, int print = 0)
             
     
     return result;
+}
+
+void init_findunion(int* fu, int size)
+{
+    for (int i = 0; i < size; i++)
+        fu[i] = i;
+}
+
+int find_findunion(int* fu, int i)
+{
+    if (fu[i] != i)
+        fu[i] = find_findunion(fu, fu[i]);
+    return fu[i];
+}
+
+int union_findunion(int* fu, int i, int j)
+{
+    i = find_findunion(fu, i);
+    j = find_findunion(fu, j);
+    
+    if (i == j) return 1;
+    
+    fu[i] = j;
+    return 0;
+}
+
+struct ijval
+{
+    int i;
+    int j;
+    int value;
+};
+
+void print_mst(struct creature* monster, struct data* D)
+{
+    int N = D->nsfw + D->npois1 + D->npois2;
+    int G[N][N];
+    int **bfs_results;
+    struct ijval T[N*N];
+    struct map temp_map;
+    
+    bfs_results = (int**)malloc(sizeof(int*) * D->zone[0].n);
+    for (int j = 0; j < D->zone[0].n; j++)
+        bfs_results[j] = (int*)malloc(sizeof(int) * D->zone[0].m);
+    
+    copy_map(&D->zone[0], &temp_map);
+    for (int j = 0; j < D->nsfw; j++)
+    {
+        if (check_placement(&temp_map, &D->objects[0][j], monster->P[0][j].x, monster->P[0][j].y) != 0)
+            return;
+        place(&temp_map, &D->objects[0][j], monster->P[0][j].x, monster->P[0][j].y);
+    }
+    
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            G[i][j] = oo;
+    
+    for (int j = 0; j < D->nsfw; j++)
+    {
+        bfs(&temp_map, bfs_results, monster->P[0][j].x, monster->P[0][j].y);
+        
+        for (int k = 0; k < D->npois1 + D->npois2; k++)
+        {
+            G[D->nsfw + k][j] = G[j][D->nsfw + k] = bfs_results[ D->pois[0][k].x ][ D->pois[0][k].y ];
+        }
+        
+        for (int k = 0; k < D->nsfw; k++)
+        {
+            G[k][j] = G[j][k] = bfs_results[ monster->P[0][k].x ][ monster->P[0][k].y ];
+        }
+    }
+    destroy_map(&temp_map);
+    
+    for (int j = 0; j < D->zone[0].n; j++)
+        free(bfs_results[j]);
+    free(bfs_results);
+    
+    int T_size = 0;
+    for (int i = 0; i < N; i++)
+        for (int j = i+1; j < N; j++)
+        {
+            T[T_size].i = i;
+            T[T_size].j = j;
+            T[T_size].value = G[i][j];
+            T_size++;
+        }
+    
+    for (int i = 0; i < T_size-1; i++)
+        for (int j = 0; j < T_size-1; j++)
+            if (T[j].value > T[j+1].value)
+            {
+                ijval tmp = T[j];
+                T[j] = T[j+1];
+                T[j+1] = tmp;
+            }
+    
+    int tree_size = 0;
+    int findunion[N];
+    struct poi Tree[N-1];
+    
+    init_findunion(findunion, N);
+    for (int i = 0; i < T_size; i++)
+        if (union_findunion(findunion, T[i].i, T[i].j) == 0)
+        {
+            Tree[tree_size].x = T[i].i;
+            Tree[tree_size].y = T[i].j;
+            tree_size++;
+        }
+
+    if (tree_size != N-1)
+    {
+        printf("Coś poszło bardzo źle.\n");
+        exit(IMPLEMENTATION_ERROR);
+    }
+        
+    for (int i = 0; i < D->nzones; i++)
+    {
+        bfs_results = (int**)malloc(sizeof(int*) * D->zone[i].n);
+        for (int j = 0; j < D->zone[i].n; j++)
+            bfs_results[j] = (int*)malloc(sizeof(int) * D->zone[i].m);
+        
+        copy_map(&D->zone[i], &temp_map);
+        for (int j = 0; j < D->nsfw; j++)
+        {
+            if (check_placement(&temp_map, &D->objects[i][j], monster->P[i][j].x, monster->P[i][j].y) != 0)
+                return;
+            place(&temp_map, &D->objects[i][j], monster->P[i][j].x, monster->P[i][j].y);
+        }
+        
+        for (int j = 0; j < tree_size; j++)
+        {
+            struct poi pfrom;
+            struct poi pto;
+            
+            if (Tree[j].x < D->nsfw)
+                pfrom = monster->P[i][ Tree[j].x ];
+            else
+                pfrom = D->pois[i][ Tree[j].x - D->nsfw ];
+            
+            if (Tree[j].y < D->nsfw)
+                pto = monster->P[i][ Tree[j].y ];
+            else
+                pto = D->pois[i][ Tree[j].y - D->nsfw ];
+            
+            bfs(&temp_map, bfs_results, pfrom.x, pfrom.y);
+            
+            int cx = pto.x;
+            int cy = pto.y;
+            
+            while (bfs_results[cx][cy] != 0)
+            {
+                if (temp_map.T[cx][cy] == GROUND)
+                    temp_map.T[cx][cy] = TRACK;
+                
+                int l = 0;
+                while (l < dn && ((temp_map.T[cx+dx[l]][cy+dy[l]] != GROUND && temp_map.T[cx+dx[l]][cy+dy[l]] != TRACK) || bfs_results[cx+dx[l]][cy+dy[l]] >= bfs_results[cx][cy]))
+                    l++;
+                if (l == dn) break;
+                cx += dx[l];
+                cy += dy[l];
+            }
+        }
+        
+        for (int j = 0; j < D->zone[i].n; j++)
+            free(bfs_results[j]);
+        free(bfs_results);
+        
+        map_print(&temp_map);
+        printf("\n");
+        
+        destroy_map(&temp_map);
+    }
 }
 
 void copy_crature(struct creature* src, struct creature* dest, int nzones, int nsfw)
