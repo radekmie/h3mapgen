@@ -127,6 +127,72 @@ function GridMap:Generate(dimensions)
     end
   end
   
+  local sectorSizes = {}
+  for id, sectors in pairs(self.sectorMaps) do
+    local sectorSize = sectorSizes[id] or 0
+    for _, sector in pairs(sectors) do
+      sectorSize = sectorSize + 1
+    end
+    sectorSizes[id] = sectorSize
+  end
+  
+  local zoneRatios = {}
+  for id, _ in pairs(self.sectorMaps) do
+    zoneRatios[#zoneRatios + 1] = {id, sectorSizes[id], self.gdat[id].size}
+  end
+  
+  local getProportion = function(ratio)
+    return ratio[2] / ratio[3]
+  end
+  
+  local compareRatios = function(ratio1, ratio2)
+    local proportion1 = getProportion(ratio1)
+    local proportion2 = getProportion(ratio2)
+    return proportion1 > proportion2
+      or (proportion1 == proportion2 and ratio1[1] > ratio2[1])
+  end
+  
+  table.sort(zoneRatios, compareRatios)
+  
+  local largestProportion = getProportion(zoneRatios[#zoneRatios])
+  local acceptableRatioToBest = 1.5
+  
+  local getSectorNeighbors = function(x, y)
+    return {
+                {x, y - 1},
+      {x - 1, y},           {x + 1, y},
+                {x, y + 1}
+    }
+  end
+  
+  for _, zoneRatio in pairs(zoneRatios) do
+    local proportion = getProportion(zoneRatio)
+    while proportion * acceptableRatioToBest < largestProportion do
+      local addedSector = nil
+      for _, sector in pairs(self.sectorMaps[zoneRatio[1]]) do
+        local goodNeigh = nil
+        for _, neigh in pairs(getSectorNeighbors(sector.x sector.y)) do
+          if self.sectors[neigh[2]][neigh[1]] == -1 then
+            goodNeigh = neigh
+            break
+          end
+        end
+        if goodNeigh then
+          self.sectorMaps[zoneRatio[1]][{goodNeigh.x, goodNeigh.y}] = true
+          self.sectors[goodNeigh.y][goodNeigh.x] = zoneRatio[1]
+          addedSector = true
+          break
+        end
+      end
+      if addedSector then
+        proportion = getProportion(zoneRatio)
+      else
+        print('Could not grow zone '..zoneRatio[1]..' anymore, might be smaller than expected.')
+        break
+      end
+    end
+  end
+  
 end
 
 
