@@ -51,6 +51,10 @@ local function saveH3M (state, path)
         instance:player(player - 1)
     end
 
+    for _, creature in ipairs(state.world_creatures) do
+        instance:creature(table.unpack(creature))
+    end
+
     for _, sign in ipairs(state.world_debugZoneSigns) do
         instance:sign(table.unpack(sign))
     end
@@ -91,7 +95,7 @@ local function step_ca (state)
         local line = {}
 
         for _, col in ipairs(row) do
-            table.insert(line, col == 0 and 3 or (col < 0 and 2 or 1))
+            table.insert(line, col == -1 and 3 or (col == -2 and 2 or 1))
         end
 
         table.insert(state.world1, line)
@@ -149,16 +153,23 @@ local function step_gameSFP (state)
             end
         end
 
+        local border = {}
+        for x = 1, #state.world1[1] + 2 do
+            table.insert(border, '#')
+        end
+
+        border = table.concat(border, '')
+
         local zones = {}
         local pois1 = {}
         for zoneId, zone in pairs(state.MLML_graph) do
             if zone.baseid == baseId then
-                local lines = {}
+                local lines = {border}
                 local poisA = {}
 
                 for z = 0, 0 do
                 for y = 0, #state.world1 - 1 do
-                local line = {}
+                local line = {'#'}
                 for x = 0, #state.world1[1] - 1 do
                     local id = state.world[xyz2position(x, y, z)].zone
                     if id == zoneId or id == -zoneId then
@@ -171,10 +182,12 @@ local function step_gameSFP (state)
                         table.insert(line, '#')
                     end
                 end
+                table.insert(line, '#')
                 table.insert(lines, table.concat(line, ''))
                 end
                 end
 
+                table.insert(lines, border)
                 table.insert(lines, '')
                 table.insert(poisA, '')
                 table.insert(zones, table.concat(lines, '\n'))
@@ -193,7 +206,7 @@ local function step_gameSFP (state)
             file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
             for index, zone in ipairs(zones) do
-                file:write(#state.world1 .. ' ' .. #state.world1[1] .. '\n')
+                file:write((#state.world1 + 2) .. ' ' .. (#state.world1[1] + 2) .. '\n')
                 file:write(zone)
                 file:write(table.concat(pois1[index], '\n'))
 
@@ -220,7 +233,7 @@ local function step_gameSFP (state)
                         local token = string.gmatch(read(), '%d+')
                         token()
 
-                        local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+                        local position = {y=tonumber(token()) - 1, x=tonumber(token()) - 1, z=0}
 
                         if feature.instance.type == 'MINE' then
                             table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
@@ -385,6 +398,7 @@ local function step_parseWorld (state)
 
     -- Yay!
     state.world = {}
+    state.world_creatures = {}
     state.world_grid = {}
     state.world_mines = {}
     state.world_obstacles = {}
@@ -415,6 +429,11 @@ local function step_parseWorld (state)
         local wall = (x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1) and -1 or state.world2[y2 + 1][x2 + 1]
 
         -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
+        if wall == 2 then
+            local sprite = 'Archangel'
+            state.world_grid[xyz2position(x, y, z)] = true
+            table.insert(state.world_creatures, {sprite, {x=x, y=y, z=z}, 0, homm3lua.DISPOSITION_AGGRESSIVE, true, true})
+        end
         if wall == 1 or wall == 3 then
             local sprite = wall == 1 and 'Oak Trees' or 'Pine Trees'
             state.world_grid[xyz2position(x, y, z)] = true
@@ -496,7 +515,7 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors})
+    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors}, true)
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
