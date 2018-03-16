@@ -153,22 +153,31 @@ local function step_gameSFP (state)
             end
         end
 
+        local border = {}
+        for x = 1, #state.world1[1] + 2 do
+            table.insert(border, '#')
+        end
+
+        border = table.concat(border, '')
+
         local zones = {}
         for zoneId, zone in pairs(state.MLML_graph) do
             if zone.baseid == baseId then
-                local lines = {}
+                local lines = {border}
 
                 for z = 0, 0 do
                 for y = 0, #state.world1 - 1 do
-                local line = {}
+                local line = {'#'}
                 for x = 0, #state.world1[1] - 1 do
                     local id = xyz2position(x, y, z)
                     table.insert(line, state.world[id].zone ~= zoneId and '#' or '.')
                 end
+                table.insert(line, '#')
                 table.insert(lines, table.concat(line, ''))
                 end
                 end
 
+                table.insert(lines, border)
                 table.insert(lines, '')
                 table.insert(zones, table.concat(lines, '\n'))
             end
@@ -185,7 +194,7 @@ local function step_gameSFP (state)
             file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
             for _, zone in ipairs(zones) do
-                file:write(#state.world1 .. ' ' .. #state.world1[1] .. '\n')
+                file:write((#state.world1 + 2) .. ' ' .. (#state.world1[1] + 2) .. '\n')
                 file:write(zone)
 
                 -- TODO: Points.
@@ -216,7 +225,7 @@ local function step_gameSFP (state)
                         local token = string.gmatch(read(), '%d+')
                         token()
 
-                        local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+                        local position = {y=tonumber(token()) - 1, x=tonumber(token()) - 1, z=0}
 
                         if feature.instance.type == 'MINE' then
                             table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
