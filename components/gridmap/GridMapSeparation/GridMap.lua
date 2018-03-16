@@ -36,7 +36,7 @@ function GridMap:Generate(dimensions, forceFill)
   for hCount = self.sH, self.gH, self.sH do
     local row = {}
     for wCount = self.sW, self.gW, self.sW do
-      row[#row + 1] = 0
+      row[#row + 1] = -1
     end
     self.sectors[#self.sectors + 1] = row
   end
@@ -68,7 +68,7 @@ function GridMap:Generate(dimensions, forceFill)
 
   self.neighbors = {}
   for id, sector in pairs(self.gdat) do
-    if self.sectors[sector.y][sector.x] ~= 0 then
+    if self.sectors[sector.y][sector.x] ~= -1 then
       print('Attempted to assign sector id ' .. id .. ' to non-empty sector. Fix attempt will be made.')
       failedToPlace[#failedToPlace + 1] = id
     else
@@ -78,14 +78,14 @@ function GridMap:Generate(dimensions, forceFill)
 
   for _,id in pairs(failedToPlace) do
     local sector = self.gdat[id]
-    if self.sectors[sector.y][sector.x] == 0 then
+    if self.sectors[sector.y][sector.x] == -1 then
       print('Fix attempt shows that no id was set in this sector. Assigning id '..id)
       placeSector(id, sector)
     else
       local neigh = getGridNeighbors(sector.x, sector.y)
       local newPos = nil
       for _, newXY in pairs(neigh) do
-        if self.sectors[newXY[2]][newXY[1]] == 0 then
+        if self.sectors[newXY[2]][newXY[1]] == -1 then
           newPos = newXY
           break
         end
@@ -245,7 +245,7 @@ function GridMap:TryConnectBresenham(id1, id2)
 
   for currentPos = 2, #path do
     local currentId = getId(currentPos)
-    if currentId ~= 0 then
+    if currentId ~= -1 then
       local lastSwitchId = getId(lastSwitch)
       if currentId ~= id1 and currentId ~= id2 then
         lastSwitch = currentPos
@@ -406,7 +406,7 @@ function GridMap:TryConnectBFS(id1, id2)
       if neighId == id2 then
         previous[neighxy[2]][neighxy[1]] = previousxy
         return neigh
-      elseif neighId == 0 and previous[neighxy[2]][neighxy[1]] == nil then
+      elseif neighId == -1 and previous[neighxy[2]][neighxy[1]] == nil then
         pushBack(neigh)
         previous[neighxy[2]][neighxy[1]] = previousxy
       end
@@ -428,7 +428,7 @@ function GridMap:TryConnectBFS(id1, id2)
     local x = xy[1][1]
     local y = xy[1][2]
     local id = self.sectors[y][x]
-    if id == 0 or id == id1 then
+    if id == -1 or id == id1 then
       local neigh1 = {{x, y - 1}, xy[2] + 1}
       local neigh2 = {{x + 1, y}, xy[2] + 1}
       local neigh3 = {{x, y + 1}, xy[2] + 1}
@@ -472,7 +472,7 @@ function GridMap:TryConnectBFS(id1, id2)
 end
 
 
---- Fills in the id's of sectors along the given path. It is assumed that both sides of the path have different id's, and the entire middle has only 0
+--- Fills in the id's of sectors along the given path. It is assumed that both sides of the path have different id's, and the entire middle has only -1
 -- Can only be called from inside functions which are connecting sectors.
 function GridMap:FillPath(path, fragStart, fragEnd)
   if fragStart == nil or fragEnd == nil then
@@ -488,7 +488,7 @@ function GridMap:FillPath(path, fragStart, fragEnd)
 
   for pos = fragStart, fragEnd do
     local xy = path[pos]
-    if self.sectors[xy[2]][xy[1]] == 0 then
+    if self.sectors[xy[2]][xy[1]] == -1 then
       local previousId = (pos - 1 <= (fragStart + fragEnd) / 2 and startId or endId)
       local currentId  = (pos     <= (fragStart + fragEnd) / 2 and startId or endId)
 
@@ -548,7 +548,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
   for y = 1, self.gH do
     local row = {}
     for x = 1, self.gW do
-      row[#row + 1] = {id = 0, dist = self.gH * self.gW, sector = {0, 0}}
+      row[#row + 1] = {id = -1, dist = self.gH * self.gW, sector = {-1, -1}}
     end
     self.grid[#self.grid + 1] = row
   end
@@ -562,9 +562,9 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       local thisX = x - 0.5
       local sectorX = math.floor((x - 1) / self.sW) + 1
       local nearestSectorsPos = self:GetNearestSectors(sectorX, sectorY)
-      local bestId = 0
+      local bestId = -1
       local bestDist = self.gH + self.gW
-      local bestSector = {0, 0}
+      local bestSector = {-1, -1}
       for _,xy in pairs(nearestSectorsPos) do
         for _,sPoint in pairs(sectorPoints[xy[2]][xy[1]]) do
           local dX = thisX - sPoint[1]
@@ -582,7 +582,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       self.grid[y][x].sector = bestSector
 
       if areaSizes[bestId] == nil then
-        areaSizes[bestId] = 0
+        areaSizes[bestId] = -1
       end
       areaSizes[bestId] = areaSizes[bestId] + 1
     end
@@ -595,7 +595,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
 
     local myGridSquare = self.grid[myY][myX]
     local otherGridSquare = self.grid[otherY][otherX]
-    if otherGridSquare.id == 0 or myGridSquare.id == otherGridSquare.id then
+    if otherGridSquare.id == -1 or myGridSquare.id == otherGridSquare.id then
       return false
     end
     if myGridSquare.dist > otherGridSquare.dist then
@@ -606,7 +606,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
 
   for _, join in ipairs(self.joinAt) do
     local idA, idB, xyA, xyB = table.unpack(join)
-    local connected = {0, 0}
+    local connected = {-1, -1}
 
     for y = 2, self.gH - 1 do
       for x = 2, self.gW - 1 do
@@ -622,7 +622,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
             local isAxis = i == 2 or i == 4 or i == 5 or i == 7
 
             if isAxis and cell.sector[1] == xyB[1] and cell.sector[2] == xyB[2] then
-              if cell.id ~= idA and cell.id ~= idB and cell.id ~= 0 then
+              if cell.id ~= idA and cell.id ~= idB and cell.id ~= -1 then
                 isEveryAorBorNeutral = false
                 break
               end
@@ -644,7 +644,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
         end
       end
 
-      if connected[1] ~= 0 then
+      if connected[1] ~= -1 then
         break
       end
     end
@@ -662,7 +662,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       if self.grid[y][x].id > 0 then
         for _, xy in pairs(getGridNeighbors(x, y)) do
           if isMySquareWorse(x, y, xy[1], xy[2]) then
-            self.grid[y][x].id = 0
+            self.grid[y][x].id = -1
             break
           end
         end
@@ -715,7 +715,7 @@ function GridMap:ShowMap(filename, mapData)
     local line = ''..(i % 10)
     local row = mapData[i]
     for j = 1, #row do
-      line = line..' '..(row[j] == 0 and '#' or row[j])
+      line = line..' '..(row[j] == -1 and '#' or row[j])
     end
     file:write(line, "\n")
   end
@@ -724,7 +724,7 @@ function GridMap:ShowMap(filename, mapData)
   for i,row in pairs(mapData) do
     local line = ''..(i % 10)
     for j = 1, #row do
-      line = line..' '..(row[j] == 0 and '#' or row[j])
+      line = line..' '..(row[j] == -1 and '#' or row[j])
     end
     file:write(line, "\n")
   end
