@@ -95,7 +95,7 @@ local function step_ca (state)
         local line = {}
 
         for _, col in ipairs(row) do
-            table.insert(line, col == -1 and 3 or (col == -2 and 2 or 1))
+            table.insert(line, col == -1 and 3 or (col == -2 and 2 or (col ~= -3 and 1 or 0)))
         end
 
         table.insert(state.world1, line)
@@ -172,11 +172,25 @@ local function step_gameSFP (state)
                 local line = {'#'}
                 for x = 0, #state.world1[1] - 1 do
                     local id = state.world[xyz2position(x, y, z)].zone
-                    if id == zoneId or id == -zoneId then
-                        table.insert(line, '.')
 
-                        if state.world2[y + 1][x + 1] == 2 and state.voronoi.grid[y + 1][x + 1] == -zoneId then
-                            table.insert(poisA, x .. ' ' .. y)
+                    if id == zoneId then
+                        table.insert(line, '.')
+                    elseif id == -3 then
+                        local found = false
+
+                        for _, join in ipairs(state.voronoi.joinAt) do
+                            if join[1] == zoneId and join[5][1] == x + 1 and join[5][2] == y + 1 or
+                               join[2] == zoneId and join[6][1] == x + 1 and join[6][2] == y + 1
+                            then
+                                table.insert(line, '.')
+                                table.insert(poisA, x .. ' ' .. y)
+                                found = true
+                                break
+                            end
+                        end
+
+                        if not found then
+                            table.insert(line, '#')
                         end
                     else
                         table.insert(line, '#')
@@ -197,7 +211,7 @@ local function step_gameSFP (state)
 
         if #features > 0 then
             local nzones = #zones
-            local npois1 = #pois1[1]
+            local npois1 = #pois1[1] - 1
             local npois2 = 0
             local nfsw = #features
 

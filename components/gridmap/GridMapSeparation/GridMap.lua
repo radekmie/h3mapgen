@@ -582,7 +582,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
       self.grid[y][x].sector = bestSector
 
       if areaSizes[bestId] == nil then
-        areaSizes[bestId] = -1
+        areaSizes[bestId] = 0
       end
       areaSizes[bestId] = areaSizes[bestId] + 1
     end
@@ -635,9 +635,19 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
 
           if isAnyB ~= nil and isEveryAorBorNeutral then
             -- Super white.
-            self.grid[y][x].id = -idA
-            self.grid[isAnyB[2]][isAnyB[1]].id = -idB
+            self.grid[y][x].id = -2
+            self.grid[isAnyB[2]][isAnyB[1]].id = -2
 
+            -- Mark these as super white but inside of the zone.
+            -- FIXME: These can be out of map!
+            -- FIXME: These can be out of zone (although 2x is better than 1x)!
+            self.grid[y + 2 * (y - isAnyB[2])][x + 2 * (x - isAnyB[1])].id = -3
+            self.grid[isAnyB[2] + 2 * (isAnyB[2] - y)][isAnyB[1] + 2 * (isAnyB[1] - x)].id = -3
+
+            table.insert(join, {x + (x - isAnyB[1]), y + (y - isAnyB[2])})
+            table.insert(join, {isAnyB[2] + (isAnyB[2] - y), isAnyB[1] + (isAnyB[1] - x)})
+
+            -- Note.
             connected = {x, y, isAnyB[1], isAnyB[2]}
             break
           end
