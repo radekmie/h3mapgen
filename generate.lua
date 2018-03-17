@@ -177,11 +177,11 @@ local function step_gameSFP (state)
                     local hasZone = id == zoneId
 
                     for _, join in ipairs(state.voronoi.joinAt) do
-                        if (join[1] == zoneId and join[5][1] == x and join[5][2] == y) or
-                           (join[2] == zoneId and join[6][1] == x and join[6][2] == y)
+                        if (join[1] == zoneId and join[5][1] == x + 1 and join[5][2] == y + 1) or
+                           (join[2] == zoneId and join[6][1] == x + 1 and join[6][2] == y + 1)
                         then
                             hasPoi1 = true
-                            table.insert(poisA, (x + 1) .. ' ' .. (y + 1))
+                            table.insert(poisA, x .. ' ' .. y)
                             break
                         end
                     end
@@ -258,7 +258,7 @@ local function step_gameSFP (state)
             print('SFP for baseId=' .. baseId .. ' ' .. status)
 
             if status == 'check_data returned 0.' then
-                for _, zone in ipairs(zones) do
+                for _ in ipairs(zones) do
                     read()
                     for _, feature in ipairs(features) do
                         local token = string.gmatch(read(), '%d+')
@@ -278,8 +278,16 @@ local function step_gameSFP (state)
                             if feature.instance.type == 'TOWN' then
                                 table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
                             end
+                        else
+                            print('Not placed feature', feature.instance.type)
                         end
                     end
+                end
+
+                local value = tonumber((read():gsub('[^%d]+', '')))
+                print('Value:', value)
+                if value > 0 and value < 1000000000 then
+                    print('READ MST!')
                 end
             end
         end
@@ -572,10 +580,10 @@ if arg[1] == '!' then
     generate(seed, {
         step_initSeed,
         step_initPaths,
-        --step_initParams, -- commented - we want to use predefined LML
-        --step_dump,
-        --step_initLML,
-        --step_dump,
+        -- step_initParams, -- commented - we want to use predefined LML
+        -- step_dump,
+        -- step_initLML,
+        -- step_dump,
         step_initMLML,
         step_dump,
         step_mds,
