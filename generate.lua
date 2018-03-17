@@ -95,7 +95,7 @@ local function step_ca (state)
         local line = {}
 
         for _, col in ipairs(row) do
-            table.insert(line, col == -1 and 3 or (col == -2 and 2 or (col ~= -3 and 1 or 0)))
+            table.insert(line, col == -1 and 3 or ((col == -2 or col == -3) and 2 or 0))
         end
 
         table.insert(state.world1, line)
@@ -173,25 +173,21 @@ local function step_gameSFP (state)
                 for x = 0, #state.world1[1] - 1 do
                     local id = state.world[xyz2position(x, y, z)].zone
 
-                    if id == zoneId then
+                    local hasPoi1 = false
+                    local hasZone = id == zoneId
+
+                    for _, join in ipairs(state.voronoi.joinAt) do
+                        if (join[1] == zoneId and join[5][1] == x and join[5][2] == y) or
+                           (join[2] == zoneId and join[6][1] == x and join[6][2] == y)
+                        then
+                            hasPoi1 = true
+                            table.insert(poisA, (x + 1) .. ' ' .. (y + 1))
+                            break
+                        end
+                    end
+
+                    if hasPoi1 or hasZone then
                         table.insert(line, '.')
-                    elseif id == -3 then
-                        local found = false
-
-                        for _, join in ipairs(state.voronoi.joinAt) do
-                            if join[1] == zoneId and join[5][1] == x + 1 and join[5][2] == y + 1 or
-                               join[2] == zoneId and join[6][1] == x + 1 and join[6][2] == y + 1
-                            then
-                                table.insert(line, '.')
-                                table.insert(poisA, x .. ' ' .. y)
-                                found = true
-                                break
-                            end
-                        end
-
-                        if not found then
-                            table.insert(line, '#')
-                        end
                     else
                         table.insert(line, '#')
                     end
@@ -210,13 +206,34 @@ local function step_gameSFP (state)
         end
 
         if #features > 0 then
+            -- All pois1 have to be the same length.
+            while true do
+                local changed = false
+
+                for i = 2, #pois1 do
+                    while #pois1[1] > #pois1[i] do
+                        changed = true
+                        table.remove(pois1[1], 1)
+                    end
+
+                    while #pois1[1] < #pois1[i] do
+                        changed = true
+                        table.remove(pois1[i], 1)
+                    end
+                end
+
+                if not changed then
+                    break
+                end
+            end
+
             local nzones = #zones
             local npois1 = #pois1[1] - 1
             local npois2 = 0
             local nfsw = #features
 
             local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
-            file:write('-1 -1 -1 -1\n')
+            file:write('-1 -1 -1 ' .. state.seed .. '\n')
             file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
             for index, zone in ipairs(zones) do
@@ -237,24 +254,30 @@ local function step_gameSFP (state)
             }, ' '))
 
             local read = string.gmatch(result, '[^\r\n]+')
-            local fail = read() ~= 'check_data returned 0.'
-            print('SFP for baseId=' .. baseId .. ' ' .. (fail and 'failed' or 'succeed'))
+            local status = read()
+            print('SFP for baseId=' .. baseId .. ' ' .. status)
 
-            if not fail then
+            if status == 'check_data returned 0.' then
                 for _, zone in ipairs(zones) do
                     read()
                     for _, feature in ipairs(features) do
                         local token = string.gmatch(read(), '%d+')
                         token()
 
-                        local position = {y=tonumber(token()) - 1, x=tonumber(token()) - 1, z=0}
+                        local position = {y=tonumber(token()), x=tonumber(token()), z=0}
 
-                        if feature.instance.type == 'MINE' then
-                            table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
-                        end
+                        if position.x ~= 0 and position.y ~= 0 then
+                            -- Border.
+                            position.x = position.x - 1
+                            position.y = position.y - 1
 
-                        if feature.instance.type == 'TOWN' then
-                            table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                            if feature.instance.type == 'MINE' then
+                                table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, homm3lua.OWNER_NEUTRAL})
+                            end
+
+                            if feature.instance.type == 'TOWN' then
+                                table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, homm3lua.OWNER_NEUTRAL})
+                            end
                         end
                     end
                 end
@@ -444,7 +467,7 @@ local function step_parseWorld (state)
 
         -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
         if wall == 2 then
-            local sprite = 'Archangel'
+            local sprite = char == -2 and 'Archangel' or 'Pikeman'
             state.world_grid[xyz2position(x, y, z)] = true
             table.insert(state.world_creatures, {sprite, {x=x, y=y, z=z}, 0, homm3lua.DISPOSITION_AGGRESSIVE, true, true})
         end
@@ -583,10 +606,10 @@ elseif arg[1] then
     generate(seed, {
         step_initSeed,
         step_initPaths,
-        --step_initParams,
-        --step_dump,
-        --step_initLML,
-        --step_dump,
+        step_initParams,
+        step_dump,
+        step_initLML,
+        step_dump,
         step_initMLML,
         step_dump,
         step_mds,

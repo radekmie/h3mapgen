@@ -119,7 +119,7 @@ int main(void)
             printf("Object %d: %d %d\n", j+1, answer->P[i][j].x, answer->P[i][j].y);
         }
     }
-    int v = evaluate(answer, &D, 1);
+    int v = evaluate(answer, &D);
     printf("Value: %d\n", v);
 
     if (v < oo)

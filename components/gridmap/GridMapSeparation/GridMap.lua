@@ -608,8 +608,8 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
     local idA, idB, xyA, xyB = table.unpack(join)
     local connected = {-1, -1}
 
-    for y = 2, self.gH - 1 do
-      for x = 2, self.gW - 1 do
+    for y = 3, self.gH - 3 do
+      for x = 3, self.gW - 3 do
         if self.grid[y][x].id == idA and
            self.grid[y][x].sector[1] == xyA[1] and
            self.grid[y][x].sector[2] == xyA[2]
@@ -635,17 +635,18 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
 
           if isAnyB ~= nil and isEveryAorBorNeutral then
             -- Super white.
-            self.grid[y][x].id = -2
+            self.grid[y        ][x        ].id = -2
             self.grid[isAnyB[2]][isAnyB[1]].id = -2
 
             -- Mark these as super white but inside of the zone.
             -- FIXME: These can be out of map!
             -- FIXME: These can be out of zone (although 2x is better than 1x)!
-            self.grid[y + 2 * (y - isAnyB[2])][x + 2 * (x - isAnyB[1])].id = -3
-            self.grid[isAnyB[2] + 2 * (isAnyB[2] - y)][isAnyB[1] + 2 * (isAnyB[1] - x)].id = -3
+            local inside = 2
+            self.grid[y         + inside * (y - isAnyB[2])][x         + inside * (x - isAnyB[1])].id = -3
+            self.grid[isAnyB[2] + inside * (isAnyB[2] - y)][isAnyB[1] + inside * (isAnyB[1] - x)].id = -3
 
-            table.insert(join, {x + (x - isAnyB[1]), y + (y - isAnyB[2])})
-            table.insert(join, {isAnyB[2] + (isAnyB[2] - y), isAnyB[1] + (isAnyB[1] - x)})
+            table.insert(join, {x         + inside * (x - isAnyB[1]), y         + inside * (y - isAnyB[2])})
+            table.insert(join, {isAnyB[1] + inside * (isAnyB[1] - x), isAnyB[2] + inside * (isAnyB[2] - y)})
 
             -- Note.
             connected = {x, y, isAnyB[1], isAnyB[2]}
