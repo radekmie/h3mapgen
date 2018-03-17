@@ -16,8 +16,19 @@ end
 local getGridNeighbors = function(x, y)
   return {
     {x - 1, y - 1}, {x, y - 1}, {x + 1, y - 1},
-    {x - 1, y},                 {x + 1, y},
+    {x - 1, y    },             {x + 1, y    },
     {x - 1, y + 1}, {x, y + 1}, {x + 1, y + 1}
+  }
+end
+
+
+local getGridNeighbors2 = function(x, y)
+  return {
+    {x - 2, y - 2}, {x - 1, y - 2}, {x, y - 2}, {x + 1, y - 2}, {x + 2, y - 2},
+    {x - 2, y - 1}, {x - 1, y - 1}, {x, y - 1}, {x + 1, y - 1}, {x + 2, y - 1},
+    {x - 2, y    }, {x - 1, y    },             {x + 1, y    }, {x + 2, y    },
+    {x - 2, y + 1}, {x - 1, y + 1}, {x, y + 1}, {x + 1, y + 1}, {x + 2, y + 1},
+    {x - 2, y + 2}, {x - 1, y + 2}, {x, y + 2}, {x + 1, y + 2}, {x + 2, y + 2}
   }
 end
 
@@ -595,7 +606,7 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
 
     local myGridSquare = self.grid[myY][myX]
     local otherGridSquare = self.grid[otherY][otherX]
-    if otherGridSquare.id == -1 or myGridSquare.id == otherGridSquare.id then
+    if otherGridSquare.id < 0 or myGridSquare.id == otherGridSquare.id then
       return false
     end
     if myGridSquare.dist > otherGridSquare.dist then
@@ -604,12 +615,45 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
     return myGridSquare.dist == otherGridSquare.dist and areaSizes[myGridSquare.id] < areaSizes[otherGridSquare.id]
   end
 
+  local closestInside = function (zoneId, xy)
+    local closest = {-1, -1}
+    local distance = 1e10
+
+    local x1 = xy[1]
+    local y1 = xy[2]
+
+    for y2 = 3, self.gH - 2 do
+      for x2 = 3, self.gW - 2 do
+        if self.grid[y2][x2].id == zoneId then
+          local isInside = true
+
+          for _, xy in pairs(getGridNeighbors2(x2, y2)) do
+            if self.grid[xy[2]][xy[1]].id ~= zoneId then
+              isInside = false
+              break
+            end
+          end
+
+          if isInside then
+            local d = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
+            if d < distance then
+              closest = {x2, y2}
+              distance = d
+            end
+          end
+        end
+      end
+    end
+
+    return closest[1], closest[2]
+  end
+
   for _, join in ipairs(self.joinAt) do
     local idA, idB, xyA, xyB = table.unpack(join)
     local connected = {-1, -1}
 
-    for y = 3, self.gH - 3 do
-      for x = 3, self.gW - 3 do
+    for y = 3, self.gH - 2 do
+      for x = 3, self.gW - 2 do
         if self.grid[y][x].id == idA and
            self.grid[y][x].sector[1] == xyA[1] and
            self.grid[y][x].sector[2] == xyA[2]
@@ -634,38 +678,46 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
           end
 
           if isAnyB ~= nil and isEveryAorBorNeutral then
-            -- Super white.
-            self.grid[y        ][x        ].id = -2
-            self.grid[isAnyB[2]][isAnyB[1]].id = -2
-
             -- Mark these as super white but inside of the zone.
-            -- FIXME: These can be out of map!
-            -- FIXME: These can be out of zone (although 2x is better than 1x)!
-            local inside = 2
-            self.grid[y         + inside * (y - isAnyB[2])][x         + inside * (x - isAnyB[1])].id = -3
-            self.grid[isAnyB[2] + inside * (isAnyB[2] - y)][isAnyB[1] + inside * (isAnyB[1] - x)].id = -3
+            local ax, ay = closestInside(idA, {x, y})
+            local bx, by = closestInside(idB, isAnyB)
 
-            table.insert(join, {x         + inside * (x - isAnyB[1]), y         + inside * (y - isAnyB[2])})
-            table.insert(join, {isAnyB[1] + inside * (isAnyB[1] - x), isAnyB[2] + inside * (isAnyB[2] - y)})
+            if ax ~= -1 and ay ~= -1 and bx ~= -1 and by ~= -1 then
+              -- Point of interest.
+              self.grid[ay][ax].id = -3
+              self.grid[by][bx].id = -3
 
-            -- Note.
-            connected = {x, y, isAnyB[1], isAnyB[2]}
-            break
+              table.insert(join, {ax, ay})
+              table.insert(join, {bx, by})
+
+              -- Super white.
+              self.grid[y        ][x        ].id = -2
+              self.grid[isAnyB[2]][isAnyB[1]].id = -2
+
+              -- Note.
+              connected = {x, y, isAnyB[1], isAnyB[2]}
+              break
+            end
           end
         end
       end
 
-      if connected[1] ~= -1 then
+      if connected[1] ~= -1 and connected[2] ~= -1 then
         break
       end
     end
 
-    print(
-      'Zone ' .. idA .. ' connected with ' .. idB .. ' at ' ..
-      connected[1] .. 'x' .. connected[2] ..
-      ' - ' ..
-      connected[3] .. 'x' .. connected[4]
-    )
+    if connected[1] ~= -1 and connected[2] ~= -1 then
+      print(table.concat({
+        'Zone', idA, 'connected with', idB, 'at',
+        connected[1] .. 'x' .. connected[2], '-',
+        connected[3] .. 'x' .. connected[4],
+      }, ' '))
+    else
+      print(table.concat({'Zone', idA, 'NOT connected with', idB}, ' '))
+      table.insert(join, {-1, -1})
+      table.insert(join, {-1, -1})
+    end
   end
 
   for y = 1, self.gH do
