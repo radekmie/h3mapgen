@@ -720,17 +720,23 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
     end
   end
 
+  self.borders = {}
+
   for y = 1, self.gH do
+    local border = {}
     for x = 1, self.gW do
+      local present = false
       if self.grid[y][x].id > 0 then
         for _, xy in pairs(getGridNeighbors(x, y)) do
           if isMySquareWorse(x, y, xy[1], xy[2]) then
-            self.grid[y][x].id = -1
+            present = true
             break
           end
         end
       end
+      table.insert(border, present)
     end
+    table.insert(self.borders, border)
   end
 
   for y = 1, self.gH do
