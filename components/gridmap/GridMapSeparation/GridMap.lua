@@ -128,27 +128,31 @@ function GridMap:Generate(dimensions, forceFill)
     end
   end
   
-  local sectorSizes = {}
-  for id, sectors in pairs(self.sectorMaps) do
-    local sectorSize = sectorSizes[id] or 0
-    for _, _ in pairs(sectors) do
-      sectorSize = sectorSize + 1
-    end
-    sectorSizes[id] = sectorSize
-  end
+  self:FillMap(forceFill)
   
+end
+
+
+--- Fills grid map to even out proportions of zones.
+-- Can only be called from inside the Generate function
+-- @param forceFill - forces filling the map even if causes uneven sizes
+function GridMap:FillMap(forceFill)
   local filledSectors = {}
   for y = 1, #self.sectors do
     for x = 1, #self.sectors[y] do
       if self.sectors[y][x] ~= -1 then
-        filledSectors[#filledSectors + 1] = {x,y}
+        local sectorId = self.sectors[y][x]
+        if not filledSectors[sectorId] then
+          filledSectors[sectorId] = {}
+        end
+        table.insert(filledSectors[sectorId], {x,y})
       end
     end
   end
   
   local zoneRatios = {}
-  for id, _ in pairs(self.sectorMaps) do
-    zoneRatios[#zoneRatios + 1] = {id, sectorSizes[id], self.gdat[id].size}
+  for id, sectors in pairs(filledSectors) do
+    table.insert(zoneRatios, {id, #sectors, self.gdat[id].size})
   end
   
   local getProportion = function(ratio)
@@ -158,14 +162,11 @@ function GridMap:Generate(dimensions, forceFill)
   local compareRatios = function(ratio1, ratio2)
     local proportion1 = getProportion(ratio1)
     local proportion2 = getProportion(ratio2)
-    return proportion1 > proportion2
-      or (proportion1 == proportion2 and ratio1[1] > ratio2[1])
+    return proportion1 < proportion2
+      or (proportion1 == proportion2 and ratio1[1] < ratio2[1])
   end
   
   table.sort(zoneRatios, compareRatios)
-  
-  local largestProportion = getProportion(zoneRatios[#zoneRatios])
-  local acceptableRatioToBest = 1.5
   
   local getSectorNeighbors = function(x, y)
     return {
@@ -175,50 +176,94 @@ function GridMap:Generate(dimensions, forceFill)
     }
   end
   
-  local addNeighborSector = function(id, xy)
+  local lastFilledForZone = {}
+  for id, _ in pairs(filledSectors) do
+    lastFilledForZone[id] = 1
+  end
+
+  local addNeighborSector = function(id)
     local goodNeigh = nil
-    for _, neigh in pairs(getSectorNeighbors(xy[1], xy[2])) do
-      if neigh[1] >= 1 and neigh[1] <= #self.sectors[1] and neigh[2] >= 1 and neigh[2] <= #self.sectors
-        and self.sectors[neigh[2]][neigh[1]] == -1 then
-          goodNeigh = neigh
-          break
+    local lastAddPos = lastFilledForZone[id]
+    local thisAddPos = lastAddPos
+    repeat
+      local xy = filledSectors[id][thisAddPos]
+      for _, neigh in pairs(getSectorNeighbors(xy[1], xy[2])) do
+        if neigh[1] >= 1 and neigh[1] <= #self.sectors[1] and neigh[2] >= 1 and neigh[2] <= #self.sectors
+          and self.sectors[neigh[2]][neigh[1]] == -1 then
+            goodNeigh = neigh
+            break
+        end
       end
-    end
+      
+      -- this ensures that thisAddPos can be assigned to lastFilledForZone[id]
+      thisAddPos = thisAddPos + 1
+      if thisAddPos > #filledSectors[id] then
+        thisAddPos = 1
+      end
+      
+      if goodNeigh then
+        break
+      end
+    until thisAddPos == lastAddPos
+    
     if goodNeigh then
-      self.sectorMaps[id][{goodNeigh[1], goodNeigh[2]}] = true
+      table.insert(filledSectors[id], goodNeigh)
       self.sectors[goodNeigh[2]][goodNeigh[1]] = id
+      lastFilledForZone[id] = thisAddPos
     end
+    
     return goodNeigh
   end
-  
-  for _, zoneRatio in pairs(zoneRatios) do
-    local proportion = getProportion(zoneRatio)
-    while proportion * acceptableRatioToBest < largestProportion do
-      local addedSector = nil
-      for sector, _ in pairs(self.sectorMaps[id]) do
-        if addNeighborSector(zoneRatio[1], sector) then
+
+  -- to even out the proportions of all zones
+  -- evenOutIndex is kept as the last index of acceptable proportions
+  local largestProportion = getProportion(zoneRatios[#zoneRatios])
+  local acceptableRatioToBest = 1.5
+
+  local evenOutIndex = 2
+  local acceptableRatioToEven = 1.2
+
+  local canAdd = true
+
+  while canAdd do
+    local evenedOut = true
+    local evenOutProportion = getProportion(zoneRatios[evenOutIndex])
+    -- growing zones should be done as evenly as possible, so grow until all zone ratios reach evenOutIndex ratio
+    for i = 1, evenOutIndex - 1 do
+      while   getProportion(zoneRatios[i]) * acceptableRatioToEven <= evenOutProportion
+          and getProportion(zoneRatios[i]) * acceptableRatioToBest <= largestProportion do
+        evenedOut = false
+        local addedSector = addNeighborSector(zoneRatios[i][1])
+        if addedSector then
+          print('Grew zone by sector '..addedSector[1]..'/'..addedSector[2]..' for id '..zoneRatios[i][1])
+          zoneRatios[i][2] = zoneRatios[i][2] + 1
+        else
+          canAdd = false
           break
         end
       end
-      if addedSector then
-        proportion = getProportion(zoneRatio)
-      else
-        print('Could not grow zone '..zoneRatio[1]..' anymore, might be smaller than expected.')
+      if not canAdd then
+        break
+      end
+    end
+    if evenedOut then
+      print('All zones from 1 to '..evenOutIndex..' are evened out, increasing index.')
+      evenOutIndex = evenOutIndex + 1
+      if evenOutIndex > #zoneRatios then
         break
       end
     end
   end
   
   if forceFill then
-    local canBeAdded = true
+    canAdd = true
     print('Force filling the map.')
-    while canBeAdded do
-      canBeAdded = false
-      for _, xy in pairs(filledSectors) do
-        local addedSector = addNeighborSector(self.sectors[xy[2]][xy[1]], xy)
-        if addedSector then
-          filledSectors[#filledSectors + 1] = addedSector
-          canBeAdded = true
+    while canAdd do
+      for i = 1, #zoneRatios do
+        local addedSector = addNeighborSector(zoneRatios[i][1])
+        if not addedSector then
+          canAdd = false
+          break
         end
       end
     end
