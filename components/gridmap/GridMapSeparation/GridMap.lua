@@ -615,6 +615,37 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
     return myGridSquare.dist == otherGridSquare.dist and areaSizes[myGridSquare.id] < areaSizes[otherGridSquare.id]
   end
 
+
+  local directedPath = function(ax, ay, bx, by, zoneId)
+    local path = {}
+    --print ('>$>', ax, ay, '-', nil, nil, '-', bx, by)
+    -- 1 step test
+    for _, cxy in ipairs(getGridNeighbors(ax, ay)) do
+      if self.grid[cxy[2]][cxy[1]].id == zoneId then
+        for _, dxy in ipairs(getGridNeighbors(bx, by)) do
+          if cxy[1]==dxy[1] and cxy[2]==dxy[2] then
+            --print ('>>>', ax, ay, '-', cxy[1], cxy[2], '-', bx, by)
+            return {cxy}
+          end
+        end
+      end
+    end
+    -- 2 step test
+    for _, cxy in ipairs(getGridNeighbors(ax, ay)) do
+      if self.grid[cxy[2]][cxy[1]].id == zoneId then
+        for _, dxy in ipairs(getGridNeighbors(bx, by)) do
+          for _, exy in ipairs(getGridNeighbors(cxy[1], cxy[2])) do
+            if exy[1]==dxy[1] and exy[2]==dxy[2] then
+              --print ('>>>', ax, ay, '-', cxy[1], cxy[2], '-', exy[1], exy[2], '-', bx, by)
+              return {cxy, exy}
+            end
+          end
+        end
+      end
+    end
+    return {}
+  end
+
   local closestInside = function (zoneId, xy)
     local closest = {-1, -1}
     local distance = 1e10
@@ -686,6 +717,11 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
               -- Point of interest.
               self.grid[ay][ax].id = -3
               self.grid[by][bx].id = -3
+              
+              
+              local stepA = directedPath(x, y, ax, ay, idA)
+              local stepB = directedPath(isAnyB[1], isAnyB[2], bx, by, idB)
+              
 
               table.insert(join, {ax, ay})
               table.insert(join, {bx, by})
@@ -693,6 +729,8 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
               -- Super white.
               self.grid[y        ][x        ].id = -2
               self.grid[isAnyB[2]][isAnyB[1]].id = -2
+              for _, sxy in ipairs(stepA) do self.grid[sxy[2]][sxy[1]].id = -2 end
+              for _, sxy in ipairs(stepB) do self.grid[sxy[2]][sxy[1]].id = -2 end
 
               -- Note.
               connected = {x, y, isAnyB[1], isAnyB[2]}

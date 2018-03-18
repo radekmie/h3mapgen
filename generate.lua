@@ -141,9 +141,6 @@ local function step_SFP (state)
                         ''
                     }, '\n')
                 })
-
-                -- FIXME: Zones are too small - 1 feature for now.
-                break
             end
 
             if feature.type == 'TOWN' then
@@ -159,9 +156,6 @@ local function step_SFP (state)
                         ''
                     }, '\n')
                 })
-
-                -- FIXME: Zones are too small - 1 feature for now.
-                break
             end
         end
 
@@ -229,137 +223,148 @@ local function step_SFP (state)
             end
         end
 
-        if #features > 0 then
-            local nzones = zonesCount
-            local npois1 = 0
-            local npois2 = 0
-            local nfsw = #features
+        if #features == 0 then
+            table.insert(features, {
+                instance = {type='PLACEHOLDER'},
+                template = table.concat({
+                    '1 1',
+                    '.',
+                    '0 0',
+                    ''
+                }, '\n')
+            })
+        end
 
-            -- All pois1 have to be the same length.
-            while true do
-                local changed = false
+        local nzones = zonesCount
+        local npois1 = 0
+        local npois2 = 0
+        local nfsw = #features
 
-                for a, poisa in pairs(pois1) do
-                    for b, poisb in pairs(pois1) do
-                        while #poisa > #poisb do
-                            changed = true
-                            table.remove(poisa, 1)
-                        end
+        -- All pois1 have to be the same length.
+        while true do
+            local changed = false
 
-                        while #poisa < #poisb do
-                            changed = true
-                            table.remove(poisb, 1)
-                        end
-
-                        npois1 = #poisa - 1
+            for a, poisa in pairs(pois1) do
+                for b, poisb in pairs(pois1) do
+                    while #poisa > #poisb do
+                        changed = true
+                        table.remove(poisa, 1)
                     end
-                end
 
-                if not changed then
-                    break
+                    while #poisa < #poisb do
+                        changed = true
+                        table.remove(poisb, 1)
+                    end
+
+                    npois1 = #poisa - 1
                 end
             end
 
-            local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
-            file:write('-1 -1 -1 ' .. state.seed .. '\n')
-            file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
+            if not changed then
+                break
+            end
+        end
 
-            for zoneId, zone in pairs(zones) do
-                file:write((#state.board + 2) .. ' ' .. (#state.board[1] + 2) .. '\n')
-                file:write(zone)
-                file:write(table.concat(pois1[zoneId], '\n'))
+        local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
+        file:write('-1 -1 -1 ' .. state.seed .. '\n')
+        file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
+        for zoneId, zone in pairs(zones) do
+            file:write((#state.board + 2) .. ' ' .. (#state.board[1] + 2) .. '\n')
+            file:write(zone)
+            file:write(table.concat(pois1[zoneId], '\n'))
+
+            for _, feature in ipairs(features) do
+                file:write(feature.template)
+            end
+        end
+
+        file:close()
+
+        local result = shell(table.concat({
+            './components/sfp/sfp',
+            '<', state.paths.sfp .. '.' .. baseId,
+        }, ' '))
+
+        local read = result:gmatch('[^\r\n]+')
+        local status = read()
+        print('SFP for baseId=' .. baseId .. ' ' .. status)
+
+        if status == 'check_data returned 0.' then
+            for zoneId, _ in pairs(zones) do
+                read()
                 for _, feature in ipairs(features) do
-                    file:write(feature.template)
+                    local token = string.gmatch(read(), '%d+')
+                    token()
+
+                    local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+
+                    if position.x ~= 0 and position.y ~= 0 then
+                        local owner = homm3lua.OWNER_NEUTRAL
+                        for player = 1, 8 do
+                            if state.MLML_graph[zoneId].players[player] then
+                                owner = player - 1
+                                break
+                            end
+                        end
+
+                        if feature.instance.type == 'PLACEHOLDER' then
+                            -- TODO: Templates!
+                            -- .
+                            state.board[position.y][position.x] = 2
+                        end
+
+                        if feature.instance.type == 'MINE' then
+                            -- TODO: Templates!
+                            -- _###
+                            -- ##.#
+                            state.board[position.y    ][position.x    ] = 2
+                            state.board[position.y    ][position.x + 1] = 3
+                            state.board[position.y    ][position.x - 1] = 3
+                            state.board[position.y    ][position.x - 2] = 3
+                            state.board[position.y - 1][position.x    ] = 3
+                            state.board[position.y - 1][position.x + 1] = 3
+                            state.board[position.y - 1][position.x - 1] = 3
+
+                            table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, owner})
+                        end
+
+                        if feature.instance.type == 'TOWN' then
+                            -- TODO: Templates!
+                            -- _###_
+                            -- #####
+                            -- ##.##
+                            state.board[position.y    ][position.x    ] = 2
+                            state.board[position.y    ][position.x + 1] = 3
+                            state.board[position.y    ][position.x + 2] = 3
+                            state.board[position.y    ][position.x - 1] = 3
+                            state.board[position.y    ][position.x - 2] = 3
+                            state.board[position.y - 1][position.x    ] = 3
+                            state.board[position.y - 1][position.x + 1] = 3
+                            state.board[position.y - 1][position.x + 2] = 3
+                            state.board[position.y - 1][position.x - 1] = 3
+                            state.board[position.y - 1][position.x - 2] = 3
+                            state.board[position.y - 2][position.x    ] = 3
+                            state.board[position.y - 2][position.x + 1] = 3
+                            state.board[position.y - 2][position.x - 1] = 3
+
+                            table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, owner})
+                        end
+                    else
+                        print('Not placed feature', feature.instance.type)
+                    end
                 end
             end
 
-            file:close()
+            read()
 
-            local result = shell(table.concat({
-                './components/sfp/sfp',
-                '<', state.paths.sfp .. '.' .. baseId,
-            }, ' '))
-
-            local read = result:gmatch('[^\r\n]+')
-            local status = read()
-            print('SFP for baseId=' .. baseId .. ' ' .. status)
-
-            if status == 'check_data returned 0.' then
-                for zoneId, _ in pairs(zones) do
-                    read()
-                    for _, feature in ipairs(features) do
-                        local token = string.gmatch(read(), '%d+')
-                        token()
-
-                        local position = {y=tonumber(token()), x=tonumber(token()), z=0}
-
-                        if position.x ~= 0 and position.y ~= 0 then
-                            -- Border.
-                            -- position.x = position.x - 1
-                            -- position.y = position.y - 1
-
-                            local owner = homm3lua.OWNER_NEUTRAL
-                            for player = 1, 8 do
-                                if state.MLML_graph[zoneId].players[player] then
-                                    owner = player - 1
-                                    break
-                                end
-                            end
-
-                            if feature.instance.type == 'MINE' then
-                                -- TODO: Templates!
-                                -- _###
-                                -- ##.#
-                                state.board[position.y    ][position.x    ] = 2
-                                state.board[position.y    ][position.x + 1] = 3
-                                state.board[position.y    ][position.x - 1] = 3
-                                state.board[position.y    ][position.x - 2] = 3
-                                state.board[position.y - 1][position.x    ] = 3
-                                state.board[position.y - 1][position.x + 1] = 3
-                                state.board[position.y - 1][position.x - 1] = 3
-
-                                table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, owner})
-                            end
-
-                            if feature.instance.type == 'TOWN' then
-                                -- TODO: Templates!
-                                -- _###_
-                                -- #####
-                                -- ##.##
-                                state.board[position.y    ][position.x    ] = 2
-                                state.board[position.y    ][position.x + 1] = 3
-                                state.board[position.y    ][position.x + 2] = 3
-                                state.board[position.y    ][position.x - 1] = 3
-                                state.board[position.y    ][position.x - 2] = 3
-                                state.board[position.y - 1][position.x    ] = 3
-                                state.board[position.y - 1][position.x + 1] = 3
-                                state.board[position.y - 1][position.x + 2] = 3
-                                state.board[position.y - 1][position.x - 1] = 3
-                                state.board[position.y - 1][position.x - 2] = 3
-                                state.board[position.y - 2][position.x    ] = 3
-                                state.board[position.y - 2][position.x + 1] = 3
-                                state.board[position.y - 2][position.x - 1] = 3
-
-                                table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, owner})
-                            end
-                        else
-                            print('Not placed feature', feature.instance.type)
-                        end
-                    end
-                end
-
-                local value = tonumber((read():gsub('[^%d]+', '')))
-                if value < 1000000000 then
-                    for zoneId, _ in pairs(zones) do
-                        for y = 0, #state.board do
-                            local char = read():gmatch('.')
-                            for x = 0, #state.board[1] do
-                                if char() == 'x' then
-                                    state.board[y][x] = 2
-                                    table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, {x=x, y=y, z=0}, homm3lua.PLAYER_7})
-                                end
-                            end
+            for zoneId, _ in pairs(zones) do
+                for y = 0, #state.board do
+                    local char = (read() or ''):gmatch('.')
+                    for x = 0, #state.board[1] do
+                        if char() == 'x' then
+                            state.board[y][x] = 2
+                            table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, {x=x, y=y, z=0}, homm3lua.PLAYER_7})
                         end
                     end
                 end
