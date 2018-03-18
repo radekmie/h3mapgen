@@ -625,12 +625,25 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
         for _, dxy in ipairs(getGridNeighbors(bx, by)) do
           if cxy[1]==dxy[1] and cxy[2]==dxy[2] then
             --print ('>>>', ax, ay, '-', cxy[1], cxy[2], '-', bx, by)
-            return cxy
+            return {cxy}
           end
         end
       end
     end
-    return nil
+    -- 2 step test
+    for _, cxy in ipairs(getGridNeighbors(ax, ay)) do
+      if self.grid[cxy[2]][cxy[1]].id == zoneId then
+        for _, dxy in ipairs(getGridNeighbors(bx, by)) do
+          for _, exy in ipairs(getGridNeighbors(cxy[1], cxy[2])) do
+            if exy[1]==dxy[1] and exy[2]==dxy[2] then
+              --print ('>>>', ax, ay, '-', cxy[1], cxy[2], '-', exy[1], exy[2], '-', bx, by)
+              return {cxy, exy}
+            end
+          end
+        end
+      end
+    end
+    return {}
   end
 
   local closestInside = function (zoneId, xy)
@@ -716,8 +729,8 @@ function GridMap:RunVoronoi(pointsPerSector, sectorLenience, seedValue)
               -- Super white.
               self.grid[y        ][x        ].id = -2
               self.grid[isAnyB[2]][isAnyB[1]].id = -2
-              if stepA ~= nil then self.grid[stepA[2]][stepA[1]].id = -2 end
-              if stepB ~= nil then self.grid[stepB[2]][stepB[1]].id = -2 end
+              for _, sxy in ipairs(stepA) do self.grid[sxy[2]][sxy[1]].id = -2 end
+              for _, sxy in ipairs(stepB) do self.grid[sxy[2]][sxy[1]].id = -2 end
 
               -- Note.
               connected = {x, y, isAnyB[1], isAnyB[2]}
