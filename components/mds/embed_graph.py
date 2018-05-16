@@ -306,12 +306,12 @@ def calc_bad_edges(graph, vor_zone_graph):
 
 
 if __name__ == '__main__':
-
+    if len(sys.argv) != 4:
+        raise Exception('Usage: path output seed')
     path = sys.argv[1]
-    if len(sys.argv) > 2:
-        output_fname = sys.argv[2]
-    else:
-        output_fname = path + '_emb'
+    output_fname = sys.argv[2]
+    random.seed(int(sys.argv[3]))
+    np.random.seed(int(sys.argv[3]))
 
     graph, sizes = load_graph(path)
     graph = reshape_graph(graph, sizes)
