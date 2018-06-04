@@ -95,7 +95,7 @@ end
 
 -- Steps.
 local function step_ca (state)
-    local board = CA.run(state.board, 'moore', 0.5, 3, 2, 0)
+    local board = CA.run(state.board, 'moore', 0.5, 3, 2, state.paramsDetailed.seed)
 
     for y, line in ipairs(board) do
         for x, char in ipairs(line) do
