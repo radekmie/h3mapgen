@@ -56,7 +56,9 @@ local function saveH3M (state, path)
     end
 
     for _, hero in ipairs(state.world_heroes) do
+        hero[2].y = hero[2].y - 1
         instance:hero(table.unpack(hero))
+        hero[2].y = hero[2].y + 1
     end
 
     for _, sign in ipairs(state.world_debugZoneSigns) do
@@ -95,19 +97,26 @@ end
 
 -- Steps.
 local function step_ca (state)
+    print('[CA] Start.')
     local board = CA.run(state.board, 'moore', 0.5, 3, 2, state.paramsDetailed.seed)
 
+    print('[CA]   Load.')
     for y, line in ipairs(board) do
-        for x, char in ipairs(line) do
-            if (char == 1 or char == 3) and state.board[y][x] == 0 then
-                local sprite = char == 1 and 'Oak Trees' or 'Pine Trees'
-                state.world_grid[xyz2position(x, y, 0)] = true
-                table.insert(state.world_obstacles, {sprite, {x=x - 1, y=y - 1, z=0}})
+        if y - 2 > 0 and y + 2 < #state.board then
+            for x, char in ipairs(line) do
+                if x - 2 > 0 and x + 2 < #line then
+                    if (char == 1 or char == 3) and state.board[y][x] == 0 then
+                        local sprite = char == 1 and 'Oak Trees' or 'Pine Trees'
+                        state.world_grid[xyz2position(x, y, 0)] = true
+                        table.insert(state.world_obstacles, {sprite, {x=x - 1, y=y - 1, z=0}})
+                    end
+                end
             end
         end
     end
 
     state.board = board
+    print('[CA]   Done.')
 end
 
 local function step_dump (state, index)
@@ -126,6 +135,8 @@ local function step_SFP (state)
     end
 
     for baseId, _ in pairs(baseIds) do
+        print('[SFP] BaseId: ' .. baseId)
+
         local features = {}
         for _, feature in ipairs(state.LML_graph[baseId].features) do
             if feature.type == 'MINE' then
@@ -189,8 +200,8 @@ local function step_SFP (state)
                         table.insert(line, '#')
                     else
                         for _, join in ipairs(state.voronoi.joinAt) do
-                            if (join[1] == zoneId and join[5][1] == x and join[5][2] == y) or
-                               (join[2] == zoneId and join[6][1] == x and join[6][2] == y)
+                            if (join[1] == zoneId and join[5][1] == (x + 1) and join[5][2] == (y + 1)) or
+                               (join[2] == zoneId and join[6][1] == (x + 1) and join[6][2] == (y + 1))
                             then
                                 hasPoi1 = true
                                 table.insert(poisA, y .. ' ' .. x)
@@ -224,6 +235,7 @@ local function step_SFP (state)
         end
 
         if #features == 0 then
+            print('[SFP]   Added artificial PoI.')
             table.insert(features, {
                 instance = {type='PLACEHOLDER'},
                 template = table.concat({
@@ -288,7 +300,7 @@ local function step_SFP (state)
 
         local read = result:gmatch('[^\r\n]+')
         local status = read()
-        print('SFP for baseId=' .. baseId .. ' ' .. status)
+        print('[SFP]   Status:', status)
 
         if status == 'check_data returned 0.' then
             for zoneId, _ in pairs(zones) do
@@ -297,7 +309,7 @@ local function step_SFP (state)
                     local token = string.gmatch(read(), '%d+')
                     token()
 
-                    local position = {y=tonumber(token()), x=tonumber(token()), z=0}
+                    local position = {y=tonumber(token()) - 1, x=tonumber(token()) - 1, z=0}
 
                     if position.x ~= 0 and position.y ~= 0 then
                         local owner = homm3lua.OWNER_NEUTRAL
@@ -312,6 +324,14 @@ local function step_SFP (state)
                             -- TODO: Templates!
                             -- .
                             state.board[position.y][position.x] = 2
+
+                            print('[SFP]     PoI', 'at', position.x, position.y)
+
+                            -- FIXME: Offset!?
+                            position.x = position.x + 1
+                            position.y = position.y + 1
+
+                            table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, position, homm3lua.PLAYER_7})
                         end
 
                         if feature.instance.type == 'MINE' then
@@ -325,6 +345,11 @@ local function step_SFP (state)
                             state.board[position.y - 1][position.x    ] = 3
                             state.board[position.y - 1][position.x + 1] = 3
                             state.board[position.y - 1][position.x - 1] = 3
+
+                            print('[SFP]     Mine', 'at', position.x, position.y)
+
+                            -- NOTE: Right bottom, not doors.
+                            position.x = position.x + 1
 
                             table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, owner})
                         end
@@ -348,20 +373,23 @@ local function step_SFP (state)
                             state.board[position.y - 2][position.x + 1] = 3
                             state.board[position.y - 2][position.x - 1] = 3
 
+                            print('[SFP]     Town', 'at', position.x, position.y)
+
                             table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, owner})
                         end
                     else
-                        print('Not placed feature', feature.instance.type)
+                        print('[SFP]     Failed', feature.instance.type)
                     end
                 end
             end
 
-            read()
+            print('[SFP]   Fitness: ' .. read():sub(8))
+            print('[SFP]   Scanning roads.')
 
             for zoneId, _ in pairs(zones) do
-                for y = 0, #state.board do
+                for y = 0, #state.board + 1 do
                     local char = (read() or ''):gmatch('.')
-                    for x = 0, #state.board[1] do
+                    for x = 0, #state.board[1] + 1 do
                         if char() == 'x' then
                             state.board[y][x] = 2
                             table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, {x=x, y=y, z=0}, homm3lua.PLAYER_7})
@@ -369,6 +397,8 @@ local function step_SFP (state)
                     end
                 end
             end
+
+            print('[SFP]     Done.')
         end
     end
 end
