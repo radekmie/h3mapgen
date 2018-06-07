@@ -45,7 +45,7 @@ local function saveH3M (state, path)
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, state.world_size)
 
     instance:name('Random Map')
-    instance:description('Seed: ' .. state.seed)
+    instance:description('Seed: ' .. state.paramsDetailed.seed)
 
     for player = 1, #state.paramsGeneral.players do
         instance:player(player - 1)
@@ -95,7 +95,7 @@ end
 
 -- Steps.
 local function step_ca (state)
-    local board = CA.run(state.board, 'moore', 0.5, 3, 2, 0)
+    local board = CA.run(state.board, 'moore', 0.5, 3, 2, state.paramsDetailed.seed)
 
     for y, line in ipairs(board) do
         for x, char in ipairs(line) do
@@ -266,7 +266,7 @@ local function step_SFP (state)
         end
 
         local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
-        file:write('-1 -1 -1 ' .. state.seed .. '\n')
+        file:write('-1 -1 -1 ' .. state.paramsDetailed.seed .. '\n')
         file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
 
         for zoneId, zone in pairs(zones) do
@@ -464,7 +464,7 @@ local function step_initPaths (state)
     local delim = package.config:sub(1,1)
 
     -- Initialize paths.
-    state.path = 'output' .. delim .. state.seed .. '_' .. #state.paramsGeneral.players
+    state.path = 'output' .. delim .. state.paramsDetailed.seed .. '_' .. #state.paramsGeneral.players
     state.paths = {
         path = state.path..delim,
         delim = delim,
@@ -496,20 +496,15 @@ end
 
 local function step_initSeed (state)
     -- Set shared seed for determinacy.
-    if state.paramsGeneral.seed == 0 then
-        state.seed = os.time()
-    else
-        state.seed = state.paramsGeneral.seed
-    end
-
-    math.randomseed(state.seed)
+    math.randomseed(state.paramsDetailed.seed)
 end
 
 local function step_mds (state)
     shell(table.concat({
         'python components/mds/embed_graph.py',
         state.paths.graph,
-        state.paths.emb
+        state.paths.emb,
+        state.paramsDetailed.seed
     }, ' '))
 end
 
@@ -671,11 +666,15 @@ if arg[1] then
 
     local steps = {}
 
-    table.insert(steps, step_initSeed)
+    if skipInit then
+        table.insert(steps, step_initSeed)
+    else
+        table.insert(steps, step_initParams)
+    end
+
     table.insert(steps, step_initPaths)
 
     if not skipInit then
-        table.insert(steps, step_initParams)
         table.insert(steps, step_dump)
 
         table.insert(steps, step_initLML)
