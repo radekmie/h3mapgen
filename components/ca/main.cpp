@@ -36,7 +36,8 @@ static int run(lua_State* L) {
   Board board;
 
   // Resize.
-  lua_geti(L, 1, 1);
+  lua_pushinteger(L, 1);
+  lua_gettable(L, 1);
   lua_len(L, -1);
   lua_len(L, 1);
   int size_x = lua_tointeger(L, -2);
@@ -49,10 +50,13 @@ static int run(lua_State* L) {
 
   // Load board.
   for (int y = 0; y < size_y; ++y) {
-    lua_geti(L, 1, y + 1);
+    lua_pushinteger(L, y + 1);
+    lua_gettable(L, 1);
 
     for (int x = 0; x < size_x; ++x) {
-      lua_geti(L, -1, x + 1);
+      int index = lua_absindex(L, -1);
+      lua_pushinteger(L, x + 1);
+      lua_gettable(L, index);
 
       switch (lua_tointeger(L, -1)) {
         case 0: board[x][y] = white; break;
