@@ -18,8 +18,8 @@ CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11
 TARGETS := \
 	components/ca/ca \
 	components/ca/ca.so \
-	components/voronoi/voronoi \
 	components/sfp/sfp \
+	components/voronoi/voronoi \
 	h3mapgen.love
 
 # Meta
@@ -34,12 +34,12 @@ components/ca/ca: $(FILES_CA)
 components/ca/ca.so: $(FILES_CA)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(SHARED)
 
+FILES_SFP := $(subst .c,.o,$(shell find components/sfp -name '*.c'))
+components/sfp/sfp: $(FILES_SFP)
+	$(CXX) -o $@ $^ $(CFLAGS) $(LDLIBS)
+
 FILES_VORONOI := $(subst .cpp,.o,$(shell find components/voronoi -name '*.cpp'))
 components/voronoi/voronoi: $(FILES_VORONOI)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
-
-FILES_SFP := $(subst .cpp,.o,$(shell find components/sfp -name '*.cpp'))
-components/sfp/sfp: $(FILES_SFP)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 
 h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi)
