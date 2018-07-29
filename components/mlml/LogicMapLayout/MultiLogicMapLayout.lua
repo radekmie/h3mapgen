@@ -1,4 +1,4 @@
-local Node = require'LogicMapLayout/MLMLNode'
+local Node = require'components/mlml/LogicMapLayout/MLMLNode'
 
 
 local MLML = {}
@@ -15,7 +15,246 @@ function MLML.Initialize(lml_interface)
 end
 
 
+--- Sets the mode for MLML.
+-- MLML objects have to be initialized before calling SetMode.
+-- when set to true, will cause buffers to not merge automatically, default mode merges automatically
+-- @param lazyBufferEdges Constant equal to true or nil
+function MLML:SetMode(lazyBufferEdges)
+  self.lazyBufferEdges = lazyBufferEdges
+end
+
+
+--- Resets the local graphs and utility tables, intializes them again from LML.
+-- MLML objects have to be initialized before calling Generate.
+-- @param PLAYERS_NUM Constant containing number of players for the MLML graph
+function MLML.InitialSetup(PLAYERS_NUM)
+  
+  -- will hold sets of "connected players", will be merge each time player graphs connect
+  self.connected = {}
+  for playerId = 1, PLAYERS_NUM do
+    table.insert(self.connected, {playerId})
+  end
+
+  -- will hold abstract representation of connection types
+  self.newConnectionTypes = {}
+
+  -- will hold definitions of newly created edges
+  self.newEdges = {}
+
+  -- will hold sets of vertices which should be zipped
+  self.toZip = {}
+
+  self.localGraphs = {}
+  for playerId = 1, PLAYERS_NUM do
+    self.localGraphs[playerId] = {}
+    
+    local idShift = #self.lml * (playerId - 1)
+
+    for _,zone in ipairs(self.lml) do
+      local zCopy = {}
+      zCopy.id = zone.id + idShift
+      zCopy.baseId = zone.id
+      zCopy.type = zone.type
+
+      local edges = {}
+      for _,k in pairs(zone.edges) do
+        local shiftedId = k + idShift
+        if not edges[shiftedId] then
+          edges[shiftedId] = 0
+        end
+        edges[shiftedId] = edges[shiftedId] + 1
+      end
+      zCopy.edges = edges
+
+      local outer = {}
+      for _,k in ipairs(zone.outer) do
+        table.insert(outer, k)
+      end
+      zCopy.outer = outer
+
+      table.insert(self.localGraphs[playerId], zCopy)
+    end
+  end
+
+end
+
+
+--- Finds buffers which can be merged automatically, removes their outer edges, adds information about merge to be made.
+-- Private function to be called only inside Generate function.
+function MLML.AutoMergeBuffers()
+  local playerCount = #self.localGraphs
+  local idShift = #self.lml * (playerId - 1)
+
+  for _,zone in ipairs(self.lml) do
+    if zone.type == 'BUFFER' then
+      -- to be implemented later, will lighten the load on edge finding.
+      -- since we usually expect buffers to be merged
+      -- this function can automatically update the graphs so that the buffers are in fact merged
+    end
+  end
+  
+end
+
+
+--- Tries to connect all outer edges fairly, without mixing between levels.
+-- Private function to be called only inside Generate function.
+function MLML.ConnectOutersWithoutMixingLevels(outers)
+
+  for level,zones in pairs(outers) do
+    
+  end
+
+
+  --[==========[
+  -- old version of single level code
+    local zonePairs = {}
+    local newEdges = {}
+    local level = levelZones[1]
+    local zones = levelZones[2]
+    zonePairs[level] = {}
+    local levelPairs = zonePairs[level]
+    for _,zoneId in ipairs(zones) do
+      for playerId=1,PLAYERS_NUM do
+        levelPairs[#levelPairs + 1] = {playerId, lmlSize * (playerId - 1) + zoneId, false}
+      end
+    end
+    for fIndex,fPair in ipairs(levelPairs) do
+      local fPlayerId = fPair[1]
+      local fZoneId = fPair[2]
+      if fPair[3] == false then
+        local sIndex
+        for sIndex = fIndex + 1, #levelPairs do
+          local sPair = levelPairs[sIndex]
+          local sPlayerId = sPair[1]
+          local sZoneId = sPair[2]
+          if sPair[3] == false and fPlayerId ~= sPlayerId then
+            if not pConn[fPlayerId][sPlayerId] then
+              for nPlayerId,_ in pairs(pConn[fPlayerId]) do
+                pConn[sPlayerId][nPlayerId] = true
+              end
+              for nPlayerId,_ in pairs(pConn[sPlayerId]) do
+                pConn[fPlayerId][nPlayerId] = true
+              end
+              fPair[3] = true
+              sPair[3] = true
+              newEdges[#newEdges + 1] = {level, fZoneId, sZoneId}
+              break
+            else
+              local laterConn = false
+              for lIndex = sIndex + 1, #levelPairs do
+                local lPlayerId = levelPairs[lIndex][1]
+                if levelPairs[lIndex][3] == false and sPlayerId ~= lPlayerId and not pConn[lPlayerId][sPlayerId] then
+                  laterConn = true
+                  break
+                end
+              end
+              if not laterConn then
+                fPair[3] = true
+                sPair[3] = true
+                newEdges[#newEdges + 1] = {level, fZoneId, sZoneId}
+                break
+              end
+            end
+          end
+        end
+      end
+    end
+  --]==========]
+
+
+end
+
+
+--- Tries to connect all outer edges fairly, while mixing between levels.
+-- Private function to be called only inside Generate function.
+function MLML.ConnectOutersWhileMixingLevels(outers)
+  
+end
+
+
+--- Tries to connect all outer edges fairly, using buffers and locals together.
+-- Private function to be called only inside Generate function.
+function MLML.ConnectOuters(bufferOuters, localOuters)
+  
+end
+
+
+--- Tries to connect all outer edges, failsafe which does not ensure fairness, to be called if no fair method exists.
+-- Private function to be called only inside Generate function.
+function MLML.BruteConnectOuters(bufferOuters, localOuters)
+  
+end
+
+
 --- Generates MLML based on initialized lml interface.
+-- MLML objects have to be initialized before calling Generate.
+-- @param PLAYERS_NUM Constant containing number of players for the MLML graph
+function MLML:NewGenerate(PLAYERS_NUM)
+
+  self.InitialSetup(PLAYERS_NUM)
+
+  if self.lazyBufferEdges then
+    self.AutoMergeBuffers()
+  end
+
+  -- for the graphs to be fair, whenever we use a buffer outer edge for a player, it should be used for all players.
+  -- the same situation applies for using a local outer edge for a player.
+  -- this allows us to use only single copy of buffer outers and local outers, but we need to always use these edges for all players.
+  local bufferOuters = {}
+  local localOuters = {}
+  for _,zone in ipairs(self.lml) do
+    for _,outLevel in ipairs(zone.outer) do
+      if zone.type == "LOCAL" then
+        if not localOuters[outLevel] then
+          localOuters[outLevel] = {}
+        end
+        table.insert(localOuters[outLevel], zone.id)
+      else
+        if not bufferOuters[outLevel] then
+          bufferOuters[outLevel] = {}
+        end
+        table.insert(bufferOuters[outLevel], zone.id)
+      end
+    end
+  end
+
+  local unusedOutersExist = function(outers)
+    for _,zones in pairs(outers) do
+      if #zones > 0 then
+        return true
+      end
+    end
+    return false
+  end
+
+  self.ConnectOutersWithoutMixingLevels(bufferOuters)
+  self.ConnectOutersWithoutMixingLevels(localOuters)
+
+  if unusedOutersExist(bufferOuters) then
+    self.ConnectOutersWhileMixingLevels(bufferOuters)
+  end
+  if unusedOutersExist(localOuters) then
+    self.ConnectOutersWhileMixingLevels(localOuters)
+  end
+
+  if unusedOutersExist(bufferOuters) and unusedOutersExist(localOuters) then
+    self.ConnectOuters(bufferOuters, localOuters)
+  end
+
+  if unusedOutersExist(bufferOuters) or unusedOutersExist(localOuters) then
+    self.BruteConnectOuters(bufferOuters, localOuters)
+  end
+
+  -- TODO: create the full graph as it should now look (copy current + add edges + zip nodes)
+
+  -- to be added at the very end!!!
+  -- self[zone.id + idShift] = Node.New(zCopy, zone.id + idShift)
+
+end
+
+
+--- Generates MLML based on initialized lml interface.
+-- THIS FUNCTION WILL BE REMOVED AFTER IMPLEMENTING NEW VERSION
 -- MLML objects have to be initialized before calling Generate.
 -- @param PLAYERS_NUM Constant containing number of players for the MLML graph
 function MLML:Generate(PLAYERS_NUM)
@@ -196,6 +435,7 @@ function MLML:Generate(PLAYERS_NUM)
     processed[vertex] = false
   end
 
+  -- finds all Buffer vertices that are connected exclusively with their own copies
   for baseVertex,_ in pairs(newEdgeGraph) do
     if not processed[baseVertex] and self[baseVertex].type == "BUFFER" then
       local reached = {}
