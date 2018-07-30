@@ -19,7 +19,7 @@ end
 -- @param x Number to round
 -- @return Random integer neighbor
 function Random.UniformNeighbour(x)
-  if math.type(x) == 'integer' then
+  if math.type and math.type(x) == 'integer' then
     return math.random(x-1, x+1)
   else
     return math.floor(x) + math.random(0,1)
@@ -32,20 +32,20 @@ end
 -- @param limit Maximal number we can draw
 -- @return True iff rand(0, limit) > threshold
 function Random.ThresholdPass(threshold, limit)
-  return math.random() > threshold / limit 
+  return math.random() > threshold / limit
 end
 -- Random.ThresholdPass
 
 
 --- Function for choosing  map key using the roulette wheel selection.
--- @param map Maps keys to (nonnegative, float) weights 
+-- @param map Maps keys to (nonnegative, float) weights
 -- @return Key of the chosen entry or nil if map is empty
 function Random.RouletteWheel(map)
   local sum = 0
   for id, weight in pairs(map) do sum = sum + weight end
   if sum == 0 then return nil end
   local shot = math.random()*sum
-  for key, weight in pairs(map) do 
+  for key, weight in pairs(map) do
     if shot <= weight then
         return key
       else

@@ -30,7 +30,7 @@ local function generate (state, steps)
 end
 
 local function position2xyz (p)
-    return p % 256, p // 256 % 256, p // 256 // 256
+    return p % 256, math.floor(p / 256) % 256, math.floor(math.floor(p / 256) / 256)
 end
 
 local function xyz2position (x, y, z)
@@ -580,8 +580,8 @@ local function step_parseWorld (state)
     for x = 0, state.world_size - 1 do
         local cell = nil
 
-        local x2 = x - (state.world_size - w1) // 2
-        local y2 = y - (state.world_size - w1) // 2
+        local x2 = x - math.floor((state.world_size - w1) / 2)
+        local y2 = y - math.floor((state.world_size - w1) / 2)
 
         if x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1 then
             cell = cell or {homm3lua.TERRAIN_WATER}
@@ -633,7 +633,7 @@ local function step_voronoi (state)
     local gW = state.paramsDetailed.width
 
     -- TODO: Sectors...?
-    local sectors = state.config.StandardZoneSize // 2
+    local sectors = math.floor(state.config.StandardZoneSize / 2)
 
     local data = {}
     local mdsItems = {}
@@ -677,7 +677,7 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors}, true)
+    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, true)
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
