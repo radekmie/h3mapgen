@@ -13,9 +13,13 @@ local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
 local MLMLHelper = require('LogicMapLayout/MLMLHelper')
 
 
-local function Test(name)
+local function Test(name, seed)
   local state = ConfigHandler.Read('tests/lml/'..name..'.h3pgm')  
   state.config = ConfigHandler.Read('config.cfg')
+  
+  if seed ~= nil then
+    state.paramsGeneral.seed = seed
+  end
   
   Params.GenerateDetailedParams(state)
   Params.GenerateInitLMLNode(state)
@@ -59,4 +63,7 @@ end
 --Test('A')
 --print('A: OK')
 Test('01')
-print('01: OK')
+--print('01: OK')
+--for i=1,5 do
+--  Test('01', i)
+--end
