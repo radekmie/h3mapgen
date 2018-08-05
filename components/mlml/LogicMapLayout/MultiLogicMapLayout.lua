@@ -27,21 +27,20 @@ end
 --- Resets the local graphs and utility tables, intializes them again from LML.
 -- MLML objects have to be initialized before calling Generate.
 -- @param PLAYERS_NUM Constant containing number of players for the MLML graph
-function MLML.InitialSetup(PLAYERS_NUM)
-  
-  -- will hold sets of "connected players", will be merge each time player graphs connect
+function MLML:InitialSetup(PLAYERS_NUM)
+
+  self.playersNum = PLAYERS_NUM
+
+  -- will hold sets of "connected players", will be merged when player graphs connect for the first time
   self.connected = {}
   for playerId = 1, PLAYERS_NUM do
     table.insert(self.connected, {playerId})
   end
 
-  -- will hold abstract representation of connection types
-  self.newConnectionTypes = {}
-
   -- will hold definitions of newly created edges
   self.newEdges = {}
 
-  -- will hold sets of vertices which should be zipped
+  -- will hold sets of shiftedIds which should be zipped
   self.toZip = {}
 
   self.localGraphs = {}
@@ -79,17 +78,46 @@ function MLML.InitialSetup(PLAYERS_NUM)
 end
 
 
+-- requires at least 2 occurrences of baseId (zones[index]) in zones.
+function MLML:CreateRing(zones, index, level)
+  
+  --[=====[
+  -- we need to do this at the end of this function, in order to preserve the "free outers"
+          table.remove(zones, index)
+          for searchIndex = index, #zones do
+            if zones[searchIndex] == zone then
+              table.remove(zones, index)
+              break
+            end
+          end
+  --]=====]
+end
+
+-- choose best pairs to connect most players.
+-- not hard to do, if first call - take any ordering and pair neighbors.
+-- after first call will look like  O=O O=O O=O O=O
+-- after second call will look like O O=O O=O O=O O   (and first player will be connected with last. this creates a ring on 2 edge types)
+-- if second call - take the same ordering and pair neighbors starting with 1-shift.
+-- 
+-- can only be called for even number of players, does not make sense to call on odd number of players.
+function MLML:CreatePairs(baseId, level)
+  
+end
+
+
+function MLML:JoinIntoRing(baseIdSource, sourceLevel, baseIdTarget, targetLevel)
+  
+end
+
+
 --- Finds buffers which can be merged automatically, removes their outer edges, adds information about merge to be made.
 -- Private function to be called only inside Generate function.
-function MLML.AutoMergeBuffers()
-  local playerCount = #self.localGraphs
-  local idShift = #self.lml * (playerId - 1)
+function MLML:AutoMergeBuffers()
 
   for _,zone in ipairs(self.lml) do
     if zone.type == 'BUFFER' then
-      -- to be implemented later, will lighten the load on edge finding.
-      -- since we usually expect buffers to be merged
-      -- this function can automatically update the graphs so that the buffers are in fact merged
+      -- if has more than 1 outer, can be merged into one, this will lighten the load on edge finding.
+      -- we usually expect buffers to be merged, so this function can automatically update the graphs so that the buffers are in fact merged
     end
   end
   
@@ -98,91 +126,145 @@ end
 
 --- Tries to connect all outer edges fairly, without mixing between levels.
 -- Private function to be called only inside Generate function.
-function MLML.ConnectOutersWithoutMixingLevels(outers)
+function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
 
-  for level,zones in pairs(outers) do
-    
-  end
-
-
-  --[==========[
-  -- old version of single level code
-    local zonePairs = {}
-    local newEdges = {}
-    local level = levelZones[1]
-    local zones = levelZones[2]
-    zonePairs[level] = {}
-    local levelPairs = zonePairs[level]
-    for _,zoneId in ipairs(zones) do
-      for playerId=1,PLAYERS_NUM do
-        levelPairs[#levelPairs + 1] = {playerId, lmlSize * (playerId - 1) + zoneId, false}
+  for level, zones in pairs(outers) do
+    local index = 1
+    while index <= #zones do
+      local zoneId = zones[index]
+      local zoneCount = 1
+      for countIndex = index + 1, #zones do
+        if zones[countIndex] == zoneId then
+          zoneCount = zoneCount + 1
+        end
       end
-    end
-    for fIndex,fPair in ipairs(levelPairs) do
-      local fPlayerId = fPair[1]
-      local fZoneId = fPair[2]
-      if fPair[3] == false then
-        local sIndex
-        for sIndex = fIndex + 1, #levelPairs do
-          local sPair = levelPairs[sIndex]
-          local sPlayerId = sPair[1]
-          local sZoneId = sPair[2]
-          if sPair[3] == false and fPlayerId ~= sPlayerId then
-            if not pConn[fPlayerId][sPlayerId] then
-              for nPlayerId,_ in pairs(pConn[fPlayerId]) do
-                pConn[sPlayerId][nPlayerId] = true
-              end
-              for nPlayerId,_ in pairs(pConn[sPlayerId]) do
-                pConn[fPlayerId][nPlayerId] = true
-              end
-              fPair[3] = true
-              sPair[3] = true
-              newEdges[#newEdges + 1] = {level, fZoneId, sZoneId}
-              break
-            else
-              local laterConn = false
-              for lIndex = sIndex + 1, #levelPairs do
-                local lPlayerId = levelPairs[lIndex][1]
-                if levelPairs[lIndex][3] == false and sPlayerId ~= lPlayerId and not pConn[lPlayerId][sPlayerId] then
-                  laterConn = true
-                  break
-                end
-              end
-              if not laterConn then
-                fPair[3] = true
-                sPair[3] = true
-                newEdges[#newEdges + 1] = {level, fZoneId, sZoneId}
-                break
+
+      if self.playersNum % 2 == 1 then
+        while zoneCount > 1 do
+          self.CreateRing(zones, index, level)
+          zoneCount = zoneCount - 2
+        end
+      else
+        if isBuffers then
+          if zoneCount > 1 then
+            local zonesToZip = {}
+            for playerId = 1, self.playersNum do
+              local idShift = #self.lml * (playerId - 1)
+              table.insert(zonesToZip, zoneId + idShift)
+            end
+
+            for zipIndex = #zones, 1, -1 do
+              if zones[zipIndex] == zoneId then
+                table.remove(zones, zipIndex)
               end
             end
+
+            table.insert(self.toZip, zonesToZip)
+            zoneCount = 0
           end
+        end
+
+        while zoneCount > 1 do
+          self.CreateRing(zones, index, level)
+          zoneCount = zoneCount - 2
+        end
+
+        if zoneCount == 1 then
+          self.CreatePairs(zoneId, level)
+          table.remove(zones, index)
+          zoneCount = 0
         end
       end
     end
-  --]==========]
+  end
 
+  for level, zones in pairs(outers) do
+    while #zones > 1 then
+      self.JoinIntoRing(zones[1], level, zones[2], level)
+
+      table.remove(zones, 2)
+      table.remove(zones, 1)
+    end
+  end
 
 end
 
 
 --- Tries to connect all outer edges fairly, while mixing between levels.
 -- Private function to be called only inside Generate function.
-function MLML.ConnectOutersWhileMixingLevels(outers)
-  
+-- To be called only after calling ConnectOutersWithoutMixingLevels.
+-- After calling ConnectOutersWithoutMixingLevels, levels should have at most 1 zoneId each.
+function MLML:ConnectOutersWhileMixingLevels(outers)
+
+  local findAnyPair = function()
+    local index1 = nil
+    local level1 = nil
+
+    for level, zones in pairs(outers) do
+      if #zones > 0 then
+        if index1 then
+          return index1, level1, 1, level
+        end
+
+        if #zones > 1 then
+          return 1, level, 2, level
+        end
+
+        index1 = 1
+        level1 = level
+      end
+    end
+
+    return index1, level1, nil, nil
+  end
+
+  local index1, level1, index2, level2 = findAnyPair()
+  while index1 and index2 do
+    local zone1 = outers[level1][index1]
+    local zone2 = outers[level2][index2]
+
+    self.JoinIntoRing(zone1, level1, zone2, level2)
+
+    table.remove(outers[level2], index2)
+    table.remove(outers[level1], index1)
+
+    index1, level1, index2, level2 = findAnyPair()
+  end
+
 end
 
 
 --- Tries to connect all outer edges fairly, using buffers and locals together.
 -- Private function to be called only inside Generate function.
-function MLML.ConnectOuters(bufferOuters, localOuters)
-  
-end
+-- To be called only after calling ConnectOutersWhileMixingLevels.
+-- After calling ConnectOutersWhileMixingLevels, bufferOuters and localOuters should have at most 1 zoneId each.
+function MLML:ConnectOuters(bufferOuters, localOuters)
+  local findAnyOuter = function(outers)
+    for level, zones in pairs(outers) do
+      if #zones > 0 then
+        return 1, level
+      end
+    end
 
+    return nil, nil
+  end
 
---- Tries to connect all outer edges, failsafe which does not ensure fairness, to be called if no fair method exists.
--- Private function to be called only inside Generate function.
-function MLML.BruteConnectOuters(bufferOuters, localOuters)
-  
+  local bufferIndex, bufferLevel = findAnyOuter(bufferOuters)
+  local localIndex, localLevel = findAnyOuter(localOuters)
+
+  while bufferIndex and localIndex do
+    local bufferOuter = bufferOuters[bufferLevel][bufferIndex]
+    local localOuter = localOuters[localLevel][localIndex]
+
+    self.JoinIntoRing(bufferOuter, bufferLevel, localOuter, localLevel)
+
+    table.remove(bufferOuters[bufferLevel], bufferIndex)
+    table.remove(localOuters[localLevel], localIndex)
+
+    bufferIndex, bufferLevel = findAnyOuter(bufferOuters)
+    localIndex, localLevel = findAnyOuter(localOuters)
+  end
+
 end
 
 
@@ -197,9 +279,9 @@ function MLML:NewGenerate(PLAYERS_NUM)
     self.AutoMergeBuffers()
   end
 
-  -- for the graphs to be fair, whenever we use a buffer outer edge for a player, it should be used for all players.
-  -- the same situation applies for using a local outer edge for a player.
-  -- this allows us to use only single copy of buffer outers and local outers, but we need to always use these edges for all players.
+  -- for the graphs to be fair, whenever we use a buffer (or local) outer edge for a player, it should be used for all players.
+  -- this allows us to use only single copy of buffer outers and local outers.
+  -- but whenever we use an outer (or 2), we need to use them for all players at once.
   local bufferOuters = {}
   local localOuters = {}
   for _,zone in ipairs(self.lml) do
@@ -227,8 +309,8 @@ function MLML:NewGenerate(PLAYERS_NUM)
     return false
   end
 
-  self.ConnectOutersWithoutMixingLevels(bufferOuters)
-  self.ConnectOutersWithoutMixingLevels(localOuters)
+  self.ConnectOutersWithoutMixingLevels(bufferOuters, true)
+  self.ConnectOutersWithoutMixingLevels(localOuters, false)
 
   if unusedOutersExist(bufferOuters) then
     self.ConnectOutersWhileMixingLevels(bufferOuters)
@@ -242,7 +324,8 @@ function MLML:NewGenerate(PLAYERS_NUM)
   end
 
   if unusedOutersExist(bufferOuters) or unusedOutersExist(localOuters) then
-    self.BruteConnectOuters(bufferOuters, localOuters)
+    -- if this happens - we cannot join anything and we have to fail the graph making, because it's not physically possible
+    -- this means an error occurred in LML, because we do have an odd number of outers, and an odd number of players
   end
 
   -- TODO: create the full graph as it should now look (copy current + add edges + zip nodes)
