@@ -62,8 +62,13 @@ end
 
 --Test('A')
 --print('A: OK')
-Test('01')
+--Test('01')
+--Test('01', 17)
+--Test('01', 36)
+--Test('01', 41)
+--Test('01', 45)
+Test('01', 47)
 --print('01: OK')
---for i=1,5 do
+--for i=30,50 do
 --  Test('01', i)
 --end
