@@ -1,4 +1,9 @@
 import numpy as np
+import matplotlib
+
+# Make it work in headless environments.
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import sys
 import random
