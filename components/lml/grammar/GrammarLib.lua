@@ -188,10 +188,9 @@ function GrammarLib.CheckForBufferWithOuter(classes, features)
     if f.type=='OUTER' then
       outercount = outercount + 1
     end
-  end  
-  if outercount < #classes then return false end
-
-  return true
+  end
+  
+  return outercount >= #classes
 end
 -- GrammarLib.CheckForBufferWithOuter
 

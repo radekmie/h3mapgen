@@ -305,7 +305,7 @@ local function ComputeOuterFeatures(state, zonelevels)
   end
 
   -- Safeguard outer addition when there is odd number of out-connections in MLML or there are no outers at all
-  while #outers==0 or (#outers*#dp.players) % 2 == 1 or (#outers * 2 < #dp.players) do
+  while #outers==0 or (#outers*#dp.players) % 2 == 1 or #outers < 2 do -- (#outers * 2 < #dp.players) do -- Piotrek said that 2 is enough
     if #zonelevels.buffers > 0 then
       local lvl = zonelevels.buffers[rand(#zonelevels.buffers)]
       local outerlvl = math.min(lvl+RNG.RouletteWheel(cfg.OuterBufferDifficulty), cfg.MaxZoneLevel)
