@@ -83,6 +83,18 @@ There's no single executable file yet, but you can run it with [love2d](https://
 love h3mapgen.love
 ```
 
+## Run in Docker
+
+```sh
+$ git submodule update --init --recursive
+$ docker rmi         h3mapgen:old              || true
+$ docker tag         h3mapgen:new h3mapgen:old || true
+$ docker build --tag h3mapgen:new .
+$ docker run --rm --name h3mapgen --volume $(pwd)/output:/app/output h3mapgen:new
+```
+
+This will remove the `old` image, tag the `new` as `old`, build the `new` and run a volatile container, which will save the output in `./output`.
+
 ## Random notes of Kuba S.:
 - In case you don't know that: the first rule is that the code in `master` is compilable at all times. You should check that before commiting.
 - I've created a separate branch for development of cellular automata. Creating branches for other parts of the project is highly encouraged.
