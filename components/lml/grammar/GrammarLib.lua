@@ -145,7 +145,7 @@ function GrammarLib.SplitInto2ByDeltaBasedPivot(classes, ratio)
   end
   --local x={} for _, c in ipairs(classes) do table.insert(x,tostring(c)) end print (table.concat(x, ', '))
   --local y={} for _, w in ipairs(weightMap) do table.insert(y,tostring(w)) end print (table.concat(y, ', '))  
-  local index = RNG.RouletteWheel(weightMap) --print (index)
+  local index = RNG.RouletteWheelTab(weightMap) --print (index)
   local pivot = classes[index]
   
   local smaller, equal, greater = GrammarLib.SplitInto3ByPivot(classes, pivot)

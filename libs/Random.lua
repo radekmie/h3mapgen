@@ -38,9 +38,29 @@ end
 
 
 --- Function for choosing  map key using the roulette wheel selection.
--- @param map Maps keys to (nonnegative, float) weights
+-- @param map Array consisting of {key=key, value=weight} entries to (nonnegative, float) weights
 -- @return Key of the chosen entry or nil if map is empty
 function Random.RouletteWheel(map)
+  local sum = 0
+  for _, obj in ipairs(map) do sum = sum + obj.value end
+  if sum == 0 then return nil end
+  local shot = math.random()*sum
+  for _, obj in ipairs(map) do
+    local key, weight = obj.key, obj.value
+    if shot <= weight then
+        return key
+      else
+        shot = shot - weight
+      end
+  end
+  error('[ERROR] <Random.RouletteWheel> : No valid results.', 2)
+end
+
+
+--- Function for choosing  map key using the roulette wheel selection.
+-- @param map Array keys to (nonnegative, float) weights
+-- @return Key of the chosen entry or nil if map is empty
+function Random.RouletteWheelTab(map)
   local sum = 0
   for id, weight in pairs(map) do sum = sum + weight end
   if sum == 0 then return nil end
@@ -54,7 +74,7 @@ function Random.RouletteWheel(map)
   end
   error('[ERROR] <Random.RouletteWheel> : No valid results.', 2)
 end
--- Random.RouletteWheel
+-- Random.RouletteWheelTab
 
 
 --- Return a random element from the non-empty sequence
