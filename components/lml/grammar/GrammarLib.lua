@@ -145,7 +145,7 @@ function GrammarLib.SplitInto2ByDeltaBasedPivot(classes, ratio)
   end
   --local x={} for _, c in ipairs(classes) do table.insert(x,tostring(c)) end print (table.concat(x, ', '))
   --local y={} for _, w in ipairs(weightMap) do table.insert(y,tostring(w)) end print (table.concat(y, ', '))  
-  local index = RNG.RouletteWheel(weightMap) --print (index)
+  local index = RNG.RouletteWheelTab(weightMap) --print (index)
   local pivot = classes[index]
   
   local smaller, equal, greater = GrammarLib.SplitInto3ByPivot(classes, pivot)
@@ -155,6 +155,44 @@ function GrammarLib.SplitInto2ByDeltaBasedPivot(classes, ratio)
   return smaller, equal
 end
 -- GrammarLib.SplitInto2ByDeltaBasedPivot
+
+
+--- Checks if given set of features is safe, i.e. it does not contain buffers or at least one buffer has an outer
+-- @param classes Sequence of classes to check
+-- @param features Sequence of features to check
+-- @return true if there is outer feature for buffer or there are no buffers at all, false otherwise
+function GrammarLib.CheckForBufferWithOuter(classes, features)
+  local nobuf = true
+  for _, c in ipairs(classes) do
+    if c.type=='BUFFER' then
+      nobuf = false
+      break
+    end
+  end
+  if nobuf then return true end
+  
+  local bufouter=false
+  for _, f in ipairs(features) do
+    if f.type=='OUTER' and f.class.type=='BUFFER' then
+      bufouter = true
+    end
+  end
+  if not bufouter then return false end
+  
+  local class = classes[1] -- additional check for 'DivideEqualHorizontally' safety
+  for _, c in ipairs(classes) do
+    if c ~= class then return true end
+  end
+  local outercount = 0
+  for _, f in ipairs(features) do
+    if f.type=='OUTER' then
+      outercount = outercount + 1
+    end
+  end
+  
+  return outercount >= #classes
+end
+-- GrammarLib.CheckForBufferWithOuter
 
 
 return GrammarLib
