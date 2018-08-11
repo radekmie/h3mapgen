@@ -9,6 +9,7 @@ local function apply (board, position, pattern)
 
             if cell == '#' then board[ty][tx] = 3 end
             if cell == '.' then board[ty][tx] = 2 end
+            if cell == '_' then board[ty][tx] = 1 end
         end
     end
     end
