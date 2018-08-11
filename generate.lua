@@ -278,7 +278,11 @@ local function step_SFP (state)
 
         file:close()
 
-        local result = shell('./components/sfp/sfp < ' .. state.paths.sfp .. '.' .. baseId)
+        local result = shell{
+            './components/sfp/sfp',
+            '< ' .. state.paths.sfp .. '.' .. baseId,
+            '2> ' .. state.paths.dumps .. 'sfp.' .. baseId .. '.log'
+        }
 
         local read = result:gmatch('[^\r\n]+')
         local status = read()
@@ -449,6 +453,7 @@ local function step_initPaths (state)
         imgs  = state.path .. delim .. 'imgs' .. delim,
         emb   = state.path .. delim .. 'emb',
         graph = state.path .. delim .. 'graph.txt',
+        logs  = state.path .. delim .. 'logs.txt',
         map   = state.path .. delim .. 'map.h3m',
         mds   = state.path .. delim .. 'emb.txt',
         pgm   = state.path .. delim .. 'mlml.h3pgm',
@@ -571,6 +576,15 @@ local function step_parseWorld (state)
     end
 end
 
+local function step_initLogging (state)
+    local handle = io.open(state.paths.logs, 'w')
+    local _print = print
+    print = function (...)
+        handle:write(table.concat({...}, '\t'), '\n')
+        _print(...)
+    end
+end
+
 local function step_saveH3M (state)
     saveH3M(state, state.paths.map)
 end
@@ -650,6 +664,7 @@ if arg[1] then
     end
 
     table.insert(steps, step_initPaths)
+    table.insert(steps, step_initLogging)
 
     if not skipInit then
         table.insert(steps, step_dump)
