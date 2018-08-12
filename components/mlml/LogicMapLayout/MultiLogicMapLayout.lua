@@ -78,35 +78,185 @@ function MLML:InitialSetup(PLAYERS_NUM)
 end
 
 
--- requires at least 2 occurrences of baseId (zones[index]) in zones.
-function MLML:CreateRing(zones, index, level)
+function MLML:AddEdge(leftZoneId, rightZoneId)
   
-  --[=====[
-  -- we need to do this at the end of this function, in order to preserve the "free outers"
-          table.remove(zones, index)
-          for searchIndex = index, #zones do
-            if zones[searchIndex] == zone then
-              table.remove(zones, index)
-              break
-            end
-          end
-  --]=====]
+  if not self.newEdges[leftZoneId] then
+    self.newEdges[leftZoneId] = {}
+  end
+  table.insert(self.newEdges[leftZoneId], rightZoneId)
+
+  if not self.newEdges[rightZoneId] then
+    self.newEdges[rightZoneId] = {}
+  end
+  table.insert(self.newEdges[rightZoneId], leftZoneId)
+
+end
+
+
+-- requires at least 2 occurrences of baseId (zones[index]) in zones.
+function MLML:CreateRing(zones, index)
+
+  local zoneId = zones[index]
+
+  local orderTable = {}
+  for i = 1, self.playersNum do
+    table.insert(orderTable, i)
+  end
+
+  if self.playersNum > 3 then
+    -- when 2-3 players, there is only one "order" which can be used anyway
+    for i = #orderTable, 1, -1 do
+      local j = math.random(i)
+      orderTable[i], orderTable[j] = orderTable[j], orderTable[i]
+    end
+  end
+
+  local idShift = #self.lml
+  for leftIndex = 1, #orderTable do
+    local rightIndex = (leftIndex + 1) % self.playersNum
+
+    local leftZoneId = idShift * (orderTable[leftIndex] - 1) + zoneId
+    local rightZoneId = idShift * (orderTable[rightIndex] - 1) + zoneId
+
+    self.AddEdge(leftZoneId, rightZoneId)
+  end
+
+  if #self.connected > 1 then
+    -- all players are now joined
+    local connected = {}
+    for playerId = 1, PLAYERS_NUM do
+      table.insert(connected, playerId)
+    end
+    self.connected = connected
+  end
+
+  table.remove(zones, index)
+  for searchIndex = index, #zones do
+    if zones[searchIndex] == zone then
+      table.remove(zones, index)
+      break
+    end
+  end
+
 end
 
 -- choose best pairs to connect most players.
--- not hard to do, if first call - take any ordering and pair neighbors.
--- after first call will look like  O=O O=O O=O O=O
--- after second call will look like O O=O O=O O=O O   (and first player will be connected with last. this creates a ring on 2 edge types)
--- if second call - take the same ordering and pair neighbors starting with 1-shift.
--- 
+-- self.connected size is 1, n/2 or n
+-- if it is n or 1, then create random pairs
+-- if it is n/2 go through all self.connected pairs (should have 2 elements each), join random from 1, with random from 2, other from 2 with random from 3, other from 3... etc
 -- can only be called for even number of players, does not make sense to call on odd number of players.
-function MLML:CreatePairs(baseId, level)
-  
+function MLML:CreatePairs(baseId)
+
+  if self.playersNum % 2 == 1 then
+    return
+  end
+
+  local idShift = #self.lml
+  local joinPlayers = function(playerId1, playerId2)
+    local leftZoneId = idShift * (playerId1 - 1) + baseId
+    local rightZoneId = idShift * (playerId2 - 1) + baseId
+
+    self.AddEdge(leftZoneId, rightZoneId)
+  end
+
+  if #self.connected == self.playersNum / 2 then
+    -- players are in pairs, so now we join the pairs in some random order into a ring so everyone is connected
+    local connectedShuffled = {}
+    for _,pair in pairs(self.connected) do
+      table.insert(connectedShuffled, pair)
+    end
+
+    for i = #connectedShuffled, 1, -1 do
+      local j = math.random(i)
+      connectedShuffled[i], connectedShuffled[j] = connectedShuffled[j], connectedShuffled[i]
+    end
+
+    local newOrder = {}
+    for index, pair in ipairs(connectedShuffled) do
+      local switchOrder = math.random(2) == 1
+      if switchOrder then
+        table.insert(newOrder, pair[2])
+        table.insert(newOrder, pair[1])
+      else
+        table.insert(newOrder, pair[1])
+        table.insert(newOrder, pair[2])
+      end
+    end
+
+    while #newOrder > 2 do
+      joinPlayers(newOrder[2], newOrder[3])
+      table.remove(newOrder, 3)
+      table.remove(newOrder, 2)
+    end
+    joinPlayers(newOrder[1], newOrder[2])
+
+    -- all players are now joined
+    local connected = {}
+    for playerId = 1, self.playersNum do
+      table.insert(connected, playerId)
+    end
+    self.connected = connected
+
+  else
+    local toBeConnected = {}
+    for i = 1, self.playersNum do
+      table.insert(toBeConnected, i)
+    end
+
+    local connected = {}
+    while #toBeConnected > 1 do
+      local secondConnector = math.random(#toBeConnected, 2)
+
+      joinPlayers(toBeConnected[1], toBeConnected[secondConnector])
+
+      table.insert(connected, {toBeConnected[1], toBeConnected[secondConnector]})
+
+      table.remove(toBeConnected, secondConnector)
+      table.remove(toBeConnected, 1)
+    end
+    if #self.connected > 1 then
+      self.connected = connected
+    end
+
+  end
+
 end
 
 
-function MLML:JoinIntoRing(baseIdSource, sourceLevel, baseIdTarget, targetLevel)
-  
+function MLML:JoinIntoRing(baseIdSource, baseIdTarget)
+
+  local orderTable = {}
+  for i = 1, self.playersNum do
+    table.insert(orderTable, i)
+  end
+
+  if self.playersNum > 3 then
+    -- when 2-3 players, there is only one "order" which can be used anyway
+    for i = #orderTable, 1, -1 do
+      local j = math.random(i)
+      orderTable[i], orderTable[j] = orderTable[j], orderTable[i]
+    end
+  end
+
+  local idShift = #self.lml
+  for leftIndex = 1, #orderTable do
+    local rightIndex = (leftIndex + 1) % self.playersNum
+
+    local leftZoneId = idShift * (orderTable[leftIndex] - 1) + baseIdSource
+    local rightZoneId = idShift * (orderTable[rightIndex] - 1) + baseIdTarget
+
+    self.AddEdge(leftZoneId, rightZoneId)
+  end
+
+  if #self.connected > 1 then
+    -- all players are now joined
+    local connected = {}
+    for playerId = 1, PLAYERS_NUM do
+      table.insert(connected, playerId)
+    end
+    self.connected = connected
+  end
+
 end
 
 
@@ -128,7 +278,7 @@ end
 -- Private function to be called only inside Generate function.
 function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
 
-  for level, zones in pairs(outers) do
+  for _, zones in pairs(outers) do
     local index = 1
     while index <= #zones do
       local zoneId = zones[index]
@@ -141,7 +291,7 @@ function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
 
       if self.playersNum % 2 == 1 then
         while zoneCount > 1 do
-          self.CreateRing(zones, index, level)
+          self.CreateRing(zones, index)
           zoneCount = zoneCount - 2
         end
       else
@@ -165,12 +315,12 @@ function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
         end
 
         while zoneCount > 1 do
-          self.CreateRing(zones, index, level)
+          self.CreateRing(zones, index)
           zoneCount = zoneCount - 2
         end
 
         if zoneCount == 1 then
-          self.CreatePairs(zoneId, level)
+          self.CreatePairs(zoneId)
           table.remove(zones, index)
           zoneCount = 0
         end
@@ -178,9 +328,9 @@ function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
     end
   end
 
-  for level, zones in pairs(outers) do
+  for _, zones in pairs(outers) do
     while #zones > 1 then
-      self.JoinIntoRing(zones[1], level, zones[2], level)
+      self.JoinIntoRing(zones[1], zones[2])
 
       table.remove(zones, 2)
       table.remove(zones, 1)
@@ -223,7 +373,7 @@ function MLML:ConnectOutersWhileMixingLevels(outers)
     local zone1 = outers[level1][index1]
     local zone2 = outers[level2][index2]
 
-    self.JoinIntoRing(zone1, level1, zone2, level2)
+    self.JoinIntoRing(zone1, zone2)
 
     table.remove(outers[level2], index2)
     table.remove(outers[level1], index1)
@@ -256,7 +406,7 @@ function MLML:ConnectOuters(bufferOuters, localOuters)
     local bufferOuter = bufferOuters[bufferLevel][bufferIndex]
     local localOuter = localOuters[localLevel][localIndex]
 
-    self.JoinIntoRing(bufferOuter, bufferLevel, localOuter, localLevel)
+    self.JoinIntoRing(bufferOuter, localOuter)
 
     table.remove(bufferOuters[bufferLevel], bufferIndex)
     table.remove(localOuters[localLevel], localIndex)
