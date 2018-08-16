@@ -421,7 +421,7 @@ end
 --- Generates MLML based on initialized lml interface.
 -- MLML objects have to be initialized before calling Generate.
 -- @param PLAYERS_NUM Constant containing number of players for the MLML graph
-function MLML:NewGenerate(PLAYERS_NUM)
+function MLML:Generate(PLAYERS_NUM)
 
   self.InitialSetup(PLAYERS_NUM)
 
@@ -490,7 +490,7 @@ end
 -- THIS FUNCTION WILL BE REMOVED AFTER IMPLEMENTING NEW VERSION
 -- MLML objects have to be initialized before calling Generate.
 -- @param PLAYERS_NUM Constant containing number of players for the MLML graph
-function MLML:Generate(PLAYERS_NUM)
+function MLML:OldGenerate(PLAYERS_NUM)
   local lmlSize = #self.lml
   self.playerData = {}
   for playerId = 1, PLAYERS_NUM do
@@ -788,9 +788,15 @@ end
 -- @return Table with properly formated MLML interface
 function MLML:Interface()
   local interface = {}
-  for i,node in pairs(self) do
-    if type(i) == 'number' then
-      interface[#interface + 1] = node:Interface()
+  for _,playerNodes in pairs(self.localGraphs) do
+    for _,node in pairs(playerNodes) do
+      local nodeInterface = node:Interface()
+      if self.newEdges[node.id] then
+        for _,newEdge in pairs(self.newEdges[node.id]) do
+          table.insert(nodeInterface.edges, newEdge)
+        end
+      end
+      table.insert(interface, nodeInterface)
     end
   end
   return interface
@@ -800,18 +806,23 @@ end
 function MLML:PrintToMDS(filename)
   local file = io.open(filename, "w")
   local count = 0
-  for i,_ in pairs(self) do
-    if type(i) == 'number' then
+  for _,playerNodes in pairs(self.localGraphs) do
+    for _,_ in pairs(playerNodes) do
       count = count + 1
     end
   end
   file:write(count, "\n")
 
-  for i,node in pairs(self) do
-    if type(i) == 'number' then
+  for _,playerNodes in pairs(self.localGraphs) do
+    for _,node in pairs(playerNodes) do
       local line = ''..node.id..' '..node.weight
       for k,_ in pairs(node.edges) do
         line = line..' '..k
+      end
+      if self.newEdges[node.id] then
+        for _,newEdge in pairs(self.newEdges[node.id]) do
+          line = line..' '..newEdge
+        end
       end
       file:write(line, "\n")
     end
