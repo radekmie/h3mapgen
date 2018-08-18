@@ -6,14 +6,13 @@
 #include <random>
 #include <fstream>
 #include <sstream>
-#include <armadillo>
+#include <Eigen/Dense>
 
-#define Sizes       std::map<std::string, int>
-#define Vert        std::pair<std::string, int>
-#define Graph       std::map<Vert, std::set<Vert> >
-#define Edge        std::pair<Vert, Vert>
+#define Sizes std::map<std::string, int>
+#define Vert std::pair<std::string, int>
+#define Graph std::map<Vert, std::set<Vert>>
+#define Edge std::pair<Vert, Vert>
 #define EdgeWeights std::map<Edge, int>
-
 
 void print_vert(Vert v);
 
@@ -31,8 +30,8 @@ Graph reshape_graph(Graph graph, Sizes sizes);
 
 EdgeWeights calc_weights(Graph graph);
 
-arma::mat calc_dists(Graph graph, EdgeWeights weights);
+Eigen::MatrixXd calc_dists(Graph graph, EdgeWeights weights);
 
-void save_embedding(arma::mat data, Graph graph, std::string fname);
+void save_embedding(Eigen::MatrixX2d data, Graph graph, std::string fname);
 
 #endif

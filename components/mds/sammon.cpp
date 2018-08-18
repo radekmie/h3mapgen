@@ -1,85 +1,103 @@
 #include <iostream>
+#include <random>
 #include "sammon.hpp"
+#include "utils.hpp"
+#include <random>
 
-using namespace arma;
+using Eigen::MatrixX2d;
+using Eigen::MatrixXd;
 
+std::default_random_engine generator(50);
+std::normal_distribution<double> distribution(0, 1);
+auto normal = [&](int, int) { return distribution(generator); };
 
 // pairwise euclidean distance
-mat euclid(mat A, mat B) {
-    mat dotsAA = repmat(diagvec(A * A.t()), 1, B.n_rows);
-    mat dotsBB = repmat(diagvec(B * B.t()).t(), A.n_rows, 1);
-    mat dotsAB = A * B.t() * 2;
-    mat dist = sqrt(dotsAA + dotsBB - dotsAB);
-    dist.replace(datum::nan, 0);
+MatrixXd euclid(MatrixX2d A, MatrixX2d B)
+{
+    MatrixXd dotsAA = (A * A.transpose()).diagonal().replicate(1, B.rows());
+    MatrixXd dotsBB =
+        (B * B.transpose()).diagonal().transpose().replicate(A.rows(), 1);
+    MatrixXd dotsAB = A * B.transpose() * 2;
+    MatrixXd dist = (dotsAA + dotsBB - dotsAB).cwiseSqrt();
+    dist = (dist.array().isNaN()).select(0, dist);
     return dist;
 }
 
-std::pair<mat, double> sammon(mat D, int display, int maxhalves, int maxiter,
-                              double tolfun) {
+std::pair<MatrixX2d, double> sammon(
+    MatrixXd D, int display, int maxhalves, int maxiter, double tolfun)
+{
     int dim = 2;
 
-    // Remaining initialisation
-    int N = D.n_rows;
-    double scale = 0.5 / accu(D);
-    D += eye<mat>(N, N);
-    mat Dinv = 1.0 / D; // Returns inf where D = 0.
-    Dinv.replace(datum::inf, 0);
+    int N = D.rows();
+    double scale = 0.5 / D.sum();
+    MatrixXd Dinv = inv_nonzero(D);
 
-    mat y = randn<mat>(N, dim);
+    auto energy = [=](MatrixXd emb_dists) {
+        return ((D - emb_dists).array().pow(2) * Dinv.array()).sum();
+    };
 
-    mat one = ones<mat>(N, dim);
-    mat d = euclid(y, y) + eye<mat>(N, N);
-    mat dinv = 1.0 / d; // Returns inf where d = 0.
-    dinv.replace(datum::inf, 0);
-    double E = accu(pow(D - d, 2) % Dinv);
+    MatrixX2d emb = MatrixX2d::NullaryExpr(N, dim, normal);
 
-    int i;
-    for (i = 0; i < maxiter; i++) {
-        mat delta = dinv - Dinv;
-        mat deltaone = delta * one;
-        mat g = (delta * y) - (y % deltaone);
-        mat dinv3 = pow(dinv, 3);
-        mat y2 = pow(y, 2);
-        mat H = (dinv3 * y2) - deltaone - (y * 2) % (dinv3 * y) +
-                y2 % (dinv3 * one);
-        mat s = -vectorise(g).t() / abs(vectorise(H)).t();
-        mat y_old = y;
+    MatrixXd d = euclid(emb, emb);
+    MatrixXd dinv = inv_nonzero(d);
 
-        // Use step-halving procedure to ensure progress is made
-        int j;
-        double E_new = 0;
-        for (j = 0; j < maxhalves; j++) {
-            mat s_reshape = reshape(s, s.size() / 2, 2);
-            y = y_old + s_reshape;
-            d = euclid(y, y) + eye<mat>(N, N);
-            dinv = 1.0 / d; // Returns inf where D = 0.
-            dinv.replace(datum::inf, 0);
-            E_new = accu(pow(D - d, 2) % Dinv);
+    double E = energy(d);
+
+    Eigen::VectorXd delta_sums;
+    MatrixXd delta;
+    MatrixXd dinv3;
+    MatrixX2d gradient;
+    MatrixX2d hessian;
+    MatrixX2d step;
+    MatrixX2d emb2;
+    MatrixX2d emb_old;
+
+    for (int i = 0; i < maxiter; i++)
+    {
+        delta = dinv - Dinv;
+        delta_sums = delta.rowwise().sum();
+        gradient = (delta * emb);
+        MatrixX2d p = emb.array().colwise() * delta_sums.array();
+        dinv3 = dinv.array().pow(3);
+        emb2 = emb.array().pow(2);
+
+        hessian = (dinv3 * emb2);
+        hessian = hessian.array().colwise() - delta_sums.array();
+        hessian = hessian - (2 * emb).cwiseProduct(dinv3 * emb);
+        hessian = hessian.array() +
+                  emb2.array().colwise() * (dinv3.rowwise().sum()).array();
+
+        step = -gradient.cwiseQuotient(hessian.cwiseAbs());
+        emb_old = emb;
+
+        double E_new;
+        for (int j = 0; j < maxhalves; j++)
+        {
+            emb = emb_old + step;
+            d = euclid(emb, emb);
+            dinv = inv_nonzero(d);
+            E_new = energy(d);
             if (E_new < E)
                 break;
             else
-                s = s / 2;
+                step /= 2;
+
+            if (j == maxhalves - 1)
+                std::cout << "Warning: maxhalves exceeded. "
+                             "Sammon mapping may not converge...\n";
         }
 
-        // Bomb out if too many halving steps are required
-        if (j == maxhalves)
-            std::cout << "Warning: maxhalves exceeded. Sammon mapping may "
-                      "not converge...\n";
-
-        // Evaluate termination criterion
-        if (std::fabs((E - E_new) / E) < tolfun) {
+        if (std::fabs((E - E_new) / E) < tolfun)
+        {
             if (display > 0)
-                cout << "TolFun exceeded: Optimisation terminated\n";
+                std::cout << "TolFun exceeded: Optimisation terminated\n";
             break;
         }
 
-        // Report progress
         E = E_new;
         if (display > 1)
-            cout << "epoch = " << i << ": E = " << E * scale << "\n";
+            std::cout << "epoch = " << i << ": E = " << E * scale << "\n";
     }
 
-    // Fiddle stress to match the original Sammon paper
-    E = E * scale;
-    return std::make_pair(y, E);
+    return std::make_pair(emb, E * scale);
 }

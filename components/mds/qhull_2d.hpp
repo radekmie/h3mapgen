@@ -1,8 +1,8 @@
 #ifndef qhull_2d_hpp
 #define qhull_2d_hpp
 
-#include <armadillo>
+#include <Eigen/Dense>
 
-arma::mat qhull2D(arma::mat sample);
+Eigen::MatrixX2d qhull2D(Eigen::MatrixX2d sample);
 
 #endif

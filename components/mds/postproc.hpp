@@ -1,17 +1,29 @@
 #ifndef postproc_hpp
 #define postproc_hpp
 
-#include <armadillo>
+#include <Eigen/Dense>
 
-arma::mat pull_points(arma::mat points, arma::mat grav_points,
-                      arma::vec mass, double g);
+#define RowArray2d Eigen::Array<double, 1, 2>
 
-arma::mat make_grav_points(int points_per_edge,
-                           arma::vec xlim, arma::vec ylim);
+Eigen::MatrixX2d pull_points(
+    Eigen::MatrixX2d points,
+    Eigen::MatrixX2d grav_points,
+    Eigen::VectorXd mass,
+    double g);
 
-arma::mat scale(arma::mat X, bool with_mean = true, bool with_std = true);
+Eigen::MatrixX2d make_grav_points(
+    int points_per_edge,
+    Eigen::Vector2d xlim,
+    Eigen::Vector2d ylim);
 
-arma::mat squeeze(arma::mat data,
-                  arma::vec lxy = {0, 0}, arma::vec hxy = {1, 1});
+Eigen::MatrixX2d scale(
+    Eigen::MatrixX2d X,
+    bool with_mean = true,
+    bool with_std = true);
+
+Eigen::MatrixX2d squeeze(
+    Eigen::MatrixX2d data,
+    Eigen::Vector2d lxy = {0, 0},
+    Eigen::Vector2d hxy = {1, 1});
 
 #endif
