@@ -9,11 +9,13 @@ using Eigen::RowVector2d;
 using Eigen::Vector2d;
 using Eigen::VectorXd;
 
-MatrixX2d pull_points(MatrixX2d points, MatrixX2d grav_points, VectorXd mass, double g)
+MatrixX2d pull_points(MatrixX2d points, MatrixX2d grav_points, VectorXd mass,
+                      double g)
 {
     MatrixXd dists = euclid(points, grav_points).array() + 1;
     MatrixXd dists2 = dists.array().pow(2);
-    MatrixXd force = g / (dists2.array().rowwise() / mass.array().transpose()).array();
+    MatrixXd force =
+        g / (dists2.array().rowwise() / mass.array().transpose()).array();
 
     MatrixXd diffsX(grav_points.rows(), points.rows());
     MatrixXd diffsY(grav_points.rows(), points.rows());
@@ -27,7 +29,8 @@ MatrixX2d pull_points(MatrixX2d points, MatrixX2d grav_points, VectorXd mass, do
         }
     }
 
-    MatrixXd lengths = (diffsX.array().pow(2) + diffsY.array().pow(2)).cwiseSqrt();
+    MatrixXd lengths =
+        (diffsX.array().pow(2) + diffsY.array().pow(2)).cwiseSqrt();
     lengths = (lengths.array() == 0).select(1, lengths);
     diffsX = diffsX.cwiseQuotient(lengths).cwiseProduct(force.transpose());
     diffsY = diffsY.cwiseQuotient(lengths).cwiseProduct(force.transpose());
