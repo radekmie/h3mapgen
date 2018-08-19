@@ -56,8 +56,8 @@ std::pair<MatrixX2d, double> sammon(
     {
         delta = dinv - Dinv;
         delta_sums = delta.rowwise().sum();
-        gradient = (delta * emb);
-        MatrixX2d p = emb.array().colwise() * delta_sums.array();
+        gradient = (delta * emb).array() -
+                   (emb.array().colwise() * delta_sums.array());
         dinv3 = dinv.array().pow(3);
         emb2 = emb.array().pow(2);
 
