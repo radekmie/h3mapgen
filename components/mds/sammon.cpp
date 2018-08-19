@@ -2,7 +2,6 @@
 #include <random>
 #include "sammon.hpp"
 #include "utils.hpp"
-#include <random>
 
 using Eigen::MatrixX2d;
 using Eigen::MatrixXd;
