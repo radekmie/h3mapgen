@@ -1,0 +1,18 @@
+# Ignore all...
+*
+
+# ...allow few...
+!/Makefile
+!/components
+!/config.cfg
+!/generate.lua
+!/libs
+!/tests
+
+# ...but without the artifacts.
+/components/ca/ca
+/components/ca/ca.so
+/components/sfp/sfp
+/components/voronoi/voronoi
+/h3mapgen.love
+/libs/homm3lua/dist/homm3lua.so

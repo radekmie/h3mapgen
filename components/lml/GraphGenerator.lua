@@ -16,8 +16,9 @@ local function ProductionIterator(state, productions)
   local grammar = state.config.Grammar
 
   local map = {}
-  for name, weight in pairs(grammar) do
-    local w = 0
+  for _, g in ipairs(grammar) do
+    local name, weight = g[1], g[2]
+    local w = 0 --print(name, weight)
     if type(weight) == 'number' then -- raw number as weight
       w = weight
     elseif type(weight) == 'string' then -- parameter name as weight
@@ -25,7 +26,7 @@ local function ProductionIterator(state, productions)
     --elseif type(weight) == 'function' then -- function as weight  -- UNSUPPORTED BY SERIALIZATION
     --  w = weight(dp)
     end
-    if w > 0 then map[name] = w end
+    if w > 0 then table.insert(map, {key=name, value=w}) end
   end
   return function ()
               local choice = RNG.RouletteWheel(map)
