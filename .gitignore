@@ -3,9 +3,19 @@
 /bin/_test/*.dot
 /bin/_test/*.png
 /components/ca/ca
+!/components/gridmap/_test
+/components/gridmap/_test/*
 /components/voronoi/voronoi
+/components/sfp/sfp
+/h3mapgen.love
 /output
+/tests/out
+/tests/lml/*.png
+/tests/lml/*.dot
+/tests/mlml/*.png
+/tests/mlml/*.dot
 /tests/params/*output.h3pgm
+
 
 #Visual Studio files
 *.sln

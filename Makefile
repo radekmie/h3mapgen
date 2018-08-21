@@ -1,30 +1,65 @@
-INCLUDEDIRS = -I/usr/local/include -I/usr/local/include/eigen3
+# Compilers
+CC  ?= gcc
+CXX ?= g++
 
-CXX = g++
-CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn-type -pedantic-errors -Wundef -O2 $(INCLUDEDIRS)
-LDLIBS =
-TARGETS = components/ca/ca components/voronoi/voronoi components/mds/mds
+# Lua options
+LUAC ?= $(shell pkg-config --cflags lua)
+LUAL ?= $(shell pkg-config --libs   lua)
 
+# Linker flags
+LDLIBS := $(LUAL)
+SHARED := -shared
+
+# Compilation flags
+CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c99
+CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11
+
+# All targets
+TARGETS := \
+	components/ca/ca \
+	components/ca/ca.so \
+	components/sfp/sfp \
+	components/voronoi/voronoi \
+	h3mapgen.love
+
+# Meta
 .PHONY: homm3lua
 
-all: $(TARGETS) | homm3lua
+all: homm3lua $(TARGETS)
 
-components/ca/ca: Makefile components/ca/board.o components/ca/cellular_terrain.o components/ca/main.cpp
-	$(CXX) $(CXXFLAGS) -o components/ca/ca components/ca/*.o components/ca/main.cpp
+# Rules
+FILES_CA := $(subst .cpp,.o,$(shell find components/ca -name '*.cpp'))
+components/ca/ca: $(FILES_CA)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
+components/ca/ca.so: $(FILES_CA)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(SHARED)
 
-components/voronoi/voronoi: Makefile components/voronoi/Constants.o components/voronoi/Sector.o components/voronoi/Tile.o components/voronoi/TileDivider.o components/voronoi/SectorLoader.o components/voronoi/BresenhamSectorLoader.o components/voronoi/ExactSectorLoader.o components/voronoi/Main.cpp
-	$(CXX) $(CXXFLAGS) -o components/voronoi/voronoi components/voronoi/*.o components/voronoi/Main.cpp
+FILES_SFP := $(subst .c,.o,$(shell find components/sfp -name '*.c'))
+components/sfp/sfp: $(FILES_SFP)
+	$(CXX) -o $@ $^ $(CFLAGS) $(LDLIBS)
 
-components/mds/mds: Makefile components/mds/utils.o components/mds/qhull_2d.o components/mds/min_bounding_rect.o components/mds/sammon.o components/mds/postproc.o components/mds/graph.o components/mds/main.cpp
-	$(CXX) $(CXXFLAGS) -o components/mds/mds components/mds/*.o components/mds/main.cpp
+FILES_VORONOI := $(subst .cpp,.o,$(shell find components/voronoi -name '*.cpp'))
+components/voronoi/voronoi: $(FILES_VORONOI)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 
-clean:
-	$(MAKE) -C libs/homm3lua clean
-	rm -f components/ca/*.o components/voronoi/*.o components/mds/*.o
-	rm -rf output
-
-distclean: clean
-	rm -f $(TARGETS)
+h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi)
+	$(RM) $@
+	cp components/gui/conf.lua conf.lua
+	cp components/gui/main.lua main.lua
+	zip -9 -q -r $@ $(subst components/gui/,,$^) \
+		-x "*.git*" \
+		-x "*libs/luigi/luigi/backend/ffisdl*" \
+		-x "*libs/luigi/luigi/theme/dark*"
+	$(RM) conf.lua main.lua
 
 homm3lua:
 	$(MAKE) -C libs/homm3lua
+
+# Helpers
+clean:
+	$(MAKE) -C libs/homm3lua clean
+	$(RM) components/*/*.o
+	$(RM) -r output
+
+distclean: clean
+	$(RM) $(TARGETS)

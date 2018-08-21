@@ -1,8 +1,12 @@
 -- Instead of LUA_CPATH
+package.cpath = package.cpath .. ';components/ca/?.so'
 package.cpath = package.cpath .. ';libs/homm3lua/dist/?.so'
 
 -- Instead of LUA_PATH
+package.path = package.path .. ';components/gridmap/?.lua'
+package.path = package.path .. ';components/lml/?.lua'
 package.path = package.path .. ';components/mlml/?.lua'
+package.path = package.path .. ';components/params/?.lua'
 package.path = package.path .. ';libs/?.lua'
 
 local homm3lua = require('homm3lua')
@@ -10,9 +14,14 @@ local homm3lua = require('homm3lua')
 local ConfigHandler = require('ConfigHandler')
 local Serialization = require('Serialization')
 
-local Grammar = require('LogicMapLayout/Grammar/Grammar')
-local LML     = require('LogicMapLayout/LogicMapLayout')
-local MLML    = require('LogicMapLayout/MultiLogicMapLayout')
+local CA         = require('ca')
+local GridMap    = require('GridMapSeparation/GridMap')
+local LML        = require('LogicMapLayout')
+local MLML       = require('LogicMapLayout/MultiLogicMapLayout')
+local MLMLHelper = require('LogicMapLayout/MLMLHelper')
+local Params     = require('Params')
+local SFPTools   = require('SFPTools')
+local rescale    = require('mdsAdapter')
 
 -- Utils.
 local function generate (state, steps)
@@ -22,7 +31,7 @@ local function generate (state, steps)
 end
 
 local function position2xyz (p)
-    return p % 256, p // 256 % 256, p // 256 // 256
+    return p % 256, math.floor(p / 256) % 256, math.floor(math.floor(p / 256) / 256)
 end
 
 local function xyz2position (x, y, z)
@@ -37,18 +46,34 @@ local function saveH3M (state, path)
     local instance = homm3lua.new(homm3lua.FORMAT_ROE, state.world_size)
 
     instance:name('Random Map')
-    instance:description('Seed: ' .. state.seed)
+    instance:description('Seed: ' .. state.paramsDetailed.seed)
 
-    for player = 1, state._params.players do
+    for player = 1, #state.paramsGeneral.players do
         instance:player(player - 1)
+    end
+
+    for _, creature in ipairs(state.world_creatures) do
+        instance:creature(table.unpack(creature))
+    end
+
+    for _, hero in ipairs(state.world_heroes) do
+        hero[2].y = hero[2].y - 1
+        instance:hero(table.unpack(hero))
+        hero[2].y = hero[2].y + 1
     end
 
     for _, sign in ipairs(state.world_debugZoneSigns) do
         instance:sign(table.unpack(sign))
     end
 
+    for _, mine in ipairs(state.world_mines) do
+        instance:mine(table.unpack(mine))
+    end
+
     for _, town in ipairs(state.world_towns) do
+        town[2].x = town[2].x + 2
         instance:town(table.unpack(town))
+        town[2].x = town[2].x - 2
     end
 
     for _, obstacle in ipairs(state.world_obstacles) do
@@ -63,6 +88,10 @@ local function saveH3M (state, path)
 end
 
 local function shell (command)
+    if type(command) == 'table' then
+        command = table.concat(command, ' ')
+    end
+
     local handle = io.popen(command)
     local result = handle:read('*a')
     handle:close()
@@ -70,13 +99,29 @@ local function shell (command)
     return result:gsub('^%s*(.-)%s*$', '%1')
 end
 
+
 -- Steps.
 local function step_ca (state)
-    shell(table.concat({
-        'components/ca/ca 0.5 3 2',
-        '<', state.paths.vor1,
-        '>', state.paths.cell
-    }, ' '))
+    print('[CA] Start.')
+    local board = CA.run(state.board, 'moore', 0.5, 3, 2, state.paramsDetailed.seed)
+
+    print('[CA]   Load.')
+    for y, line in ipairs(board) do
+        if y - 2 > 0 and y + 2 < #state.board then
+            for x, char in ipairs(line) do
+                if x - 2 > 0 and x + 2 < #line then
+                    if (char == 1 or char == 3) and state.board[y][x] == 0 then
+                        local sprite = char == 1 and 'Oak Trees' or 'Pine Trees'
+                        state.world_grid[xyz2position(x, y, 0)] = true
+                        table.insert(state.world_obstacles, {sprite, {x=x - 1, y=y - 1, z=0}})
+                    end
+                end
+            end
+        end
+    end
+
+    state.board = board
+    print('[CA]   Done.')
 end
 
 local function step_dump (state, index)
@@ -87,73 +132,224 @@ local function step_dumpH3M (state, index)
     saveH3M(state, state.paths.dumps .. index .. '.h3m')
 end
 
-local function step_gameCastles (state)
-    for zoneId, zone in pairs(state.MLML_graph) do
-        local base = state.LML_graph[zone.baseid]
-        local town = false
+local function step_SFP (state)
+    local baseIds = {}
 
-        for _, feature in ipairs(base.features) do
+    for zoneId, zone in pairs(state.MLML_graph) do
+        baseIds[zone.baseid] = true
+    end
+
+    for baseId, _ in pairs(baseIds) do
+        print('[SFP] BaseId: ' .. baseId)
+
+        local features = {}
+        for _, feature in ipairs(state.LML_graph[baseId].features) do
+            if feature.type == 'MINE' then
+                -- TODO: Mine instance?
+                table.insert(features, {
+                    instance = feature,
+                    template = SFPTools.patterns.mine.sawmill.text
+                })
+            end
+
             if feature.type == 'TOWN' then
-                town = true
+                table.insert(features, {
+                    instance = feature,
+                    template = SFPTools.patterns.town.text
+                })
+            end
+        end
+
+        local border = {}
+        for x = 1, #state.board[1] + 2 do
+            table.insert(border, '#')
+        end
+
+        border = table.concat(border, '')
+
+        local zonesCount = 0
+        local zones = {}
+        local pois1 = {}
+
+        for zoneId, zone in pairs(state.MLML_graph) do
+            if zone.baseid == baseId then
+                local lines = {border}
+                local poisA = {}
+
+                for z = 0, 0 do
+                for y = 0, #state.board - 1 do
+                local line = {'#'}
+                for x = 0, #state.board[1] - 1 do
+                    local id = state.world[xyz2position(x, y, z)].zone
+
+                    local hasPoi1 = false
+                    local hasWall = state.board[y + 1][x + 1] == 3
+                    local hasZone = id == zoneId
+
+                    if hasWall then
+                        table.insert(line, '#')
+                    else
+                        for _, join in ipairs(state.voronoi.joinAt) do
+                            if (join[1] == zoneId and join[5][1] == (x + 1) and join[5][2] == (y + 1)) or
+                               (join[2] == zoneId and join[6][1] == (x + 1) and join[6][2] == (y + 1))
+                            then
+                                hasPoi1 = true
+                                table.insert(poisA, y .. ' ' .. x)
+                                break
+                            end
+                        end
+
+                        if hasPoi1 then
+                            -- NOTE: Change to P for debugging.
+                            table.insert(line, '.')
+                        elseif hasZone then
+                            table.insert(line, '.')
+                        else
+                            table.insert(line, '#')
+                        end
+                    end
+                end
+                table.insert(line, '#')
+                table.insert(lines, table.concat(line, ''))
+                end
+                end
+
+                table.insert(lines, border)
+                table.insert(lines, '')
+                table.insert(poisA, '')
+
+                zones[zoneId] = table.concat(lines, '\n')
+                pois1[zoneId] = poisA
+                zonesCount = zonesCount + 1
+            end
+        end
+
+        if #features == 0 then
+            print('[SFP]   Added artificial PoI.')
+            table.insert(features, {
+                instance = {type='PLACEHOLDER'},
+                template = SFPTools.patterns.zero.text
+            })
+        end
+
+        local nzones = zonesCount
+        local npois1 = 0
+        local npois2 = 0
+        local nfsw = #features
+
+        -- All pois1 have to be the same length.
+        while true do
+            local changed = false
+
+            for a, poisa in pairs(pois1) do
+                for b, poisb in pairs(pois1) do
+                    while #poisa > #poisb do
+                        changed = true
+                        table.remove(poisa, 1)
+                    end
+
+                    while #poisa < #poisb do
+                        changed = true
+                        table.remove(poisb, 1)
+                    end
+
+                    npois1 = #poisa - 1
+                end
+            end
+
+            if not changed then
                 break
             end
         end
 
-        if town then
-            local play = 0
-            for player in pairs(zone.players) do
-                play = player
-                break
+        local file = io.open(state.paths.sfp .. '.' .. baseId, 'w')
+        file:write('-1 -1 -1 ' .. state.paramsDetailed.seed .. '\n')
+        file:write(table.concat({nzones, npois1, npois2, nfsw}, ' ') .. '\n')
+
+        for zoneId, zone in pairs(zones) do
+            file:write((#state.board + 2) .. ' ' .. (#state.board[1] + 2) .. '\n')
+            file:write(zone)
+            file:write(table.concat(pois1[zoneId], '\n'))
+
+            for _, feature in ipairs(features) do
+                file:write(feature.template)
             end
+        end
 
-            local cells = {}
+        file:close()
 
-            for cellId, cell in pairs(state.world) do
-                if cell.zone == zoneId then
-                    cells[cellId] = true
+        local result = shell{
+            './components/sfp/sfp',
+            '< ' .. state.paths.sfp .. '.' .. baseId,
+            '2> ' .. state.paths.dumps .. 'sfp.' .. baseId .. '.log'
+        }
+
+        local read = result:gmatch('[^\r\n]+')
+        local status = read()
+        print('[SFP]   Status:', status)
+
+        if status == 'check_data returned 0.' then
+            for zoneId, _ in pairs(zones) do
+                read()
+                for _, feature in ipairs(features) do
+                    local token = string.gmatch(read(), '%d+')
+                    token()
+
+                    local position = {y=tonumber(token()) - 1, x=tonumber(token()) - 1, z=0}
+
+                    if position.x ~= 0 and position.y ~= 0 then
+                        local owner = homm3lua.OWNER_NEUTRAL
+                        for player = 1, 8 do
+                            if state.MLML_graph[zoneId].players[player] then
+                                owner = player - 1
+                                break
+                            end
+                        end
+
+                        if feature.instance.type == 'PLACEHOLDER' then
+                            SFPTools.apply(state.board, position, SFPTools.patterns.zero)
+                            print('[SFP]     PoI', 'at', position.x, position.y)
+                            -- FIXME: Offset!?
+                            position.x = position.x + 1
+                            position.y = position.y + 1
+                            table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, position, homm3lua.PLAYER_7})
+                        end
+
+                        if feature.instance.type == 'MINE' then
+                            SFPTools.apply(state.board, position, SFPTools.patterns.mine.sawmill)
+                            print('[SFP]     Mine', 'at', position.x, position.y)
+                            -- NOTE: Right bottom, not doors.
+                            position.x = position.x + 1
+                            table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, owner})
+                        end
+
+                        if feature.instance.type == 'TOWN' then
+                            SFPTools.apply(state.board, position, SFPTools.patterns.town)
+                            print('[SFP]     Town', 'at', position.x, position.y)
+                            table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, owner})
+                        end
+                    else
+                        print('[SFP]     Failed', feature.instance.type)
+                    end
                 end
             end
 
-            local valid = {}
+            print('[SFP]   Fitness: ' .. read():sub(8))
+            print('[SFP]   Scanning roads.')
 
-            for cellId in pairs(cells) do
-                local x, y, z = position2xyz(cellId)
-
-                if  not state.world_grid[xyz2position(x - 2,     y,     z)]
-                and not state.world_grid[xyz2position(x - 2 + 1, y + 1, z)]
-                and not state.world_grid[xyz2position(x - 2 + 1, y,     z)]
-                and not state.world_grid[xyz2position(x - 2 - 1, y + 1, z)]
-                and not state.world_grid[xyz2position(x - 2 - 1, y,     z)]
-                and not state.world_grid[xyz2position(x - 2,     y + 1, z)] then
-                    -- TODO: Check if this position is valid.
-                    table.insert(valid, cellId)
+            for zoneId, _ in pairs(zones) do
+                for y = -1, #state.board do
+                    local char = (read() or ''):gmatch('.')
+                    for x = -1, #state.board[1] do
+                        if char() == 'x' then
+                            state.board[y + 1][x + 1] = 2
+                            state.world[xyz2position(x, y, 0)].cell[2] = 2
+                        end
+                    end
                 end
             end
 
-            if #valid > 0 then
-                for _, cellId in ipairs(valid) do
-                    local x, y, z = position2xyz(cellId)
-
-                    local sprite = ({
-                        homm3lua.TOWN_CASTLE,
-                        homm3lua.TOWN_DUNGEON,
-                        homm3lua.TOWN_FORTRESS,
-                        homm3lua.TOWN_INFERNO,
-                        homm3lua.TOWN_NECROPOLIS,
-                        homm3lua.TOWN_RAMPART,
-                        homm3lua.TOWN_STRONGHOLD,
-                        homm3lua.TOWN_TOWER
-                    })[play]
-
-                    -- TODO: Define town as main one.
-                    local isMain = false
-                    table.insert(state.world_towns, {sprite, {x=x, y=y, z=z}, play - 1, isMain})
-
-                    break
-                end
-            else
-                print('FAILED TO PLACE A TOWN IN ZONE', zoneId)
-            end
+            print('[SFP]     Done.')
         end
     end
 end
@@ -170,6 +366,10 @@ local function step_debugZoneSigns (state)
       local mlmlNode = state.MLML_graph[zoneId]
       local descr_bzone = 'Zone Base-ID: '..mlmlNode.baseid
       local lmlNode = state.LML_graph[mlmlNode.baseid]
+
+      -- TODO: Inconsistency...
+      lmlNode.class = lmlNode.classes
+
       local descr_level = 'Level: '..lmlNode.class[1].level
       local players = {}
       for p=1,8 do
@@ -217,104 +417,104 @@ local function step_debugZoneSigns (state)
 end
 
 local function step_initLML (state)
-    local init = {class={}, features={}}
-    local rand = function (from, to)
-        return math.floor(math.random() * (to - from)) + from
-    end
+    LML.GenerateGraph(state)
+    LML.GenerateMetagraph(state)
 
-    for level = 0, rand(1, 6) do
-        table.insert(init.class,           {level=level, type='LOCAL'})
-        table.insert(init.features, {class={level=level, type='LOCAL'}, type='TOWN', value='PLAYER'})
-    end
+    -- TODO: Inconsistency...
+    state.LML_graph = state.lmlGraph
 
-    for buffer = 1, rand(1, 4) do
-        local level = rand(3, 6)
-
-        table.insert(init.class,           {level=level, type='BUFFER'})
-        table.insert(init.features, {class={level=level, type='BUFFER'}, type='OUTER', value=0})
-    end
-
-    local lml = LML.Initialize(init)
-    -- TODO: Do not use a state._config?
-    lml:Generate(Grammar, state._config.LML_max_steps)
-
-    state.LML_graph = lml
-    state.LML_init = init
-    state.LML_interface = lml:Interface()
+    state.LML_interface_OLD = MLMLHelper.GenerateOldLMLInterface(state.LML_graph)
 end
 
 local function step_initMLML (state)
-    local mlml = MLML.Initialize(state.LML_interface)
-    mlml:Generate(state._params.players)
+    local mlml = MLML.Initialize(state.LML_interface_OLD)
+    mlml:Generate(#state.paramsDetailed.players)
 
     -- TODO: Should be stored in state, not in a file.
     mlml:PrintToMDS(state.paths.graph)
 
     state.MLML_graph = mlml
     state.MLML_interface = mlml:Interface()
+
+    MLMLHelper.GenerateImage(mlml, state.lmlGraph):Draw(state.paths.path..'MLML', state.config.GraphGeneratorDrawKeepDotSources)
 end
 
 local function step_initPaths (state)
     -- NOTE: Store it somewhere?
-    local isWindows = package.config[1] == '/'
+    local isWindows = package.config:sub(1,1) == '\\'
+    local delim = package.config:sub(1,1)
 
     -- Initialize paths.
-    state.path = 'output/' .. state.seed .. '_' .. state._params.players
+    state.path = 'output' .. delim .. state.paramsDetailed.seed .. '_' .. #state.paramsGeneral.players
     state.paths = {
-        cell  = state.path .. '/cell.txt',
-        dumps = state.path .. '/dumps/',
-        emb   = state.path .. '/emb.txt',
-        graph = state.path .. '/graph.txt',
-        map   = state.path .. '/map.h3m',
-        pgm   = state.path .. '/mlml.h3pgm',
-        vor1  = state.path .. '/map.txt',
-        vor2  = state.path .. '/mapText.txt'
+        path = state.path..delim,
+        delim = delim,
+        dumps = state.path .. delim .. 'dumps' .. delim,
+        imgs  = state.path .. delim .. 'imgs' .. delim,
+        emb   = state.path .. delim .. 'emb',
+        graph = state.path .. delim .. 'graph.txt',
+        logs  = state.path .. delim .. 'logs.txt',
+        map   = state.path .. delim .. 'map.h3m',
+        mds   = state.path .. delim .. 'emb.txt',
+        pgm   = state.path .. delim .. 'mlml.h3pgm',
+        sfp   = state.path .. delim .. 'sfp.txt'
     }
+
+    -- TODO: Inconsistency...
+    --state.config.DebugOutPath = state.path
 
     print('Generating ' .. state.path .. '...')
 
     -- Create dir.
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.path)
     shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.dumps)
+    shell('mkdir ' .. (isWindows and '' or '-p ') .. state.paths.imgs)
+end
+
+local function step_initParams (state)
+    Params.GenerateDetailedParams(state)
+    Params.GenerateInitLMLNode(state)
 end
 
 local function step_initSeed (state)
     -- Set shared seed for determinacy.
-    if state._params.seed == -1 then
-        state.seed = os.time()
-    else
-        state.seed = state._params.seed
-    end
-
-    math.randomseed(state.seed)
+    math.randomseed(state.paramsDetailed.seed)
 end
 
 local function step_mds (state)
-    shell(table.concat({
-        'components/mds/mds',
+    shell{
+        'python components/mds/embed_graph.py',
         state.paths.graph,
-        state.paths.emb
-    }, ' '))
+        state.paths.emb,
+        state.paramsDetailed.seed
+    }
 end
 
 local function step_parseWorld (state)
-    -- Terrain
-    local file = assert(io.open(state.paths.vor2))
-    local h1, w1, terrain = file:read('*number', '*number', '*all')
-    file:close()
+    state.board = {}
 
-    -- World
-    local file = assert(io.open(state.paths.cell))
-    local h2, w2, world = file:read('*number', '*number', '*all')
-    file:close()
+    for y, row in ipairs(state.voronoi.grid) do
+        local line = {}
 
-    if h1 ~= w1 then error('Map have to be a square!') end
-    if h2 ~= w2 then error('Map have to be a square!') end
-    if h1 ~= h2 then error('Map terrain and world differ in size!') end
+        for x, col in ipairs(row) do
+            table.insert(line, (col == -1 or state.voronoi.borders[y][x]) and 3 or ((col == -2 or col == -3) and 2 or 0))
+        end
+
+        table.insert(state.board, line)
+    end
+
+    -- Backward compatibility.
+    local h1 = #state.board
+    local w1 = #state.board[1]
+    local h2 = h1
+    local w2 = w1
 
     -- Yay!
     state.world = {}
+    state.world_creatures = {}
     state.world_grid = {}
+    state.world_heroes = {}
+    state.world_mines = {}
     state.world_obstacles = {}
     state.world_size = nil
     state.world_towns = {}
@@ -328,30 +528,33 @@ local function step_parseWorld (state)
 
     -- TODO: Store underground info somewhere.
     for z = 0, 0 do
-    for y = 0, state.world_size do
-    for x = 0, state.world_size do
+    for y = 0, state.world_size - 1 do
+    for x = 0, state.world_size - 1 do
         local cell = nil
 
-        local x2 = x - (state.world_size - w1) // 2
-        local y2 = y - (state.world_size - w1) // 2
+        local x2 = x - math.floor((state.world_size - w1) / 2)
+        local y2 = y - math.floor((state.world_size - w1) / 2)
 
         if x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1 then
             cell = cell or {homm3lua.TERRAIN_WATER}
         end
 
-        -- NOTE: +1 for line break, +2 for the initial offset.
-        local info = y2 * (w1 + 1) + x2 + 2
-        local char = terrain:sub(info, info)
-        local wall = world:sub(info, info)
+        local char = (x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1) and -1 or state.voronoi.grid[y2 + 1][x2 + 1]
+        local wall = (x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1) and -1 or state.board[y2 + 1][x2 + 1]
 
         -- NOTE: See https://github.com/potmdehex/homm3tools/blob/master/h3m/h3mlib/gen/object_names_hash.in.
-        if wall == '#' or wall == '$' then
-            local sprite = wall == '#' and 'Oak Trees' or 'Pine Trees'
+        if wall == 2 then
+            local sprite = char == -2 and 'Archangel' or 'Pikeman'
+            state.world_grid[xyz2position(x, y, z)] = true
+            table.insert(state.world_creatures, {sprite, {x=x, y=y, z=z}, 0, homm3lua.DISPOSITION_AGGRESSIVE, true, true})
+        end
+        if wall == 3 then
+            local sprite = 'Pine Trees'
             state.world_grid[xyz2position(x, y, z)] = true
             table.insert(state.world_obstacles, {sprite, {x=x, y=y, z=z}})
         end
 
-        local code = (char:byte() or 0) - ('a'):byte()
+        local code = char
         local zone = state.MLML_graph[code]
 
         if zone then
@@ -364,12 +567,21 @@ local function step_parseWorld (state)
             end
         end
 
-        -- NOTE: It should NOT happen, but... You know.
-        cell = cell or {homm3lua.H3M_TERRAIN_ROCK}
+        -- No zone.
+        cell = cell or {homm3lua.TERRAIN_LAVA}
 
         state.world[xyz2position(x, y, z)] = {cell = cell, zone = code}
     end
     end
+    end
+end
+
+local function step_initLogging (state)
+    local handle = io.open(state.paths.logs, 'w')
+    local _print = print
+    print = function (...)
+        handle:write(table.concat({...}, '\t'), '\n')
+        _print(...)
     end
 end
 
@@ -378,55 +590,121 @@ local function step_saveH3M (state)
 end
 
 local function step_voronoi (state)
-    shell(table.concat({
-        'components/voronoi/voronoi',
-        state.paths.emb,
-        state.paths.vor1,
-        state._params.size,
-        state._params.size,
-        state._params.sectors,
-        state._params.sectors
-    }, ' '))
+    local gH = state.paramsDetailed.height
+    local gW = state.paramsDetailed.width
+
+    -- TODO: Sectors...?
+    local sectors = math.floor(state.config.StandardZoneSize / 2)
+
+    local data = {}
+    local mdsItems = {}
+
+    for _, node in pairs(state.MLML_graph) do
+        data[node.id] = {neighbors={}}
+        mdsItems[node.id] = {}
+
+        for edge, _ in pairs(node.edges) do
+            table.insert(data[node.id].neighbors, edge)
+        end
+    end
+
+    for line in io.lines(state.paths.mds) do
+        if not line:match('^%d+$') then
+            local item = {}
+
+            for part in line:gmatch('[^%s]+') do
+                table.insert(item, tonumber(part))
+            end
+
+            mdsItems[item[1]][#mdsItems[item[1]] + 1] = {item[2], item[3]}
+        end
+    end
+
+    for id, items in pairs(mdsItems) do
+      local avgx = 0.0
+      local avgy = 0.0
+
+      for _, item in pairs(items) do
+        avgx = avgx + item[1]
+        avgy = avgy + item[2]
+      end
+
+      avgx = avgx / #items
+      avgy = avgy / #items
+
+      data[id].x = rescale(avgx, sectors)
+      data[id].y = rescale(avgy, sectors)
+      data[id].size = #items
+    end
+
+    state.voronoi = GridMap.Initialize(data)
+    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, true)
+    state.voronoi:RunVoronoi(3, 70, nil)
 end
 
 -- Main.
-if arg[1] then
-    local seed = {
-        _config = ConfigHandler.Read('config.cfg'),
-        _params = {
-            players = tonumber(arg[1]),
-            sectors = tonumber(arg[3]),
-            seed    = tonumber(arg[4] or -1),
-            size    = tonumber(arg[2])
-        }
-    }
+local skipInit = arg[1] == '!'
 
-    generate(seed, {
-        step_initSeed,
-        step_initPaths,
-        -- step_dump,
-        step_initLML,
-        -- step_dump,
-        step_initMLML,
-        step_dump,
-        step_mds,
-        -- step_dump,
-        step_voronoi,
-        -- step_dump,
-        step_ca,
-        -- step_dump,
-        -- NOTE: This makes state renderable, i.e. .h3m-able.
-        step_parseWorld,
-        step_gameCastles,
-        step_debugZoneSigns,
-        step_dump,
-        -- step_dumpH3M,
-        step_saveH3M
-    })
+if arg[1] == '?' then arg[1] = 'tests/lml/01.h3pgm' end
+if arg[1] == '!' then arg[1] = 'tests/paperMap.h3pgm' end
+
+if arg[1] then
+    local seed  = ConfigHandler.Read(arg[1])
+    seed.config = ConfigHandler.Read('config.cfg')
+
+    -- TODO: There's an inconsistency...
+    seed._config = seed.config
+
+    local steps = {}
+
+    if skipInit then
+        table.insert(steps, step_initSeed)
+    else
+        table.insert(steps, step_initParams)
+    end
+
+    table.insert(steps, step_initPaths)
+    table.insert(steps, step_initLogging)
+
+    if not skipInit then
+        table.insert(steps, step_dump)
+
+        table.insert(steps, step_initLML)
+        table.insert(steps, step_dump)
+    end
+
+    table.insert(steps, step_initMLML)
+    table.insert(steps, step_dump)
+
+    table.insert(steps, step_mds)
+    table.insert(steps, step_dump)
+
+    table.insert(steps, step_voronoi)
+    table.insert(steps, step_dump)
+
+    -- NOTE: This makes state renderable, i.e. .h3m-able
+    table.insert(steps, step_parseWorld)
+    table.insert(steps, step_dump)
+    table.insert(steps, step_dumpH3M)
+
+    table.insert(steps, step_SFP)
+    table.insert(steps, step_dump)
+    table.insert(steps, step_dumpH3M)
+
+    table.insert(steps, step_ca)
+    table.insert(steps, step_dump)
+    table.insert(steps, step_dumpH3M)
+
+    table.insert(steps, step_debugZoneSigns)
+    table.insert(steps, step_dump)
+    table.insert(steps, step_dumpH3M)
+
+    table.insert(steps, step_saveH3M)
+
+    generate(seed, steps)
 else
-    print('generate.lua players size sectors [seed]')
+    print('generate.lua h3pgm-file')
     print('  Example:')
-    print('           lua generate.lua 8 144 36')
-    print('           lua generate.lua 4 90 15')
-    print('           lua generate.lua 2 72 4')
+    print('           lua ?')
+    print('           lua tests/lml/01.h3pgm')
 end

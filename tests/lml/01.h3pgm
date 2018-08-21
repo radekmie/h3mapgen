@@ -1,0 +1,36 @@
+
+paramsGeneral = 
+{
+  branching = 3,
+  focus = 3,
+  grail = false,
+  locations = 3,
+  monsters = 3,
+  players = 
+  {
+    {
+      castle = { "Castle", "Rampart", "Tower", "Stronghold", "Fortress", },
+      computerOnly = false,
+      id = 1,
+      team = 1,
+    },
+    {
+      castle = { "Inferno", "Necropolis", "Dungeon", },
+      computerOnly = false,
+      id = 2,
+      team = 2,
+    },
+    { castle=    { }, computerOnly=false, id=3, team=3, },
+    { castle=    { "Rampart", }, computerOnly=false, id=4, team=4, },
+  },
+  seed = 0,
+  size = "M",
+  towns = 3,
+  transitivity = 3,
+  underground = false,
+  version = "RoE",
+  water = 1,
+  welfare = 3,
+  winning = 1,
+  zonesize = 3,
+}
