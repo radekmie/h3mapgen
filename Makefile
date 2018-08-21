@@ -1,6 +1,7 @@
+INCLUDEDIRS = -I/usr/local/include -I/usr/local/include/eigen3
+
 CXX = g++
-CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn-type -pedantic-errors -Wundef
-ARMAFLAGS = -O2 -DARMA_DONT_USE_WRAPPER -DARMA_USE_BLAS -DARMA_USE_LAPACK -lopenblas -llapack
+CXXFLAGS = -std=c++11 -pedantic -Wall -Wextra -Wformat -Wfloat-equal -W -Wreturn-type -pedantic-errors -Wundef -O2 $(INCLUDEDIRS)
 LDLIBS =
 TARGETS = components/ca/ca components/voronoi/voronoi components/mds/mds
 
@@ -14,8 +15,8 @@ components/ca/ca: Makefile components/ca/board.o components/ca/cellular_terrain.
 components/voronoi/voronoi: Makefile components/voronoi/Constants.o components/voronoi/Sector.o components/voronoi/Tile.o components/voronoi/TileDivider.o components/voronoi/SectorLoader.o components/voronoi/BresenhamSectorLoader.o components/voronoi/ExactSectorLoader.o components/voronoi/Main.cpp
 	$(CXX) $(CXXFLAGS) -o components/voronoi/voronoi components/voronoi/*.o components/voronoi/Main.cpp
 
-components/mds/mds: Makefile components/mds/graph.o components/mds/min_bounding_rect.o components/mds/sammon.o components/mds/qhull_2d.o components/mds/postproc.o components/mds/main.cpp
-	$(CXX) $(CXXFLAGS) $(ARMAFLAGS) -o components/mds/mds components/mds/*.o components/mds/main.cpp
+components/mds/mds: Makefile components/mds/utils.o components/mds/qhull_2d.o components/mds/min_bounding_rect.o components/mds/sammon.o components/mds/postproc.o components/mds/graph.o components/mds/main.cpp
+	$(CXX) $(CXXFLAGS) -o components/mds/mds components/mds/*.o components/mds/main.cpp
 
 clean:
 	$(MAKE) -C libs/homm3lua clean

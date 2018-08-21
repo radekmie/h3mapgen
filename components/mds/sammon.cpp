@@ -69,7 +69,7 @@ std::pair<MatrixX2d, double> sammon(
         step = -gradient.cwiseQuotient(hessian.cwiseAbs());
         emb_old = emb;
 
-        double E_new;
+        double E_new = E;
         for (int j = 0; j < maxhalves; j++)
         {
             emb = emb_old + step;
