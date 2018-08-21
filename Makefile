@@ -10,9 +10,13 @@ LUAL ?= $(shell pkg-config --libs   lua)
 LDLIBS := $(LUAL)
 SHARED := -shared
 
+INCLUDEDIRS := \
+	-I/usr/local/include \
+	-I/usr/local/include/eigen3
+
 # Compilation flags
 CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c99
-CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11
+CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11 -O2 $(INCLUDEDIRS)
 
 # All targets
 TARGETS := \
@@ -20,6 +24,7 @@ TARGETS := \
 	components/ca/ca.so \
 	components/sfp/sfp \
 	components/voronoi/voronoi \
+	components/mds/mds \
 	h3mapgen.love
 
 # Meta
@@ -41,6 +46,10 @@ components/sfp/sfp: $(FILES_SFP)
 FILES_VORONOI := $(subst .cpp,.o,$(shell find components/voronoi -name '*.cpp'))
 components/voronoi/voronoi: $(FILES_VORONOI)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
+
+FILES_MDS := $(subst .cpp,.o,$(shell find components/mds -name '*.cpp'))
+components/mds/mds: $(FILES_MDS)
+	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi)
 	$(RM) $@

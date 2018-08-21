@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     std::string output_path;
 
     if (argc > 2)
-        output_path = argv[2];
+        output_path = argv[2] + std::string(".txt");
     else
         output_path = input_path + "_emb.txt";
 
