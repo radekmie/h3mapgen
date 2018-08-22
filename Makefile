@@ -10,9 +10,7 @@ LUAL ?= $(shell pkg-config --libs   lua)
 LDLIBS := $(LUAL)
 SHARED := -shared
 
-INCLUDEDIRS := \
-	-I/usr/local/include \
-	-I/usr/local/include/eigen3
+INCLUDEDIRS := -I libs/eigen
 
 # Compilation flags
 CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c99

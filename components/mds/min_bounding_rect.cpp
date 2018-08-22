@@ -1,10 +1,8 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
-#include <iostream>
 #include <cfloat>
 #include "min_bounding_rect.hpp"
-#include <igl/unique.h>
 
 using Eigen::MatrixX2d;
 
@@ -29,9 +27,6 @@ std::tuple<double, double, double> minBoundingRect(MatrixX2d hull_points_2d)
         // want strictly positive answers
         edge_angles(i) = std::fabs(std::remainder(edge_angles(i), M_PI_2));
     }
-
-    // Remove duplicate angles
-    igl::unique(edge_angles, edge_angles);
 
     // Test each angle to find bounding box with smallest area
     // rot_angle, area, width, height
