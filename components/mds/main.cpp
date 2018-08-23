@@ -30,13 +30,17 @@ int main(int argc, char **argv)
         output_path = input_path + "_emb.txt";
 
     std::mt19937 rng;
+    std::default_random_engine generator;
 
     if (argc == 4) {
-        std::seed_seq seed{std::atoi(argv[3])};
+        int seed_param = std::atoi(argv[3]);
+        std::seed_seq seed{seed_param};
         rng = std::mt19937(seed);
+        generator = std::default_random_engine(seed_param);
     } else {
         std::random_device rd;
         rng = std::mt19937(rd());
+        generator = std::default_random_engine();
     }
 
     std::pair<Graph, Sizes> gs = load_graph(input_path);
@@ -45,8 +49,8 @@ int main(int argc, char **argv)
     EdgeWeights weights = calc_weights(graph);
     MatrixXd dists = calc_dists(graph, weights);
 
-    auto embed = [dists]() {
-        std::pair<MatrixX2d, double> emb = sammon(dists, 0);
+    auto embed = [&]() {
+        std::pair<MatrixX2d, double> emb = sammon(dists, generator, 0);
         MatrixX2d data_trans_scaled = squeeze(
             emb.first, {-2.5, -2.5}, {2.5, 2.5});
         data_trans_scaled = scale(data_trans_scaled);

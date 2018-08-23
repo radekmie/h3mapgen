@@ -1,14 +1,11 @@
 #include <iostream>
-#include <random>
 #include "sammon.hpp"
 #include "utils.hpp"
 
 using Eigen::MatrixX2d;
 using Eigen::MatrixXd;
 
-std::default_random_engine generator(50);
 std::normal_distribution<double> distribution(0, 1);
-auto normal = [&](int, int) { return distribution(generator); };
 
 // pairwise euclidean distance
 MatrixXd euclid(MatrixX2d A, MatrixX2d B)
@@ -23,7 +20,8 @@ MatrixXd euclid(MatrixX2d A, MatrixX2d B)
 }
 
 std::pair<MatrixX2d, double> sammon(
-    MatrixXd D, int display, int maxhalves, int maxiter, double tolfun)
+    MatrixXd D, std::default_random_engine &generator,
+    int display, int maxhalves, int maxiter, double tolfun)
 {
     int dim = 2;
 
@@ -35,6 +33,7 @@ std::pair<MatrixX2d, double> sammon(
         return ((D - emb_dists).array().pow(2) * Dinv.array()).sum();
     };
 
+    auto normal = [&](int, int) { return distribution(generator); };
     MatrixX2d emb = MatrixX2d::NullaryExpr(N, dim, normal);
 
     MatrixXd d = euclid(emb, emb);
