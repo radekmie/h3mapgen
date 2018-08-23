@@ -4,12 +4,9 @@ WORKDIR /app
 # Common dependencies.
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes --no-install-recommends \
-        g++                  \
-        graphviz             \
-        pkg-config           \
-        python-matplotlib    \
-        python-numpy         \
-        python-scikits-learn \
+        g++        \
+        graphviz   \
+        pkg-config \
         zip
 
 # Lua.
