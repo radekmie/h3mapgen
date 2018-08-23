@@ -485,8 +485,8 @@ local function step_mds (state)
     shell{
         'components/mds/mds',
         state.paths.graph,
-        state.paths.emb
-        -- state.paramsDetailed.seed
+        state.paths.emb,
+        state.paramsDetailed.seed
     }
 end
 

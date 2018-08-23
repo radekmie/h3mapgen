@@ -26,7 +26,7 @@ std::pair<Graph, Sizes> load_graph(std::string path);
 
 std::string edg(std::string s1, std::string s2);
 
-Graph reshape_graph(Graph graph, Sizes sizes);
+Graph reshape_graph(Graph graph, Sizes sizes, std::mt19937 &rng);
 
 EdgeWeights calc_weights(Graph graph);
 

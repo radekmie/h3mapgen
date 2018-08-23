@@ -15,8 +15,6 @@ using Eigen::MatrixXd;
 
 int main(int argc, char **argv)
 {
-    // arma_rng::set_seed_random();
-
     if (argc < 2)
     {
         std::cerr << "Input file not provided.\n";
@@ -31,9 +29,19 @@ int main(int argc, char **argv)
     else
         output_path = input_path + "_emb.txt";
 
+    std::mt19937 rng;
+
+    if (argc == 4) {
+        std::seed_seq seed{std::atoi(argv[3])};
+        rng = std::mt19937(seed);
+    } else {
+        std::random_device rd;
+        rng = std::mt19937(rd());
+    }
+
     std::pair<Graph, Sizes> gs = load_graph(input_path);
     Sizes sizes = gs.second;
-    Graph graph = reshape_graph(gs.first, sizes);
+    Graph graph = reshape_graph(gs.first, sizes, rng);
     EdgeWeights weights = calc_weights(graph);
     MatrixXd dists = calc_dists(graph, weights);
 

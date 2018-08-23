@@ -4,9 +4,6 @@
 using Eigen::MatrixX2d;
 using Eigen::MatrixXd;
 
-std::random_device rd;
-std::mt19937 rng(rd());
-
 std::pair<Graph, Sizes> load_graph(std::string path)
 {
     Graph graph = Graph();
@@ -44,7 +41,7 @@ std::string edg(std::string s1, std::string s2)
     return s1 + " " + s2;
 }
 
-Graph reshape_graph(Graph graph, Sizes sizes)
+Graph reshape_graph(Graph graph, Sizes sizes, std::mt19937 &rng)
 {
     Graph new_graph = Graph();
     std::set<std::string> done = {};
