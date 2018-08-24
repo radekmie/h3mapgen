@@ -483,7 +483,7 @@ end
 
 local function step_mds (state)
     shell{
-        'python components/mds/embed_graph.py',
+        'components/mds/mds',
         state.paths.graph,
         state.paths.emb,
         state.paramsDetailed.seed
