@@ -13,4 +13,4 @@
 [submodule "luigi"]
     path = libs/luigi
     url = git@github.com:airstruck/luigi.git
-	shallow = true
+    shallow = true

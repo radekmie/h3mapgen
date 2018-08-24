@@ -14,7 +14,7 @@ INCLUDEDIRS := -I libs/eigen -I libs/libigl/include
 
 # Compilation flags
 CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c99
-CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11 -O2 $(INCLUDEDIRS)
+CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11 $(INCLUDEDIRS)
 
 # All targets
 TARGETS := \
