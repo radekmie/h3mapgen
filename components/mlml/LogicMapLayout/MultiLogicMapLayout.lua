@@ -71,7 +71,7 @@ function MLML:InitialSetup(PLAYERS_NUM)
       end
       zCopy.outer = outer
 
-      table.insert(self.localGraphs[playerId], zCopy)
+      self.localGraphs[playerId][zCopy.id] = zCopy
     end
   end
 
@@ -118,7 +118,7 @@ function MLML:CreateRing(zones, index)
     local leftZoneId = idShift * (orderTable[leftIndex] - 1) + zoneId
     local rightZoneId = idShift * (orderTable[rightIndex] - 1) + zoneId
 
-    self.AddEdge(leftZoneId, rightZoneId)
+    self:AddEdge(leftZoneId, rightZoneId)
   end
 
   if #self.connected > 1 then
@@ -156,7 +156,7 @@ function MLML:CreatePairs(baseId)
     local leftZoneId = idShift * (playerId1 - 1) + baseId
     local rightZoneId = idShift * (playerId2 - 1) + baseId
 
-    self.AddEdge(leftZoneId, rightZoneId)
+    self:AddEdge(leftZoneId, rightZoneId)
   end
 
   if #self.connected == self.playersNum / 2 then
@@ -245,7 +245,7 @@ function MLML:JoinIntoRing(baseIdSource, baseIdTarget)
     local leftZoneId = idShift * (orderTable[leftIndex] - 1) + baseIdSource
     local rightZoneId = idShift * (orderTable[rightIndex] - 1) + baseIdTarget
 
-    self.AddEdge(leftZoneId, rightZoneId)
+    self:AddEdge(leftZoneId, rightZoneId)
   end
 
   if #self.connected > 1 then
@@ -291,36 +291,34 @@ function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
 
       if self.playersNum % 2 == 1 then
         while zoneCount > 1 do
-          self.CreateRing(zones, index)
+          self:CreateRing(zones, index)
           zoneCount = zoneCount - 2
         end
       else
-        if isBuffers then
-          if zoneCount > 1 then
-            local zonesToZip = {}
-            for playerId = 1, self.playersNum do
-              local idShift = #self.lml * (playerId - 1)
-              table.insert(zonesToZip, zoneId + idShift)
-            end
-
-            for zipIndex = #zones, 1, -1 do
-              if zones[zipIndex] == zoneId then
-                table.remove(zones, zipIndex)
-              end
-            end
-
-            table.insert(self.toZip, zonesToZip)
-            zoneCount = 0
+        if isBuffers and zoneCount > 1 then
+          local zonesToZip = {}
+          for playerId = 1, self.playersNum do
+            local idShift = #self.lml * (playerId - 1)
+            table.insert(zonesToZip, zoneId + idShift)
           end
+
+          for zipIndex = #zones, 1, -1 do
+            if zones[zipIndex] == zoneId then
+              table.remove(zones, zipIndex)
+            end
+          end
+
+          table.insert(self.toZip, zonesToZip)
+          zoneCount = 0
         end
 
         while zoneCount > 1 do
-          self.CreateRing(zones, index)
+          self:CreateRing(zones, index)
           zoneCount = zoneCount - 2
         end
 
         if zoneCount == 1 then
-          self.CreatePairs(zoneId)
+          self:CreatePairs(zoneId)
           table.remove(zones, index)
           zoneCount = 0
         end
@@ -330,7 +328,7 @@ function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
 
   for _, zones in pairs(outers) do
     while #zones > 1 then
-      self.JoinIntoRing(zones[1], zones[2])
+      self:JoinIntoRing(zones[1], zones[2])
 
       table.remove(zones, 2)
       table.remove(zones, 1)
@@ -373,7 +371,7 @@ function MLML:ConnectOutersWhileMixingLevels(outers)
     local zone1 = outers[level1][index1]
     local zone2 = outers[level2][index2]
 
-    self.JoinIntoRing(zone1, zone2)
+    self:JoinIntoRing(zone1, zone2)
 
     table.remove(outers[level2], index2)
     table.remove(outers[level1], index1)
@@ -406,7 +404,7 @@ function MLML:ConnectOuters(bufferOuters, localOuters)
     local bufferOuter = bufferOuters[bufferLevel][bufferIndex]
     local localOuter = localOuters[localLevel][localIndex]
 
-    self.JoinIntoRing(bufferOuter, localOuter)
+    self:JoinIntoRing(bufferOuter, localOuter)
 
     table.remove(bufferOuters[bufferLevel], bufferIndex)
     table.remove(localOuters[localLevel], localIndex)
@@ -418,15 +416,114 @@ function MLML:ConnectOuters(bufferOuters, localOuters)
 end
 
 
+--- Finds buffers for which all new edges are exclusively to their copies.
+-- Private function to be called only inside Generate function, after joining all possible outer edges.
+function MLML:FindBuffersToZip()
+  
+  local buffers = {}
+  local processed = {}
+  for _,zone in ipairs(self.lml) do
+    if zone.type == "BUFFER" then
+      buffers[zone.id] = true
+      processed[zone.id] = false
+    end
+  end
+
+  -- finds all Buffer vertices that are connected exclusively with their own copies
+  for zoneId,_ in pairs(buffers) do
+    if not processed[zoneId] then
+      local zonesToZip = {zoneId}
+      local bfsFront = {zoneId}
+      local failed = false
+
+      while #bfsFront > 0 and not failed do
+        local nextZoneId = bfsFront[#bfsFront]
+        if not buffers[nextZoneId] or (zoneId % self.playersNum) != (nextZoneId % self.playersNum) then
+          failed = true
+          break
+        end
+
+        if not processed[nextZoneId] then
+          processed[nextZoneId] = true
+          table.insert(zonesToZip, nextZoneId)
+          table.remove(bfsFront, #bfsFront)
+
+          for _,newEdge in pairs(self.newEdges[nextZoneId]) do
+            if not processed[newEdge] then
+              table.insert(bfsFront, newEdge)
+            end
+          end
+        end
+      end
+
+      if not failed and #zonesToZip > 1 then
+        table.insert(self.toZip, zonesToZip)
+      end
+    end
+  end
+
+end
+
+
+--- Zips all buffer groups from toZip, altering localGraphs structure and newEdges.
+-- Private function to be called only inside Generate function, should be after calling FindBuffersToZip.
+function MLML:ZipBuffers()
+
+  local findNodeInLocalGraphs = function(zoneId)
+    local playerId = zoneId // self.playersNum
+    return self.localGraphs[playerId][zoneId]
+  end
+
+  for _,zonesToZip in pairs(self.toZip) do
+    local printMessage = 'merging zones:'
+    for index=2,#zonesToZip do
+      printMessage = printMessage..' '..zonesToZip[index]
+    end
+    print(printMessage..' to zone '..zonesToZip[1])
+
+    self.newEdges[zonesToZip[1]] = {}
+    local targetNode = findNodeInLocalGraphs(zonesToZip[1])
+    for index=2,#zonesToZip do
+      local zoneId = zonesToZip[index]
+      local node = findNodeInLocalGraphs(zoneId)
+      self.newEdges[zoneId] = {}
+
+      for neighborId,_ in pairs(node.edges) do
+        local neighborNode = findNodeInLocalGraphs(neighborId)
+
+        if not targetNode.edges[neighborNode.id] then
+          targetNode.edges[neighborNode.id] = 0
+        end
+        targetNode.edges[neighborNode.id] = targetNode.edges[neighborNode.id] + neighborNode.edges[zoneId]
+
+        if not neighborNode.edges[targetNode.id] then
+          neighborNode.edges[targetNode.id] = 0
+        end
+        neighborNode.edges[targetNode.id] = neighborNode.edges[targetNode.id] + neighborNode.edges[zoneId]
+
+        neighborNode.edges[zoneId] = nil
+      end
+
+      self.localGraphs[zoneId // self.playersNum][zoneId] = nil
+
+      targetNode.weight = targetNode.weight + (self.playersNum > 4 and 1 or 2)
+    end
+  end
+
+  self.toZip = {}
+
+end
+
+
 --- Generates MLML based on initialized lml interface.
 -- MLML objects have to be initialized before calling Generate.
 -- @param PLAYERS_NUM Constant containing number of players for the MLML graph
 function MLML:Generate(PLAYERS_NUM)
 
-  self.InitialSetup(PLAYERS_NUM)
+  self:InitialSetup(PLAYERS_NUM)
 
   if self.lazyBufferEdges then
-    self.AutoMergeBuffers()
+    self:AutoMergeBuffers()
   end
 
   -- for the graphs to be fair, whenever we use a buffer (or local) outer edge for a player, it should be used for all players.
@@ -459,18 +556,18 @@ function MLML:Generate(PLAYERS_NUM)
     return false
   end
 
-  self.ConnectOutersWithoutMixingLevels(bufferOuters, true)
-  self.ConnectOutersWithoutMixingLevels(localOuters, false)
+  self:ConnectOutersWithoutMixingLevels(bufferOuters, true)
+  self:ConnectOutersWithoutMixingLevels(localOuters, false)
 
   if unusedOutersExist(bufferOuters) then
-    self.ConnectOutersWhileMixingLevels(bufferOuters)
+    self:ConnectOutersWhileMixingLevels(bufferOuters)
   end
   if unusedOutersExist(localOuters) then
-    self.ConnectOutersWhileMixingLevels(localOuters)
+    self:ConnectOutersWhileMixingLevels(localOuters)
   end
 
   if unusedOutersExist(bufferOuters) and unusedOutersExist(localOuters) then
-    self.ConnectOuters(bufferOuters, localOuters)
+    self:ConnectOuters(bufferOuters, localOuters)
   end
 
   if unusedOutersExist(bufferOuters) or unusedOutersExist(localOuters) then
@@ -478,309 +575,10 @@ function MLML:Generate(PLAYERS_NUM)
     -- this means an error occurred in LML, because we do have an odd number of outers, and an odd number of players
   end
 
-  -- TODO: create the full graph as it should now look (copy current + add edges + zip nodes)
+  self:FindBuffersToZip()
 
-  -- to be added at the very end!!!
-  -- self[zone.id + idShift] = Node.New(zCopy, zone.id + idShift)
+  self:ZipBuffers();
 
-end
-
-
---- Generates MLML based on initialized lml interface.
--- THIS FUNCTION WILL BE REMOVED AFTER IMPLEMENTING NEW VERSION
--- MLML objects have to be initialized before calling Generate.
--- @param PLAYERS_NUM Constant containing number of players for the MLML graph
-function MLML:OldGenerate(PLAYERS_NUM)
-  local lmlSize = #self.lml
-  self.playerData = {}
-  for playerId = 1, PLAYERS_NUM do
-    local singleData = {}
-    singleData.nodes = {}
-    singleData.addedEdges = {}
-    self.playerData[playerId] = singleData
-  end
-
-  for playerId = 1, PLAYERS_NUM do
-    local shift = lmlSize * (playerId - 1)
-    for _,zone in ipairs(self.lml) do
-      local zCopy = {}
-      for k,v in pairs(zone) do
-        zCopy[k] = v
-      end
-      zCopy.player = playerId
-      local edges = {}
-      for _,k in pairs(zone.edges) do
-        if edges[k + shift] then
-          edges[k + shift] = edges[k + shift] + 1
-        else
-          edges[k + shift] = 1
-        end
-      end
-      zCopy.edges = edges
-      self[zone.id + shift] = Node.New(zCopy, zone.id + shift)
---      self.playerData[playerId].nodes[#self.playerData[playerid].nodes + 1] = zone.id + shift
-    end
-  end
-
-  local bEdges = {}
-  local lEdges = {}
-  for _,zone in ipairs(self.lml) do
-    for _,outLevel in ipairs(zone.outer) do
-      if zone.type == "LOCAL" then
-        if not lEdges[outLevel] then
-          lEdges[outLevel] = {}
-        end
-        lEdges[outLevel][#lEdges[outLevel] + 1] = zone.id
-      else
-        if not bEdges[outLevel] then
-          bEdges[outLevel] = {}
-        end
-        bEdges[outLevel][#bEdges[outLevel] + 1] = zone.id
-      end
-    end
-  end
-
-  local bufferEdges = {}
-  local localEdges = {}
-  for level,zones in pairs(bEdges) do
-    bufferEdges[#bufferEdges + 1] = {level, zones}
-  end
-  for level,zones in pairs(lEdges) do
-    localEdges[#localEdges + 1] = {level, zones}
-  end
-
-  local createEdges = function (levelZones, pConn)
-    -- This is the first version, should be done differently to assure automorphism of graph.
-    local zonePairs = {}
-    local newEdges = {}
-    local level = levelZones[1]
-    local zones = levelZones[2]
-    zonePairs[level] = {}
-    local levelPairs = zonePairs[level]
-    for _,zoneId in ipairs(zones) do
-      for playerId=1,PLAYERS_NUM do
-        levelPairs[#levelPairs + 1] = {playerId, lmlSize * (playerId - 1) + zoneId, false}
-      end
-    end
-    for fIndex,fPair in ipairs(levelPairs) do
-      local fPlayerId = fPair[1]
-      local fZoneId = fPair[2]
-      if fPair[3] == false then
-        local sIndex
-        for sIndex = fIndex + 1, #levelPairs do
-          local sPair = levelPairs[sIndex]
-          local sPlayerId = sPair[1]
-          local sZoneId = sPair[2]
-          if sPair[3] == false and fPlayerId ~= sPlayerId then
-            if not pConn[fPlayerId][sPlayerId] then
-              for nPlayerId,_ in pairs(pConn[fPlayerId]) do
-                pConn[sPlayerId][nPlayerId] = true
-              end
-              for nPlayerId,_ in pairs(pConn[sPlayerId]) do
-                pConn[fPlayerId][nPlayerId] = true
-              end
-              fPair[3] = true
-              sPair[3] = true
-              newEdges[#newEdges + 1] = {level, fZoneId, sZoneId}
-              break
-            else
-              local laterConn = false
-              for lIndex = sIndex + 1, #levelPairs do
-                local lPlayerId = levelPairs[lIndex][1]
-                if levelPairs[lIndex][3] == false and sPlayerId ~= lPlayerId and not pConn[lPlayerId][sPlayerId] then
-                  laterConn = true
-                  break
-                end
-              end
-              if not laterConn then
-                fPair[3] = true
-                sPair[3] = true
-                newEdges[#newEdges + 1] = {level, fZoneId, sZoneId}
-                break
-              end
-            end
-          end
-        end
-      end
-    end
-    return newEdges
-  end
-
-  local pConn = {}
-  for pIndex = 1, PLAYERS_NUM do
-    pConn[#pConn + 1] = {}
-    pConn[pIndex][pIndex] = true
-  end
-
-  local newEdges = {}
-  for i=#bufferEdges, 1, -1 do
-    local edges = createEdges(bufferEdges[i], pConn)
-    for _,edge in ipairs(edges) do
-      newEdges[#newEdges + 1] = edge
-    end
-  end
-
-  for i=#localEdges, 1, -1 do
-    local edges = createEdges(localEdges[i], pConn)
-    for _,edge in ipairs(edges) do
-      newEdges[#newEdges + 1] = edge
-    end
-  end
-
-  local addEdge = function(lId, rId)
-    local lEdges = self[lId].edges
-    if lEdges[rId] then
-      lEdges[rId] = lEdges[rId] + 1
-    else
-      lEdges[rId] = 1
-    end
-    local rEdges = self[rId].edges
-    if rEdges[lId] then
-      rEdges[lId] = rEdges[lId] + 1
-    else
-      rEdges[lId] = 1
-    end
-  end
-
-  for _,edge in ipairs(newEdges) do
-    addEdge(edge[2], edge[3])
-  end
-
-  -- from this point on - should work for later version of connecting vertices.
-  -- should not have to be changed.
-
-  local newEdgeGraph = {}
-  for _,edge in ipairs(newEdges) do
-    if not newEdgeGraph[edge[2]] then
-      newEdgeGraph[edge[2]] = {}
-    end
-    if not newEdgeGraph[edge[3]] then
-      newEdgeGraph[edge[3]] = {}
-    end
-    newEdgeGraph[edge[2]][edge[3]] = true
-    newEdgeGraph[edge[3]][edge[2]] = true
-  end
-
-  local zipTo = {}
-  local processed = {}
-  for vertex,_ in pairs(newEdgeGraph) do
-    zipTo[vertex] = vertex
-    processed[vertex] = false
-  end
-
-  -- finds all Buffer vertices that are connected exclusively with their own copies
-  for baseVertex,_ in pairs(newEdgeGraph) do
-    if not processed[baseVertex] and self[baseVertex].type == "BUFFER" then
-      local reached = {}
-      local path = {baseVertex}
-      local stopPath = false
-      while #path > 0 and stopPath == false do
-        local vertex = path[#path]
-        path[#path] = nil
-        if self[vertex].baseid ~= self[baseVertex].baseid then
-          stopPath = true
-          break
-        else
-          if not reached[vertex] then
-            reached[vertex] = true
-            local edges = newEdgeGraph[vertex]
-            for connection,_ in pairs(edges) do
-              if not reached[connection] then
-                path[#path + 1] = connection
-              end
-            end
-          end
-        end
-      end
-      for vertex,_ in pairs(reached) do
-        processed[vertex] = true
-      end
-      if stopPath == false then
-        for vertex,_ in pairs(reached) do
-          zipTo[vertex] = baseVertex
-        end
-      end
-    end
-  end
-
-  local toRemove = {}
-  for vertex,target in pairs(zipTo) do
-    local node = self[vertex]
-    local targetNode = self[target]
-    if node.type == "BUFFER" and vertex ~= target then
-      print('merging zone '..vertex..' to zone '..target)
-      toRemove[vertex] = true
-
-      -- NOTE: It's not so obvious.
-      if targetNode.weight < 3 * node.weight then
-        targetNode.weight = targetNode.weight + node.weight
-      end
-      for k,n in pairs(node.edges) do
-        if k ~= target then
-          if targetNode.edges[k] then
-            targetNode.edges[k] = targetNode.edges[k] + n
-          else
-            targetNode.edges[k] = n
-          end
-        end
-      end
-      for p,_ in pairs(node.players) do
-        targetNode.players[p] = true
-      end
-
-      for k,n in pairs(node.edges) do
-        local kEdges = self[k].edges
-        if kEdges[node.id] then
-          kEdges[node.id] = kEdges[node.id] - n
-          if kEdges[node.id] <= 0 then
-            kEdges[node.id] = nil
-          end
-        end
-        if k ~= target then
-          if kEdges[target] then
-            kEdges[target] = kEdges[target] + n
-          else
-            kEdges[target] = n
-          end
-        end
-      end
-    end
-  end
-
-  for i,_ in pairs(toRemove) do
-    self[i] = nil
-  end
-
-  --[=====[
-  local toZip = {}
-  for _,edge in ipairs(newEdges) do
-    if self[edge[2]].type == "BUFFER" and self[edge[3]].type == "BUFFER" then
-      toZip[self[edge[2]].baseid] = true
-      toZip[self[edge[3]].baseid] = true
-    end
-  end
-
-  for _,edge in ipairs(newEdges) do
-    local fType = self[edge[2]].type
-    local sType = self[edge[3]].type
-    local fBaseId = self[edge[2]].baseid
-    local sBaseId = self[edge[3]].baseid
-    if fType == "BUFFER" and toZip[fBaseId] then
-      if sType == "LOCAL" or fBaseId ~= sBaseId then
-        toZip[fBaseId] = false
-      end
-    end
-
-    if sType == "BUFFER" and toZip[sBaseId] then
-      if fType == "LOCAL" or sBaseId ~= fBaseId then
-        toZip[sBaseId] = false
-      end
-    end
-  end
-  --]=====]
-
-  self.playerData = nil
-  self.lml = nil
 end
 
 
@@ -789,11 +587,13 @@ end
 function MLML:Interface()
   local interface = {}
   for _,playerNodes in pairs(self.localGraphs) do
-    for _,node in pairs(playerNodes) do
+    for nodeId,node in pairs(playerNodes) do
       local nodeInterface = node:Interface()
-      if self.newEdges[node.id] then
-        for _,newEdge in pairs(self.newEdges[node.id]) do
-          table.insert(nodeInterface.edges, newEdge)
+      if self.newEdges[nodeId] then
+        for _,newEdge in pairs(self.newEdges[nodeId]) do
+          if not node.edges[newEdge] then
+            table.insert(nodeInterface.edges, newEdge)
+          end
         end
       end
       table.insert(interface, nodeInterface)
@@ -805,76 +605,18 @@ end
 
 function MLML:PrintToMDS(filename)
   local file = io.open(filename, "w")
-  local count = 0
-  for _,playerNodes in pairs(self.localGraphs) do
-    for _,_ in pairs(playerNodes) do
-      count = count + 1
-    end
-  end
-  file:write(count, "\n")
+  local mlmlInterface = self:Interface()
+  file:write(#mlmlInterface, "\n")
 
-  for _,playerNodes in pairs(self.localGraphs) do
-    for _,node in pairs(playerNodes) do
-      local line = ''..node.id..' '..node.weight
-      for k,_ in pairs(node.edges) do
-        line = line..' '..k
-      end
-      if self.newEdges[node.id] then
-        for _,newEdge in pairs(self.newEdges[node.id]) do
-          line = line..' '..newEdge
-        end
-      end
-      file:write(line, "\n")
+  for _,nodeInterface in ipairs(mlmlInterface) do
+    local line = ''..nodeInterface.id..' '..nodeInterface.weight
+    for _,v in pairs(nodeInterface.edges) do
+      line = line..' '..v
     end
+    file:write(line, "\n")
   end
   file:close()
 end
 
 
 return MLML
-
-
---[======[
--- old version
-
---- Generates MLML based on initialized lml interface.
--- MLML objects have to be initialized before calling Generate.
--- @param PLAYERS_NUM Constant containing number of players for the MLML graph
-function MLML:Generate(PLAYERS_NUM)
-  for _,zone in ipairs(self.lml) do
-    print (zone.id, zone.edges[1], zone.edges[2], zone.type)
-    self[zone.id] = Node.New(zone, zone.id)
-  end
-
-  local lmlSize = #self.lml
-  print ("size "..lmlSize)
-  for playerId = 2, PLAYERS_NUM do
-    for i,zone in ipairs(self.lml) do
-      if zone.type == "LOCAL" then
-        local nextId = zone.id + lmlSize * (playerId - 1)
-        local zCopy = {}
-        for k,v in pairs(zone) do
-          zCopy[k] = v
-        end
-        zCopy.player = playerId
-        local edges = {}
-        for _,k in ipairs(zone.edges) do
-          if self.lml[k].type == "BUFFER" then
-            print("adding edge to buffer from "..(nextId).." to "..k)
-            edges[#edges + 1] = k
-            self[k].players[playerId] = true
-            self[k].edges[nextId] = true
-          else
-            print("adding edge to local from "..(nextId).." to "..(k + lmlSize * (playerId - 1)))
-            edges[#edges + 1] = k + lmlSize * (playerId - 1)
-          end
-        end
-        zCopy.edges = edges
-        self[#self + 1] = Node.New(zCopy, nextId)
-      end
-    end
-  end
-  self.lml = nil
-end
-
---]======]
