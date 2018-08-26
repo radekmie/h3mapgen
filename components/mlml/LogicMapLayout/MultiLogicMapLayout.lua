@@ -114,7 +114,7 @@ function MLML:CreateRing(zones, index)
 
   local idShift = #self.lml
   for leftIndex = 1, #orderTable do
-    local rightIndex = (leftIndex + 1) % self.playersNum
+    local rightIndex = leftIndex == #orderTable and 1 or leftIndex + 1
 
     local leftZoneId = idShift * (orderTable[leftIndex] - 1) + zoneId
     local rightZoneId = idShift * (orderTable[rightIndex] - 1) + zoneId
