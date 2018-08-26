@@ -54,6 +54,7 @@ function MLML:InitialSetup(PLAYERS_NUM)
       zCopy.id = zone.id + idShift
       zCopy.baseId = zone.id
       zCopy.type = zone.type
+      zCopy.weight = zone.weight or 5
 
       local edges = {}
       for _,k in pairs(zone.edges) do
@@ -159,7 +160,7 @@ function MLML:CreatePairs(baseId)
     self:AddEdge(leftZoneId, rightZoneId)
   end
 
-  if #self.connected == self.playersNum / 2 then
+  if #self.connected == self.playersNum // 2 then
     -- players are in pairs, so now we join the pairs in some random order into a ring so everyone is connected
     local connectedShuffled = {}
     for _,pair in pairs(self.connected) do
@@ -205,7 +206,7 @@ function MLML:CreatePairs(baseId)
 
     local connected = {}
     while #toBeConnected > 1 do
-      local secondConnector = math.random(#toBeConnected, 2)
+      local secondConnector = math.random(2, #toBeConnected)
 
       joinPlayers(toBeConnected[1], toBeConnected[secondConnector])
 
@@ -327,7 +328,7 @@ function MLML:ConnectOutersWithoutMixingLevels(outers, isBuffers)
   end
 
   for _, zones in pairs(outers) do
-    while #zones > 1 then
+    while #zones > 1 do
       self:JoinIntoRing(zones[1], zones[2])
 
       table.remove(zones, 2)
@@ -432,13 +433,13 @@ function MLML:FindBuffersToZip()
   -- finds all Buffer vertices that are connected exclusively with their own copies
   for zoneId,_ in pairs(buffers) do
     if not processed[zoneId] then
-      local zonesToZip = {zoneId}
+      local zonesToZip = {}
       local bfsFront = {zoneId}
       local failed = false
 
       while #bfsFront > 0 and not failed do
         local nextZoneId = bfsFront[#bfsFront]
-        if not buffers[nextZoneId] or (zoneId % self.playersNum) != (nextZoneId % self.playersNum) then
+        if not buffers[nextZoneId] or not (zoneId % self.playersNum) == (nextZoneId % self.playersNum) then
           failed = true
           break
         end
@@ -448,9 +449,11 @@ function MLML:FindBuffersToZip()
           table.insert(zonesToZip, nextZoneId)
           table.remove(bfsFront, #bfsFront)
 
-          for _,newEdge in pairs(self.newEdges[nextZoneId]) do
-            if not processed[newEdge] then
-              table.insert(bfsFront, newEdge)
+          if self.newEdges[nextZoneId] then
+            for _,newEdge in pairs(self.newEdges[nextZoneId]) do
+              if not processed[newEdge] then
+                table.insert(bfsFront, newEdge)
+              end
             end
           end
         end
@@ -470,7 +473,7 @@ end
 function MLML:ZipBuffers()
 
   local findNodeInLocalGraphs = function(zoneId)
-    local playerId = zoneId // self.playersNum
+    local playerId = math.ceil(zoneId / #self.lml)
     return self.localGraphs[playerId][zoneId]
   end
 
@@ -504,7 +507,7 @@ function MLML:ZipBuffers()
         neighborNode.edges[zoneId] = nil
       end
 
-      self.localGraphs[zoneId // self.playersNum][zoneId] = nil
+      self.localGraphs[math.ceil(zoneId / #self.lml)][zoneId] = nil
 
       targetNode.weight = targetNode.weight + (self.playersNum > 4 and 1 or 2)
     end
@@ -588,14 +591,23 @@ function MLML:Interface()
   local interface = {}
   for _,playerNodes in pairs(self.localGraphs) do
     for nodeId,node in pairs(playerNodes) do
-      local nodeInterface = node:Interface()
+      local nodeInterface = {}
+      nodeInterface.id = nodeId
+      nodeInterface.weight = node.weight
+
+      local edges = {}
+      for k, _ in pairs(node.edges) do
+        edges[#edges+1] = k
+      end
       if self.newEdges[nodeId] then
         for _,newEdge in pairs(self.newEdges[nodeId]) do
           if not node.edges[newEdge] then
-            table.insert(nodeInterface.edges, newEdge)
+            table.insert(edges, newEdge)
           end
         end
       end
+      nodeInterface.edges = edges
+
       table.insert(interface, nodeInterface)
     end
   end
