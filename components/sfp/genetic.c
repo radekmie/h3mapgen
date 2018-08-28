@@ -124,6 +124,8 @@ int evaluate(struct creature* monster, struct data* D, int print)
     int obj2poi[D->nzones][D->nsfw][D->npois1 + D->npois2];
     int obj2obj[D->nzones][D->nsfw][D->nsfw];
 
+    int result = 0;
+
     for (int i = 0; i < D->nzones; i++)
     {
         int **bfs_results;
@@ -145,7 +147,7 @@ int evaluate(struct creature* monster, struct data* D, int print)
         for (int j = 0; j < D->nsfw; j++)
         {
             if (check_placement(&temp_map, &D->objects[i][j], monster->P[i][j].x, monster->P[i][j].y) != 0)
-                return oo;
+                result = oo;
             place(&temp_map, &D->objects[i][j], monster->P[i][j].x, monster->P[i][j].y);
         }
 
@@ -157,7 +159,7 @@ int evaluate(struct creature* monster, struct data* D, int print)
             for (int k = 0; k < D->npois1 + D->npois2; k++)
             {
                 obj2poi[i][j][k] = bfs_results[ D->pois[i][k].x ][ D->pois[i][k].y ];
-                if (obj2poi[i][j][k] == oo) return oo;
+                if (obj2poi[i][j][k] == oo) result = oo;
 
                 //if (print == 1) addpath(bfs_results, &printmap, D->pois[i][k].x, D->pois[i][k].y);
             }
@@ -165,7 +167,7 @@ int evaluate(struct creature* monster, struct data* D, int print)
             for (int k = 0; k < D->nsfw; k++)
             {
                 obj2obj[i][j][k] = bfs_results[ monster->P[i][k].x ][ monster->P[i][k].y ];
-                if (obj2obj[i][j][k] == oo) return oo;
+                if (obj2obj[i][j][k] == oo) result = oo;
 
                 //if (print == 1) addpath(bfs_results, &printmap, monster->P[i][k].x, monster->P[i][k].y);
             }
@@ -185,6 +187,9 @@ int evaluate(struct creature* monster, struct data* D, int print)
         for (int j = 0; j < D->zone[i].n; j++)
             free(bfs_results[j]);
         free(bfs_results);
+
+        if (result == oo)
+            return oo;
     }
 
     // Wypisujemy tablice obj2poi oraz obj2obj //
@@ -218,7 +223,6 @@ int evaluate(struct creature* monster, struct data* D, int print)
     }
 
     // Liczymy wartosc ewaluacji na podstawie tablic obj2obj oraz obj2poi
-    int result = 0;
 
     for (int i = 0; i < D->nzones; i++)
         for (int j = i+1; j < D->nzones; j++)
@@ -511,6 +515,8 @@ struct creature* genetic(struct data* D, int pop_size, int mut_prom, int time_li
         destroy_creature(&bst[i], D->nzones);
         destroy_creature(&popul[i], D->nzones);
     }
+
+    destroy_possible_positions(D, &possible);
 
     // Zwracamy wynik //
     return best_creature;

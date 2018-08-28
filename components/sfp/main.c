@@ -40,9 +40,11 @@ int main(void)
 
     printf("Value: %d\n", evaluate(answer, &D, 1));
     print_mst(answer, &D);
-    
+
     destroy_creature(answer, D.nzones);
     destroy_data(&D);
+
+    free(answer);
 
     return 0;
 }

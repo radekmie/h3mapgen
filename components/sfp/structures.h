@@ -66,6 +66,7 @@ struct possible_positions
 };
 
 void create_possible_positions(struct data* D, struct possible_positions* P);
+void destroy_possible_positions(struct data* D, struct possible_positions* P);
 
 void init_findunion(int* fu, int size);
 int  find_findunion(int* fu, int i);
