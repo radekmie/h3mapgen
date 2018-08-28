@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "config.h"
 #include "structures.h"
 
@@ -14,10 +15,10 @@ void alloc_map(struct map* M, int n, int m)
     if (M->T == NULL || M->n != n || M->m != m)
     {
         destroy_map(M);
-        
+
         M->n = n;
         M->m = m;
-        
+
         M->T = (char**)malloc(sizeof(char*) * n);
         for (int i = 0; i < M->n; i++)
             M->T[i] = (char*)malloc(sizeof(char) * (m + 1));
@@ -39,11 +40,11 @@ void destroy_map(struct map* M)
 void read_map(struct map* M)
 {
     int n, m;
-    
+
     scanf("%d%d", &n, &m);
-    
+
     alloc_map(M, n, m);
-    
+
     for (int i = 0; i < n; i++)
         scanf("%s", M->T[i]);
 }
@@ -59,8 +60,7 @@ void copy_map(struct map* src, struct map* dest)
     alloc_map(dest, src->n, src->m);
 
     for (int i = 0; i < dest->n; i++)
-        for (int j = 0; j < dest->m + 1; j++)
-            dest->T[i][j] = src->T[i][j];
+        memcpy(dest->T[i], src->T[i], sizeof(char) * (dest->m + 1));
 }
 
 int check_map(struct map* M)
@@ -132,10 +132,10 @@ int check_pattern(struct pattern* T)
         if (T->M.T[i][T->M.m] != '\0')
             return PATTERN_UNEXPECTED_CHARACTER;
     }
-    
+
     if (T->P.x < 0 || T->P.x >= T->M.n || T->P.y < 0 || T->P.y >= T->M.m)
         return PATTERN_POI_OUT_OF_BOUND;
-    
+
     return NO_ERROR;
 }
 
@@ -181,16 +181,16 @@ void init_data(struct data* D)
 void alloc_data(struct data* D, int nzones, int npois1, int npois2, int nsfw)
 {
     destroy_data(D);
-    
+
     D->nzones = nzones;
     D->npois1 = npois1;
     D->npois2 = npois2;
     D->nsfw   = nsfw;
-    
+
     D->zone = (struct map*)malloc(sizeof(struct map) * D->nzones);
     D->pois = (struct poi**)malloc(sizeof(struct poi*) * D->nzones);
     D->objects = (struct pattern**)malloc(sizeof(struct pattern*) * D->nzones);
-    
+
     for (int j = 0; j < D->nzones; j++)
     {
         init_map(&(D->zone[j]));
@@ -207,23 +207,29 @@ void alloc_data(struct data* D, int nzones, int npois1, int npois2, int nsfw)
 
 void destroy_data(struct data* D)
 {
-    if (D->zone != NULL)
+    if (D->zone != NULL) {
+        for (int j = 0; j < D->nzones; j++)
+            destroy_map(&D->zone[j]);
         free(D->zone);
-    
+    }
+
     if (D->pois != NULL)
     {
         for (int j = 0; j < D->nzones; j++)
             free(D->pois[j]);
         free(D->pois);
     }
-    
+
     if (D->objects != NULL)
     {
-        for (int j = 0; j < D->nzones; j++)
+        for (int j = 0; j < D->nzones; j++) {
+            for (int i = 0; i < D->nsfw; i++)
+                destroy_pattern(&D->objects[j][i]);
             free(D->objects[j]);
+        }
         free(D->objects);
     }
-    
+
     D->nzones = D->npois1 = D->npois2 = D->nsfw = 0;
     D->zone = NULL;
     D->pois = NULL;
@@ -233,7 +239,7 @@ void destroy_data(struct data* D)
 void read_data(struct data* D)
 {
     int nzones, npois1, npois2, nsfw;
-    
+
     scanf("%d%d%d%d", &nzones, &npois1, &npois2, &nsfw);
     alloc_data(D, nzones, npois1, npois2, nsfw);
 
@@ -341,6 +347,20 @@ void create_possible_positions(struct data* D, struct possible_positions* P)
     }
 }
 
+void destroy_possible_positions(struct data* D, struct possible_positions* P)
+{
+    for (int z = 0; z < D->nzones; z++)
+    {
+        for (int o = 0; o < D->nsfw; o++)
+            free(P->PP[z][o]);
+        free(P->PP[z]);
+        free(P->N[z]);
+    }
+
+    free(P->PP);
+    free(P->N);
+}
+
 void init_findunion(int* fu, int size)
 {
     for (int i = 0; i < size; i++)
@@ -384,7 +404,7 @@ void destroy_creature(struct creature* C, int nzones)
         for (int j = 0; j < nzones; j++)
             free(C->P[j]);
         free(C->P);
-        
+
         C->P = NULL;
     }
 }
@@ -392,8 +412,7 @@ void destroy_creature(struct creature* C, int nzones)
 void copy_creature(struct creature* src, struct creature* dest, int nzones, int nsfw)
 {
     for (int i = 0; i < nzones; i++)
-        for (int j = 0; j < nsfw; j++)
-            dest->P[i][j] = src->P[i][j];
+        memcpy(dest->P[i], src->P[i], sizeof(struct poi) * nsfw);
 }
 
 int compare_creature(struct creature* one, struct creature* two, int nzones, int nsfw)
