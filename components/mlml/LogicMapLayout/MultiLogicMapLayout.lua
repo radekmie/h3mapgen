@@ -580,7 +580,41 @@ function MLML:Generate(PLAYERS_NUM)
 
   self:FindBuffersToZip()
 
-  self:ZipBuffers();
+  self:ZipBuffers()
+
+  for _,playerNodes in pairs(self.localGraphs) do
+    for nodeId,node in pairs(playerNodes) do
+      local data = {}
+      data.id = nodeId % #self.lml
+      data.weight = node.weight
+      data.type = node.type
+      data.player = math.ceil(nodeId / #self.lml)
+
+      local edges = node.edges
+      if self.newEdges[nodeId] then
+        for _,newEdge in pairs(self.newEdges[nodeId]) do
+          if not node.edges[newEdge] then
+            if not edges[newEdge] then
+              edges[newEdge] = 0
+            end
+            edges[newEdge] = edges[newEdge] + 1
+          end
+        end
+      end
+      data.edges = edges
+
+      self[nodeId] = Node.New(data, nodeId)
+    end
+  end
+
+  -- clean up necessary for later algorithms to work on this mlml object
+  self.lml = nil
+  self.lazyBufferEdges = nil
+  self.playersNum = nil
+  self.connected = nil
+  self.newEdges = nil
+  self.toZip = nil
+  self.localGraphs = nil
 
 end
 
@@ -589,27 +623,8 @@ end
 -- @return Table with properly formated MLML interface
 function MLML:Interface()
   local interface = {}
-  for _,playerNodes in pairs(self.localGraphs) do
-    for nodeId,node in pairs(playerNodes) do
-      local nodeInterface = {}
-      nodeInterface.id = nodeId
-      nodeInterface.weight = node.weight
-
-      local edges = {}
-      for k, _ in pairs(node.edges) do
-        edges[#edges+1] = k
-      end
-      if self.newEdges[nodeId] then
-        for _,newEdge in pairs(self.newEdges[nodeId]) do
-          if not node.edges[newEdge] then
-            table.insert(edges, newEdge)
-          end
-        end
-      end
-      nodeInterface.edges = edges
-
-      table.insert(interface, nodeInterface)
-    end
+  for _,node in pairs(self) do
+    table.insert(interface, node:Interface())
   end
   return interface
 end
