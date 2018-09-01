@@ -20,6 +20,7 @@ local LML        = require('LogicMapLayout')
 local MLML       = require('LogicMapLayout/MultiLogicMapLayout')
 local MLMLHelper = require('LogicMapLayout/MLMLHelper')
 local Params     = require('Params')
+local SFPTools   = require('SFPTools')
 local rescale    = require('mdsAdapter')
 
 -- Utils.
@@ -30,7 +31,7 @@ local function generate (state, steps)
 end
 
 local function position2xyz (p)
-    return p % 256, p // 256 % 256, p // 256 // 256
+    return p % 256, math.floor(p / 256) % 256, math.floor(math.floor(p / 256) / 256)
 end
 
 local function xyz2position (x, y, z)
@@ -87,6 +88,10 @@ local function saveH3M (state, path)
 end
 
 local function shell (command)
+    if type(command) == 'table' then
+        command = table.concat(command, ' ')
+    end
+
     local handle = io.popen(command)
     local result = handle:read('*a')
     handle:close()
@@ -141,31 +146,16 @@ local function step_SFP (state)
         for _, feature in ipairs(state.LML_graph[baseId].features) do
             if feature.type == 'MINE' then
                 -- TODO: Mine instance?
-                -- TODO: Mine template.
                 table.insert(features, {
                     instance = feature,
-                    template = table.concat({
-                        '2 4',
-                        '_###',
-                        '##.#',
-                        '1 2',
-                        ''
-                    }, '\n')
+                    template = SFPTools.patterns.mine.sawmill.text
                 })
             end
 
             if feature.type == 'TOWN' then
-                -- TODO: Town template.
                 table.insert(features, {
                     instance = feature,
-                    template = table.concat({
-                        '3 5',
-                        '_###_',
-                        '#####',
-                        '##.##',
-                        '2 2',
-                        ''
-                    }, '\n')
+                    template = SFPTools.patterns.town.text
                 })
             end
         end
@@ -238,12 +228,7 @@ local function step_SFP (state)
             print('[SFP]   Added artificial PoI.')
             table.insert(features, {
                 instance = {type='PLACEHOLDER'},
-                template = table.concat({
-                    '1 1',
-                    '.',
-                    '0 0',
-                    ''
-                }, '\n')
+                template = SFPTools.patterns.zero.text
             })
         end
 
@@ -293,10 +278,11 @@ local function step_SFP (state)
 
         file:close()
 
-        local result = shell(table.concat({
+        local result = shell{
             './components/sfp/sfp',
-            '<', state.paths.sfp .. '.' .. baseId,
-        }, ' '))
+            '< ' .. state.paths.sfp .. '.' .. baseId,
+            '2> ' .. state.paths.dumps .. 'sfp.' .. baseId .. '.log'
+        }
 
         local read = result:gmatch('[^\r\n]+')
         local status = read()
@@ -321,60 +307,25 @@ local function step_SFP (state)
                         end
 
                         if feature.instance.type == 'PLACEHOLDER' then
-                            -- TODO: Templates!
-                            -- .
-                            state.board[position.y][position.x] = 2
-
+                            SFPTools.apply(state.board, position, SFPTools.patterns.zero)
                             print('[SFP]     PoI', 'at', position.x, position.y)
-
                             -- FIXME: Offset!?
                             position.x = position.x + 1
                             position.y = position.y + 1
-
                             table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, position, homm3lua.PLAYER_7})
                         end
 
                         if feature.instance.type == 'MINE' then
-                            -- TODO: Templates!
-                            -- _###
-                            -- ##.#
-                            state.board[position.y    ][position.x    ] = 2
-                            state.board[position.y    ][position.x + 1] = 3
-                            state.board[position.y    ][position.x - 1] = 3
-                            state.board[position.y    ][position.x - 2] = 3
-                            state.board[position.y - 1][position.x    ] = 3
-                            state.board[position.y - 1][position.x + 1] = 3
-                            state.board[position.y - 1][position.x - 1] = 3
-
+                            SFPTools.apply(state.board, position, SFPTools.patterns.mine.sawmill)
                             print('[SFP]     Mine', 'at', position.x, position.y)
-
                             -- NOTE: Right bottom, not doors.
                             position.x = position.x + 1
-
                             table.insert(state.world_mines, {homm3lua.MINE_SAWMILL, position, owner})
                         end
 
                         if feature.instance.type == 'TOWN' then
-                            -- TODO: Templates!
-                            -- _###_
-                            -- #####
-                            -- ##.##
-                            state.board[position.y    ][position.x    ] = 2
-                            state.board[position.y    ][position.x + 1] = 3
-                            state.board[position.y    ][position.x + 2] = 3
-                            state.board[position.y    ][position.x - 1] = 3
-                            state.board[position.y    ][position.x - 2] = 3
-                            state.board[position.y - 1][position.x    ] = 3
-                            state.board[position.y - 1][position.x + 1] = 3
-                            state.board[position.y - 1][position.x + 2] = 3
-                            state.board[position.y - 1][position.x - 1] = 3
-                            state.board[position.y - 1][position.x - 2] = 3
-                            state.board[position.y - 2][position.x    ] = 3
-                            state.board[position.y - 2][position.x + 1] = 3
-                            state.board[position.y - 2][position.x - 1] = 3
-
+                            SFPTools.apply(state.board, position, SFPTools.patterns.town)
                             print('[SFP]     Town', 'at', position.x, position.y)
-
                             table.insert(state.world_towns, {homm3lua.TOWN_RANDOM, position, owner})
                         end
                     else
@@ -387,12 +338,12 @@ local function step_SFP (state)
             print('[SFP]   Scanning roads.')
 
             for zoneId, _ in pairs(zones) do
-                for y = 0, #state.board + 1 do
+                for y = -1, #state.board do
                     local char = (read() or ''):gmatch('.')
-                    for x = 0, #state.board[1] + 1 do
+                    for x = -1, #state.board[1] do
                         if char() == 'x' then
-                            state.board[y][x] = 2
-                            table.insert(state.world_heroes, {homm3lua.HERO_CRAG_HACK, {x=x, y=y, z=0}, homm3lua.PLAYER_7})
+                            state.board[y + 1][x + 1] = 2
+                            state.world[xyz2position(x, y, 0)].cell[2] = 2
                         end
                     end
                 end
@@ -502,6 +453,7 @@ local function step_initPaths (state)
         imgs  = state.path .. delim .. 'imgs' .. delim,
         emb   = state.path .. delim .. 'emb',
         graph = state.path .. delim .. 'graph.txt',
+        logs  = state.path .. delim .. 'logs.txt',
         map   = state.path .. delim .. 'map.h3m',
         mds   = state.path .. delim .. 'emb.txt',
         pgm   = state.path .. delim .. 'mlml.h3pgm',
@@ -530,12 +482,12 @@ local function step_initSeed (state)
 end
 
 local function step_mds (state)
-    shell(table.concat({
-        'python components/mds/embed_graph.py',
+    shell{
+        'components/mds/mds',
         state.paths.graph,
         state.paths.emb,
         state.paramsDetailed.seed
-    }, ' '))
+    }
 end
 
 local function step_parseWorld (state)
@@ -580,8 +532,8 @@ local function step_parseWorld (state)
     for x = 0, state.world_size - 1 do
         local cell = nil
 
-        local x2 = x - (state.world_size - w1) // 2
-        local y2 = y - (state.world_size - w1) // 2
+        local x2 = x - math.floor((state.world_size - w1) / 2)
+        local y2 = y - math.floor((state.world_size - w1) / 2)
 
         if x2 < 0 or x2 >= w1 or y2 < 0 or y2 >= w1 then
             cell = cell or {homm3lua.TERRAIN_WATER}
@@ -624,6 +576,15 @@ local function step_parseWorld (state)
     end
 end
 
+local function step_initLogging (state)
+    local handle = io.open(state.paths.logs, 'w')
+    local _print = print
+    print = function (...)
+        handle:write(table.concat({...}, '\t'), '\n')
+        _print(...)
+    end
+end
+
 local function step_saveH3M (state)
     saveH3M(state, state.paths.map)
 end
@@ -633,7 +594,7 @@ local function step_voronoi (state)
     local gW = state.paramsDetailed.width
 
     -- TODO: Sectors...?
-    local sectors = state.config.StandardZoneSize // 2
+    local sectors = math.floor(state.config.StandardZoneSize / 2)
 
     local data = {}
     local mdsItems = {}
@@ -677,7 +638,7 @@ local function step_voronoi (state)
     end
 
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gH=gH, gW=gW, sH=gH//sectors, sW=gW//sectors}, true)
+    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, true)
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
@@ -703,6 +664,7 @@ if arg[1] then
     end
 
     table.insert(steps, step_initPaths)
+    table.insert(steps, step_initLogging)
 
     if not skipInit then
         table.insert(steps, step_dump)

@@ -10,16 +10,19 @@ LUAL ?= $(shell pkg-config --libs   lua)
 LDLIBS := $(LUAL)
 SHARED := -shared
 
+INCLUDEDIRS := -I libs/eigen -I libs/libigl/include
+
 # Compilation flags
 CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c99
-CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11
+CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11 $(INCLUDEDIRS)
 
 # All targets
 TARGETS := \
 	components/ca/ca \
 	components/ca/ca.so \
-	components/voronoi/voronoi \
+	components/mds/mds \
 	components/sfp/sfp \
+	components/voronoi/voronoi \
 	h3mapgen.love
 
 # Meta
@@ -34,12 +37,16 @@ components/ca/ca: $(FILES_CA)
 components/ca/ca.so: $(FILES_CA)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(SHARED)
 
+FILES_MDS := $(subst .cpp,.o,$(shell find components/mds -name '*.cpp'))
+components/mds/mds: $(FILES_MDS)
+	$(CXX) -o $@ $^ $(CXXFLAGS)
+
+FILES_SFP := $(subst .c,.o,$(shell find components/sfp -name '*.c'))
+components/sfp/sfp: $(FILES_SFP)
+	$(CXX) -o $@ $^ $(CFLAGS) $(LDLIBS)
+
 FILES_VORONOI := $(subst .cpp,.o,$(shell find components/voronoi -name '*.cpp'))
 components/voronoi/voronoi: $(FILES_VORONOI)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
-
-FILES_SFP := $(subst .cpp,.o,$(shell find components/sfp -name '*.cpp'))
-components/sfp/sfp: $(FILES_SFP)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 
 h3mapgen.love: components/gui/*.lua libs/*.lua $(shell find libs/luigi/luigi)

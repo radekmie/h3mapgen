@@ -35,6 +35,15 @@ function Productions.PushOutGreaterThenPivot (graph, state)
     end
   end
   
+  for _, c in ipairs(smaller_c) do -- we need to prevent onoutered buffers after locals
+    if c.type=='LOCAL' then -- need additional check
+      if not GL.CheckForBufferWithOuter(smaller_c, smaller_f) or not GL.CheckForBufferWithOuter(greatereq_c, greatereq_f) then
+        return false
+      end
+    end
+  end
+  
+  
   graph[id] = Zone.New{classes=smaller_c, features=smaller_f}
   local nid, nzone = graph:AddZone{classes=greatereq_c, features=greatereq_f}
   graph:AddEdge(id, nid)
