@@ -55,6 +55,7 @@ function MLML:InitialSetup(PLAYERS_NUM)
       zCopy.baseId = zone.id
       zCopy.type = zone.type
       zCopy.weight = zone.weight or 5
+      zCopy.players = { [playerId] = true }
 
       local edges = {}
       for _,k in pairs(zone.edges) do
@@ -510,6 +511,7 @@ function MLML:ZipBuffers()
       self.localGraphs[math.ceil(zoneId / #self.lml)][zoneId] = nil
 
       targetNode.weight = targetNode.weight + (self.playersNum > 4 and 1 or 2)
+      targetNode.players[math.ceil(zoneId / #self.lml)] = true
     end
   end
 
@@ -585,10 +587,10 @@ function MLML:Generate(PLAYERS_NUM)
   for _,playerNodes in pairs(self.localGraphs) do
     for nodeId,node in pairs(playerNodes) do
       local data = {}
-      data.id = nodeId % #self.lml
+      data.id = node.baseId
       data.weight = node.weight
       data.type = node.type
-      data.player = math.ceil(nodeId / #self.lml)
+      data.players = node.players
 
       local edges = node.edges
       if self.newEdges[nodeId] then
