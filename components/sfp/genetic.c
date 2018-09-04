@@ -329,7 +329,7 @@ void print_mst(struct creature* monster, struct data* D)
     // Konstruujemy drzewo algorytmem Kruskala //
     int tree_size = 0;
     int findunion[N];
-    struct poi Tree[N-1];
+    struct poi Tree[N];
 
     init_findunion(findunion, N);
     for (int i = 0; i < T_size; i++)

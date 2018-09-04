@@ -9,7 +9,7 @@ BresenhamSectorLoader::BresenhamSectorLoader()
 }
 
 
-Sector& BresenhamSectorLoader::HandleNewSector(int _id, int _weight, int _col, int _row, floatPoint _position)
+Sector& BresenhamSectorLoader::HandleNewSector(int _id, int _weight, int _col, int _row, floatPoint)
 {
 	Sector& sector = this->sectors[_row][_col];
 	if (sector.id == _id)

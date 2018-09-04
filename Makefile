@@ -13,8 +13,8 @@ SHARED := -shared
 INCLUDEDIRS := -I libs/eigen -I libs/libigl/include
 
 # Compilation flags
-CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c99
-CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Wextra -std=c++11 $(INCLUDEDIRS)
+CFLAGS   := $(LUAC) -fPIC -O3 -W -Wall -Werror -Wextra -std=c99
+CXXFLAGS := $(LUAC) -fPIC -O3 -W -Wall -Werror -Wextra -std=c++11 $(INCLUDEDIRS)
 
 # All targets
 TARGETS := \
