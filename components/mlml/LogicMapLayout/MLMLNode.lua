@@ -13,9 +13,7 @@ function MLMLNode.New(data, id)
   obj.baseid = data and data.id or -1
   obj.weight = data and data.weight or 5
   obj.type = data and data.type or "LOCAL"
-  obj.players = {}
-  local playerId = data and data.player or 1
-  obj.players[playerId] = true
+  obj.players = data and data.players or { [1] = true }
   obj.edges = data and data.edges or {}
   return setmetatable(obj, MLMLNode_mt)
 end
