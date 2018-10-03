@@ -70,7 +70,7 @@ void SectorLoader::LoadSectors(string _inputFile)
 }
 
 
-Sector& SectorLoader::HandleNewSector(int _id, int _weight, int _col, int _row, floatPoint _position)
+Sector& SectorLoader::HandleNewSector(int _id, int _weight, int _col, int _row, floatPoint)
 {
 	Sector& sector = this->sectors[_row][_col];
 	if (sector.id == _id)

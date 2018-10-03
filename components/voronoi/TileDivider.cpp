@@ -33,9 +33,9 @@ void TileDivider::DivideBySectors(vector<sectorIndex> _sectorIndexes)
 {
 	vector<pair<int, floatPoint> > sites;
 	cout << "Dividing by sectors\n";
-	for (int i = 0; i < _sectorIndexes.size(); ++i)
+	for (const auto &index : _sectorIndexes)
 	{
-		Sector& sector = this->sectors[_sectorIndexes[i].row][_sectorIndexes[i].col];
+		Sector& sector = this->sectors[index.row][index.col];
 		this->CreateSites(sites, sector);
 	}
 
@@ -104,7 +104,7 @@ void TileDivider::RunVoronoi(vector<pair<int, floatPoint> > _sites)
 				float hisOwnerDist = hisTile.ownerDist;
 				if (hisOwnerId != -1 && !hisTile.isBridge && !hisTile.isEdge && hisOwnerId != myOwnerId)
 				{
-					if (myOwnerDist > hisOwnerDist || myOwnerDist == hisOwnerDist && myOwnerId < hisOwnerId)
+					if (myOwnerDist > hisOwnerDist || (myOwnerDist == hisOwnerDist && myOwnerId < hisOwnerId))
 					{
 //						tile.ResetValues();
 						tile.isEdge = true;
