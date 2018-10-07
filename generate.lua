@@ -173,13 +173,13 @@ local function step_SFP (state)
 
         for zoneId, zone in pairs(state.MLML_graph) do
             if zone.baseid == baseId then
-                local lines = {border}
+                local lines = {border, border}
                 local poisA = {}
 
                 for z = 0, 0 do
-                for y = 0, #state.board - 1 do
-                local line = {'#'}
-                for x = 0, #state.board[1] - 1 do
+                for y = 1, #state.board - 2 do
+                local line = {'#', '#'}
+                for x = 1, #state.board[1] - 2 do
                     local id = state.world[xyz2position(x, y, z)].zone
 
                     local hasPoi1 = false
@@ -209,11 +209,12 @@ local function step_SFP (state)
                         end
                     end
                 end
-                table.insert(line, '#')
+                table.insert(line, '##')
                 table.insert(lines, table.concat(line, ''))
                 end
                 end
 
+                table.insert(lines, border)
                 table.insert(lines, border)
                 table.insert(lines, '')
                 table.insert(poisA, '')
