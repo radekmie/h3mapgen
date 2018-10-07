@@ -637,8 +637,11 @@ local function step_voronoi (state)
       data[id].size = #items
     end
 
+    -- TODO: set this parameter to value from input parameters
+    local forceFill = true
+
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, true)
+    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, forceFill)
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
