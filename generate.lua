@@ -173,13 +173,13 @@ local function step_SFP (state)
 
         for zoneId, zone in pairs(state.MLML_graph) do
             if zone.baseid == baseId then
-                local lines = {border}
+                local lines = {border, border}
                 local poisA = {}
 
                 for z = 0, 0 do
-                for y = 0, #state.board - 1 do
-                local line = {'#'}
-                for x = 0, #state.board[1] - 1 do
+                for y = 1, #state.board - 2 do
+                local line = {'#', '#'}
+                for x = 1, #state.board[1] - 2 do
                     local id = state.world[xyz2position(x, y, z)].zone
 
                     local hasPoi1 = false
@@ -209,11 +209,12 @@ local function step_SFP (state)
                         end
                     end
                 end
-                table.insert(line, '#')
+                table.insert(line, '##')
                 table.insert(lines, table.concat(line, ''))
                 end
                 end
 
+                table.insert(lines, border)
                 table.insert(lines, border)
                 table.insert(lines, '')
                 table.insert(poisA, '')
@@ -637,8 +638,11 @@ local function step_voronoi (state)
       data[id].size = #items
     end
 
+    -- TODO: set this parameter to value from input parameters
+    local forceFill = true
+
     state.voronoi = GridMap.Initialize(data)
-    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, true)
+    state.voronoi:Generate({gH=gH, gW=gW, sH=math.floor(gH / sectors), sW=math.floor(gW / sectors)}, forceFill)
     state.voronoi:RunVoronoi(3, 70, nil)
 end
 
